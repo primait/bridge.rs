@@ -1,12 +1,16 @@
 use std::fmt::Debug;
 
 use reqwest::blocking::Client as ReqwestClient;
-use reqwest::{Method, Url, header::{HeaderName, HeaderValue, CONTENT_TYPE}};
+use reqwest::{
+    header::{HeaderName, HeaderValue, CONTENT_TYPE},
+    Method, Url,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
 
-use super::{response::Response, Bridge, BridgeRsError, BridgeRsResult};
+use crate::errors::{BridgeRsError, BridgeRsResult};
+use crate::prelude::*;
 
 pub struct Request<'a, S: Serialize> {
     bridge: &'a Bridge,

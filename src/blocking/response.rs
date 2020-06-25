@@ -3,8 +3,7 @@ use std::fmt::Debug;
 use reqwest::StatusCode;
 use uuid::Uuid;
 
-use crate::BridgeRsError::EmptyBody;
-use crate::BridgeRsResult;
+use crate::prelude::*;
 
 #[derive(Debug)]
 pub struct Response<T> {
@@ -24,7 +23,7 @@ impl<T: Debug> Response<T> {
 
     pub fn get_data(self) -> BridgeRsResult<T> {
         match self.response_body {
-            None => Err(EmptyBody),
+            None => Err(BridgeRsError::EmptyBody),
             Some(body) => Ok(body),
         }
     }
