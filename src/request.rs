@@ -1,16 +1,20 @@
 use std::fmt::Debug;
 
+#[cfg(feature = "blocking")]
 use reqwest::blocking::Client as ReqwestClient;
+#[cfg(not(feature = "blocking"))]
+use reqwest::Client as ReqwestClient;
+
 use reqwest::{
     header::{HeaderName, HeaderValue, CONTENT_TYPE},
     Method, Url,
 };
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde::Serialize;
 use uuid::Uuid;
 
 use crate::errors::{BridgeRsError, BridgeRsResult};
 use crate::prelude::*;
+use std::ops::Deref;
 
 pub struct Request<'a, S: Serialize> {
     bridge: &'a Bridge,
@@ -56,9 +60,9 @@ impl<'a, S: Serialize> Request<'a, S> {
 
     /// issue the external request by consuming the bridge request and
     /// returning a [Response](struct.Response.html)
-    pub fn send<T>(self, response_extractor: &[&str]) -> BridgeRsResult<Response<T>>
+    #[cfg(feature = "blocking")]
+    pub fn send(self) -> BridgeRsResult<Response>
     where
-        for<'de> T: Deserialize<'de> + Debug,
         Self: Sized,
     {
         let request = self.get_request_type();
@@ -93,22 +97,87 @@ impl<'a, S: Serialize> Request<'a, S> {
             source: e,
             url: self.get_url(),
         })?;
-        let json_value = serde_json::from_str(response_body.as_str()).map_err(|e| {
-            BridgeRsError::ResponseBodyNotDeserializable {
+        let response = match request {
+            RequestType::GraphQL(_) => Response::graphql(
+                self.get_url(),
+                response_body,
                 status_code,
-                source: e,
-            }
-        })?;
-        let mut selectors = response_extractor.to_vec();
-        if request.is_graphql() {
-            selectors.insert(0, "data");
+                self.get_request_type().id(),
+            ),
+            RequestType::Rest(_) => Response::rest(
+                self.get_url(),
+                response_body,
+                status_code,
+                self.get_request_type().id(),
+            ),
         };
-        let response_body = extract_inner_json(self.get_url(), selectors, json_value)?;
-        Ok(Response::new(
-            response_body,
-            status_code,
-            self.get_request_type().id(),
-        ))
+        Ok(response)
+    }
+
+    #[cfg(not(feature = "blocking"))]
+    pub async fn send(self) -> impl std::future::Future<Output = BridgeRsResult<Response>> + 'a
+    where
+        Self: Sized,
+        S: 'a,
+    {
+        use futures_util::future::TryFutureExt;
+        let request = self.get_request_type();
+        let request_method = request.get_method();
+        let url = &self.get_url().to_string().to_owned();
+        let request_id = self.get_request_type().id();
+
+        let request_builder = self
+            .get_client()
+            .request(request_method, self.get_url().as_str())
+            .header(CONTENT_TYPE, "application/json")
+            .header(
+                HeaderName::from_static("x-request-id"),
+                &request.id().to_string(),
+            );
+        let request_builder = self
+            .custom_headers()
+            .iter()
+            .fold(request_builder, |request, (name, value)| {
+                request.header(name, value)
+            });
+
+        request_builder
+            .body(request.body_as_string().unwrap())
+            .send()
+            .map_err(move |e| BridgeRsError::HttpError {
+                url: url.to_string(),
+                source: e,
+            })
+            .and_then(move |response| {
+                let status_code = response.status();
+                async move {
+                    if status_code.is_success() {
+                        Ok::<_, BridgeRsError>((response.status(), response))
+                    } else {
+                        Err::<_, BridgeRsError>(BridgeRsError::WrongStatusCode(
+                            url.to_string(),
+                            status_code,
+                        ))
+                    }
+                }
+            })
+            .and_then(move |(status_code, response)| {
+                response
+                    .text()
+                    .map_err(move |e| BridgeRsError::HttpError {
+                        source: e,
+                        url: url.to_string(),
+                    })
+                    .map_ok(move |response_body| (status_code, response_body))
+            })
+            .map_ok(move |(status_code, response_body)| match request {
+                RequestType::GraphQL(_) => {
+                    Response::graphql(url.to_string(), response_body, status_code, request_id)
+                }
+                RequestType::Rest(_) => {
+                    Response::rest(url.to_string(), response_body, status_code, request_id)
+                }
+            })
     }
 
     fn get_client(&self) -> &ReqwestClient {
@@ -153,21 +222,6 @@ impl<'a, S: Serialize> Request<'a, S> {
                 url
             })
     }
-}
-
-fn extract_inner_json<T>(url: Url, selectors: Vec<&str>, json_value: Value) -> BridgeRsResult<T>
-where
-    for<'de> T: Deserialize<'de> + Debug,
-{
-    let inner_result =
-        selectors
-            .into_iter()
-            .try_fold(&json_value, |acc: &Value, accessor: &str| {
-                acc.get(accessor).ok_or_else(|| {
-                    BridgeRsError::SelectorNotFound(url.clone(), accessor.to_string(), acc.clone())
-                })
-            })?;
-    Ok(serde_json::from_value::<T>(inner_result.clone())?)
 }
 
 #[derive(Debug)]

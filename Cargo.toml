@@ -7,7 +7,7 @@ edition = "2018"
 [features]
 default = ["async"]
 blocking = ["reqwest/blocking"]
-async = ["reqwest"]
+async = ["reqwest", "futures-util"]
 
 [dependencies]
 reqwest = { version = "0.10.6", features = ["json", "blocking"], optional = true }
@@ -15,6 +15,7 @@ serde = { version = "1.0.114", features = ["derive"] }
 serde_json = "1.0.55"
 thiserror = "1.0.20"
 uuid = { version = "^0.7", features = ["serde", "v4"] }
+futures-util = { version = "0.3", optional = true }
 
 [dev-dependencies]
 mockito = "0.25.2"

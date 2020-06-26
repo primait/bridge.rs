@@ -1,7 +1,6 @@
-#[cfg(feature = "blocking")]
-pub use super::blocking::{
+pub use super::errors::*;
+pub use super::{
     request::{GraphQL, RequestType, Rest},
     response::Response,
     Bridge,
 };
-pub use super::errors::*;

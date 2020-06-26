@@ -18,6 +18,42 @@
 
 mod errors;
 pub mod prelude;
+mod request;
+mod response;
 
-#[cfg(feature = "blocking")]
-mod blocking;
+use self::request::{Request, RequestType};
+use reqwest::Url;
+use serde::Serialize;
+
+/// The bridge instance to issue external requests.
+#[derive(Debug)]
+pub struct Bridge {
+    #[cfg(feature = "blocking")]
+    client: reqwest::blocking::Client,
+    #[cfg(not(feature = "blocking"))]
+    client: reqwest::Client,
+    /// the url this bridge should call to
+    endpoint: Url,
+}
+
+impl Bridge {
+    #[cfg(feature = "blocking")]
+    pub fn new(endpoint: Url) -> Self {
+        Self {
+            client: reqwest::blocking::Client::new(),
+            endpoint,
+        }
+    }
+
+    #[cfg(not(feature = "blocking"))]
+    pub fn new(endpoint: Url) -> Self {
+        Self {
+            client: reqwest::Client::new(),
+            endpoint,
+        }
+    }
+
+    pub fn request<S: Serialize>(&self, request_type: RequestType<S>) -> Request<S> {
+        Request::new(&self, request_type)
+    }
+}
