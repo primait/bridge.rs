@@ -15,6 +15,7 @@ use uuid::Uuid;
 use crate::errors::{BridgeRsError, BridgeRsResult};
 use crate::prelude::*;
 use std::ops::Deref;
+use std::rc::Rc;
 
 pub struct Request<'a, S: Serialize> {
     bridge: &'a Bridge,
@@ -121,9 +122,12 @@ impl<'a, S: Serialize> Request<'a, S> {
         S: 'a,
     {
         use futures_util::future::TryFutureExt;
-        let request = self.get_request_type();
-        let request_method = request.get_method();
-        let url = &self.get_url().to_string().to_owned();
+        let is_graphql = self.get_request_type().is_graphql();
+        let request_method = self.get_request_type().get_method();
+        let url = self.get_url();
+        let url_copy1 = self.get_url();
+        let url_copy2 = self.get_url();
+        let url_copy3 = self.get_url();
         let request_id = self.get_request_type().id();
 
         let request_builder = self
@@ -132,7 +136,7 @@ impl<'a, S: Serialize> Request<'a, S> {
             .header(CONTENT_TYPE, "application/json")
             .header(
                 HeaderName::from_static("x-request-id"),
-                &request.id().to_string(),
+                &request_id.to_string(),
             );
         let request_builder = self
             .custom_headers()
@@ -142,10 +146,10 @@ impl<'a, S: Serialize> Request<'a, S> {
             });
 
         request_builder
-            .body(request.body_as_string().unwrap())
+            .body(self.get_request_type().body_as_string().unwrap())
             .send()
             .map_err(move |e| BridgeRsError::HttpError {
-                url: url.to_string(),
+                url: url,
                 source: e,
             })
             .and_then(move |response| {
@@ -155,7 +159,7 @@ impl<'a, S: Serialize> Request<'a, S> {
                         Ok::<_, BridgeRsError>((response.status(), response))
                     } else {
                         Err::<_, BridgeRsError>(BridgeRsError::WrongStatusCode(
-                            url.to_string(),
+                            url_copy1,
                             status_code,
                         ))
                     }
@@ -166,17 +170,15 @@ impl<'a, S: Serialize> Request<'a, S> {
                     .text()
                     .map_err(move |e| BridgeRsError::HttpError {
                         source: e,
-                        url: url.to_string(),
+                        url: url_copy2,
                     })
-                    .map_ok(move |response_body| (status_code, response_body))
-            })
-            .map_ok(move |(status_code, response_body)| match request {
-                RequestType::GraphQL(_) => {
-                    Response::graphql(url.to_string(), response_body, status_code, request_id)
-                }
-                RequestType::Rest(_) => {
-                    Response::rest(url.to_string(), response_body, status_code, request_id)
-                }
+                    .map_ok(move |response_body| {
+                        if is_graphql {
+                            Response::graphql(url_copy3, response_body, status_code, request_id)
+                        } else {
+                            Response::rest(url_copy3, response_body, status_code, request_id)
+                        }
+                    })
             })
     }
 
@@ -221,6 +223,10 @@ impl<'a, S: Serialize> Request<'a, S> {
                 url.query_pairs_mut().append_pair(name, value);
                 url
             })
+    }
+
+    fn url_as_string(&self) -> String {
+        self.get_url().to_string()
     }
 }
 

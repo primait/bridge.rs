@@ -6,6 +6,7 @@ use uuid::Uuid;
 use crate::prelude::*;
 use serde::Deserialize;
 use serde_json::Value;
+use std::ops::Deref;
 
 #[derive(Debug, PartialEq)]
 enum RequestType {
@@ -15,7 +16,7 @@ enum RequestType {
 
 #[derive(Debug)]
 pub struct Response {
-    url: String,
+    url: Url,
     response_body: String,
     status_code: StatusCode,
     request_id: Uuid,
@@ -24,7 +25,7 @@ pub struct Response {
 
 impl Response {
     pub fn rest(
-        url: String,
+        url: Url,
         response_body: String,
         status_code: StatusCode,
         request_id: Uuid,
@@ -39,7 +40,7 @@ impl Response {
     }
 
     pub fn graphql(
-        url: String,
+        url: Url,
         response_body: String,
         status_code: StatusCode,
         request_id: Uuid,
@@ -79,7 +80,7 @@ impl Response {
     }
 }
 
-fn extract_inner_json<T>(url: String, selectors: Vec<&str>, json_value: Value) -> BridgeRsResult<T>
+fn extract_inner_json<T>(url: Url, selectors: Vec<&str>, json_value: Value) -> BridgeRsResult<T>
 where
     for<'de> T: Deserialize<'de> + Debug,
 {
@@ -88,7 +89,7 @@ where
             .into_iter()
             .try_fold(&json_value, |acc: &Value, accessor: &str| {
                 acc.get(accessor).ok_or_else(|| {
-                    BridgeRsError::SelectorNotFound(url, accessor.to_string(), acc.clone())
+                    BridgeRsError::SelectorNotFound(url.clone(), accessor.to_string(), acc.clone())
                 })
             })?;
     Ok(serde_json::from_value::<T>(inner_result.clone())?)

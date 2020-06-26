@@ -7,13 +7,13 @@ pub type BridgeRsResult<T> = Result<T, BridgeRsError>;
 #[derive(Debug, Error)]
 pub enum BridgeRsError {
     #[error("http error while calling {url}, error: {source}")]
-    HttpError { url: String, source: reqwest::Error },
+    HttpError { url: Url, source: reqwest::Error },
     #[error(transparent)]
     SerializationError(#[from] serde_json::error::Error),
     #[error("selector not found while calling {0}. the data for key `{1}` cannot be found in payload: {2}")]
-    SelectorNotFound(String, String, Value),
+    SelectorNotFound(Url, String, Value),
     #[error("wrong response status code while calling {0}: {1}")]
-    WrongStatusCode(String, StatusCode),
+    WrongStatusCode(Url, StatusCode),
     #[error("unserializable body. response status code: {status_code}, error: {source}")]
     ResponseBodyNotDeserializable {
         status_code: StatusCode,
