@@ -114,12 +114,11 @@ impl<'a, S: Serialize> Request<'a, S> {
     }
 
     #[cfg(not(feature = "blocking"))]
-    pub async fn send(self) -> impl std::future::Future<Output = BridgeRsResult<Response>> + 'a
+    pub fn send(self) -> impl std::future::Future<Output = BridgeRsResult<Response>> + 'a
     where
         Self: Sized,
         S: 'a,
     {
-        use futures::future;
         use futures::future::FutureExt;
         use futures_util::future::TryFutureExt;
         let is_graphql = self.get_request_type().is_graphql();
