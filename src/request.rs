@@ -14,8 +14,6 @@ use uuid::Uuid;
 
 use crate::errors::{BridgeRsError, BridgeRsResult};
 use crate::prelude::*;
-use std::ops::Deref;
-use std::rc::Rc;
 
 pub struct Request<'a, S: Serialize> {
     bridge: &'a Bridge,
@@ -121,13 +119,15 @@ impl<'a, S: Serialize> Request<'a, S> {
         Self: Sized,
         S: 'a,
     {
+        use futures::future;
+        use futures::future::FutureExt;
         use futures_util::future::TryFutureExt;
         let is_graphql = self.get_request_type().is_graphql();
         let request_method = self.get_request_type().get_method();
         let url = self.get_url();
-        let url_copy1 = self.get_url();
-        let url_copy2 = self.get_url();
-        let url_copy3 = self.get_url();
+        let url_copy1 = url.clone();
+        let url_copy2 = url.clone();
+        let url_copy3 = url.clone();
         let request_id = self.get_request_type().id();
 
         let request_builder = self
@@ -145,13 +145,14 @@ impl<'a, S: Serialize> Request<'a, S> {
                 request.header(name, value)
             });
 
+        if let Err(e) = self.get_request_type().body_as_string() {
+            return async { Err(e) }.right_future();
+        }
+
         request_builder
             .body(self.get_request_type().body_as_string().unwrap())
             .send()
-            .map_err(move |e| BridgeRsError::HttpError {
-                url: url,
-                source: e,
-            })
+            .map_err(move |e| BridgeRsError::HttpError { url, source: e })
             .and_then(move |response| {
                 let status_code = response.status();
                 async move {
@@ -180,6 +181,7 @@ impl<'a, S: Serialize> Request<'a, S> {
                         }
                     })
             })
+            .left_future()
     }
 
     fn get_client(&self) -> &ReqwestClient {
@@ -223,10 +225,6 @@ impl<'a, S: Serialize> Request<'a, S> {
                 url.query_pairs_mut().append_pair(name, value);
                 url
             })
-    }
-
-    fn url_as_string(&self) -> String {
-        self.get_url().to_string()
     }
 }
 

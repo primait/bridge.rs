@@ -6,7 +6,6 @@ use uuid::Uuid;
 use crate::prelude::*;
 use serde::Deserialize;
 use serde_json::Value;
-use std::ops::Deref;
 
 #[derive(Debug, PartialEq)]
 enum RequestType {
