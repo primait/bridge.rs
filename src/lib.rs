@@ -37,17 +37,11 @@ pub struct Bridge {
 }
 
 impl Bridge {
-    #[cfg(feature = "blocking")]
     pub fn new(endpoint: Url) -> Self {
         Self {
+            #[cfg(feature = "blocking")]
             client: reqwest::blocking::Client::new(),
-            endpoint,
-        }
-    }
-
-    #[cfg(not(feature = "blocking"))]
-    pub fn new(endpoint: Url) -> Self {
-        Self {
+            #[cfg(not(feature = "blocking"))]
             client: reqwest::Client::new(),
             endpoint,
         }

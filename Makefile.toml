@@ -1,0 +1,16 @@
+[tasks.test]
+dependencies = ["test-blocking", "test-async"]
+
+[tasks.test-blocking]
+command = "cargo"
+args = ["test", "--features", "blocking"]
+dependencies = ["build"]
+
+[tasks.test-async]
+command = "cargo"
+args = ["test"]
+dependencies = ["build"]
+
+[tasks.clean]
+command = "cargo"
+args = ["clean"]

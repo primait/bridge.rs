@@ -60,10 +60,7 @@ impl<'a, S: Serialize> Request<'a, S> {
     /// issue the external request by consuming the bridge request and
     /// returning a [Response](struct.Response.html)
     #[cfg(feature = "blocking")]
-    pub fn send(self) -> BridgeRsResult<Response>
-    where
-        Self: Sized,
-    {
+    pub fn send(self) -> BridgeRsResult<Response> {
         let request = self.get_request_type();
 
         let request_builder = self
@@ -114,11 +111,7 @@ impl<'a, S: Serialize> Request<'a, S> {
     }
 
     #[cfg(not(feature = "blocking"))]
-    pub fn send(self) -> impl std::future::Future<Output = BridgeRsResult<Response>> + 'a
-    where
-        Self: Sized,
-        S: 'a,
-    {
+    pub fn send(self) -> impl std::future::Future<Output = BridgeRsResult<Response>> {
         use futures::future::FutureExt;
         use futures_util::future::TryFutureExt;
         let is_graphql = self.get_request_type().is_graphql();
