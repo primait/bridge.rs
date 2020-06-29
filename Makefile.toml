@@ -28,3 +28,35 @@ args = ["clippy", "--", "-D", "warnings"]
 description = "Build inside CI."
 command = "cargo"
 args = ["build", "-j", "2", "--all-features"]
+
+[tasks.cache-cleanup]
+description = "Clean CI cache"
+dependencies = ["cargo-prune", "delete-artifacts", "sweep-end", "print-stats"]
+
+[tasks.cargo-prune]
+description = "Run cargo prune"
+command = "cargo"
+args = ["prune"]
+
+[tasks.delete-artifacts]
+description = "Remove non cachable artifacts"
+script = [
+'''
+#!/bin/bash
+set -e
+set -x
+find ./target/debug -type f -maxdepth 1 -delete || true
+rm -rfv ./target/{debug,release}/deps/{*starsky*,*decode_key*,*gen_public_key*,*intermediari_importer*,*migrate*,*rabbit_worker*,*seed*}
+rm -rfv ./target/{debug,release}/.fingerprint/*starsky*
+'''
+]
+
+[tasks.sweep-end]
+description = "Run cargo sweep cleanup"
+command = "cargo"
+args = ["sweep", "-f"]
+
+[tasks.print-stats]
+description = "Print cache size"
+command = "du"
+args = ["-sh", "target", ".cargo"]
