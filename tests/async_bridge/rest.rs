@@ -1,5 +1,5 @@
 use crate::common::*;
-use bridge::prelude::*;
+use prima_bridge::prelude::*;
 use reqwest::Method;
 use serde::Deserialize;
 use std::error::Error;

@@ -1,5 +1,5 @@
 [package]
-name = "bridge"
+name = "prima_bridge"
 version = "0.1.0"
 authors = ["Matteo Giachino <matteog@gmail.com>"]
 edition = "2018"

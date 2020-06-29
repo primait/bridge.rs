@@ -4,7 +4,7 @@ use reqwest::Method;
 use serde::Deserialize;
 
 use crate::common::*;
-use bridge::prelude::*;
+use prima_bridge::prelude::*;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 struct Data {

@@ -1,5 +1,5 @@
-use bridge::prelude::*;
 use mockito::{mock, Mock};
+use prima_bridge::prelude::*;
 use reqwest::Url;
 
 pub fn create_bridge(status_code: usize, body: &str) -> (Mock, Bridge) {

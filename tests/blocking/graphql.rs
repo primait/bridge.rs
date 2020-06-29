@@ -6,7 +6,7 @@ use reqwest::Url;
 use serde::Deserialize;
 use serde_json::json;
 
-use bridge::prelude::*;
+use prima_bridge::prelude::*;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 struct Person {
