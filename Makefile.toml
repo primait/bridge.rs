@@ -46,8 +46,8 @@ script = [
 set -e
 set -x
 find ./target/debug -type f -maxdepth 1 -delete || true
-rm -rfv ./target/{debug,release}/deps/{*starsky*,*decode_key*,*gen_public_key*,*intermediari_importer*,*migrate*,*rabbit_worker*,*seed*}
-rm -rfv ./target/{debug,release}/.fingerprint/*starsky*
+rm -rfv ./target/{debug,release}/deps/{*bridge.rs*,*decode_key*,*gen_public_key*,*intermediari_importer*,*migrate*,*rabbit_worker*,*seed*}
+rm -rfv ./target/{debug,release}/.fingerprint/*bridge.rs*
 '''
 ]
 
