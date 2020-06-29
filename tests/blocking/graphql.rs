@@ -25,8 +25,8 @@ fn simple_request() -> Result<(), Box<dyn Error>> {
 
     let result: Person = bridge
         .request(RequestType::graphql(query, variables))
-        .send(&["person"])?
-        .get_data()?;
+        .send()?
+        .get_data(&["person"])?;
 
     assert_eq!(
         Person {

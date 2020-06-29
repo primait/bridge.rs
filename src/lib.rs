@@ -15,46 +15,23 @@
 //! pass around.
 //!
 //! The bridge implement a type state pattern to build the external request. Follow the types!
-use std::fmt::Debug;
 
-use reqwest::blocking::Client as ReqwestClient;
-use reqwest::{StatusCode, Url};
-use serde::Serialize;
-use serde_json::Value;
-use thiserror::Error;
-
-use self::request::{Request, RequestType};
-
+mod errors;
 pub mod prelude;
 mod request;
 mod response;
 
-
-#[derive(Debug, Error)]
-pub enum BridgeRsError {
-    #[error("http error while calling {url}, error: {source}")]
-    HttpError { url: Url, source: reqwest::Error },
-    #[error(transparent)]
-    SerializationError(#[from] serde_json::error::Error),
-    #[error("selector not found while calling {0}. the data for key `{1}` cannot be found in payload: {2}")]
-    SelectorNotFound(Url, String, Value),
-    #[error("wrong response status code while calling {0}: {1}")]
-    WrongStatusCode(Url, StatusCode),
-    #[error("unserializable body. response status code: {status_code}, error: {source}")]
-    ResponseBodyNotDeserializable {
-        status_code: StatusCode,
-        source: serde_json::error::Error,
-    },
-    #[error("empty body")]
-    EmptyBody,
-}
-
-pub type BridgeRsResult<T> = Result<T, BridgeRsError>;
+use self::request::{Request, RequestType};
+use reqwest::Url;
+use serde::Serialize;
 
 /// The bridge instance to issue external requests.
 #[derive(Debug)]
 pub struct Bridge {
-    client: ReqwestClient,
+    #[cfg(feature = "blocking")]
+    client: reqwest::blocking::Client,
+    #[cfg(not(feature = "blocking"))]
+    client: reqwest::Client,
     /// the url this bridge should call to
     endpoint: Url,
 }
@@ -62,7 +39,10 @@ pub struct Bridge {
 impl Bridge {
     pub fn new(endpoint: Url) -> Self {
         Self {
-            client: ReqwestClient::new(),
+            #[cfg(feature = "blocking")]
+            client: reqwest::blocking::Client::new(),
+            #[cfg(not(feature = "blocking"))]
+            client: reqwest::Client::new(),
             endpoint,
         }
     }

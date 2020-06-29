@@ -1,32 +1,77 @@
 use std::fmt::Debug;
 
-use reqwest::StatusCode;
+use reqwest::{StatusCode, Url};
 use uuid::Uuid;
 
-use crate::BridgeRsError::EmptyBody;
-use crate::BridgeRsResult;
+use crate::prelude::*;
+use serde::Deserialize;
+use serde_json::Value;
 
-#[derive(Debug)]
-pub struct Response<T> {
-    response_body: Option<T>,
-    status_code: StatusCode,
-    request_id: Uuid,
+#[derive(Debug, PartialEq)]
+enum RequestType {
+    Rest,
+    GraphQL,
 }
 
-impl<T: Debug> Response<T> {
-    pub fn new(response_body: Option<T>, status_code: StatusCode, request_id: Uuid) -> Self {
+#[derive(Debug)]
+pub struct Response {
+    url: Url,
+    response_body: String,
+    status_code: StatusCode,
+    request_id: Uuid,
+    request_type: RequestType,
+}
+
+impl Response {
+    pub fn rest(
+        url: Url,
+        response_body: String,
+        status_code: StatusCode,
+        request_id: Uuid,
+    ) -> Self {
         Self {
+            url,
             response_body,
             status_code,
             request_id,
+            request_type: RequestType::Rest,
         }
     }
 
-    pub fn get_data(self) -> BridgeRsResult<T> {
-        match self.response_body {
-            None => Err(EmptyBody),
-            Some(body) => Ok(body),
+    pub fn graphql(
+        url: Url,
+        response_body: String,
+        status_code: StatusCode,
+        request_id: Uuid,
+    ) -> Self {
+        Self {
+            url,
+            response_body,
+            status_code,
+            request_id,
+            request_type: RequestType::GraphQL,
         }
+    }
+
+    fn is_graphql(&self) -> bool {
+        self.request_type == RequestType::GraphQL
+    }
+
+    pub fn get_data<T>(self, response_extractor: &[&str]) -> BridgeRsResult<T>
+    where
+        for<'de> T: Deserialize<'de> + Debug,
+    {
+        let json_value = serde_json::from_str(self.response_body.as_str()).map_err(|e| {
+            BridgeRsError::ResponseBodyNotDeserializable {
+                status_code: self.status_code,
+                source: e,
+            }
+        })?;
+        let mut selectors = response_extractor.to_vec();
+        if self.is_graphql() {
+            selectors.insert(0, "data");
+        };
+        Ok(extract_inner_json(self.url, selectors, json_value)?)
     }
 
     pub fn is_ok(&self) -> bool {
@@ -34,8 +79,17 @@ impl<T: Debug> Response<T> {
     }
 }
 
-impl<T: Debug> From<Response<T>> for BridgeRsResult<T> {
-    fn from(response: Response<T>) -> Self {
-        response.get_data()
-    }
+fn extract_inner_json<T>(url: Url, selectors: Vec<&str>, json_value: Value) -> BridgeRsResult<T>
+where
+    for<'de> T: Deserialize<'de> + Debug,
+{
+    let inner_result =
+        selectors
+            .into_iter()
+            .try_fold(&json_value, |acc: &Value, accessor: &str| {
+                acc.get(accessor).ok_or_else(|| {
+                    BridgeRsError::SelectorNotFound(url.clone(), accessor.to_string(), acc.clone())
+                })
+            })?;
+    Ok(serde_json::from_value::<T>(inner_result.clone())?)
 }
