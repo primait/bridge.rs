@@ -31,7 +31,7 @@ args = ["build", "-j", "2", "--all-features"]
 
 [tasks.cache-cleanup]
 description = "Clean CI cache"
-dependencies = ["cargo-prune", "delete-artifacts", "print-stats"]
+dependencies = ["cargo-prune", "delete-artifacts"]
 
 [tasks.cargo-prune]
 description = "Run cargo prune"
