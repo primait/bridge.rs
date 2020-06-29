@@ -31,7 +31,7 @@ args = ["build", "-j", "2", "--all-features"]
 
 [tasks.cache-cleanup]
 description = "Clean CI cache"
-dependencies = ["cargo-prune", "delete-artifacts", "sweep-end", "print-stats"]
+dependencies = ["cargo-prune", "delete-artifacts", "print-stats"]
 
 [tasks.cargo-prune]
 description = "Run cargo prune"
@@ -50,6 +50,11 @@ rm -rfv ./target/{debug,release}/deps/{*prima_bridge*,*decode_key*,*gen_public_k
 rm -rfv ./target/{debug,release}/.fingerprint/*prima_bridge*
 '''
 ]
+
+[tasks.sweep-start]
+description = "Start cargo sweep"
+command = "cargo"
+args = ["sweep", "-s"]
 
 [tasks.sweep-end]
 description = "Run cargo sweep cleanup"
