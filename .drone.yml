@@ -1,0 +1,148 @@
+kind: pipeline
+name: default
+
+volumes:
+  - name: docker
+    host:
+      path: /var/run/docker.sock
+  - name: ecs
+    host:
+      path: /etc/profile.d/ecs-credentials-endpoint
+
+
+clone:
+  depth: 1
+
+steps:
+
+  - name: pre-start
+    image: prima/drone-tools:1.17.6
+    commands:
+      - pre-start-scripts
+  - name: cache-restore
+    image: prima/drone-tools:1.17.6
+    volumes:
+      - name: ecs
+        path: /etc/profile.d/ecs-credentials-endpoint
+      - name: docker
+        path: /var/run/docker.sock
+    commands:
+      - . /etc/profile.d/ecs-credentials-endpoint
+      - cache-restore
+
+  - name: check-secrets
+    image: prima/drone-tools:1.17.6
+    volumes:
+      - name: ecs
+        path: /etc/profile.d/ecs-credentials-endpoint
+    commands:
+      - . /etc/profile.d/ecs-credentials-endpoint
+      - check-secrets-grants
+  - name: build-image
+    image: prima/drone-tools:1.17.6
+    volumes:
+      - name: docker
+        path: /var/run/docker.sock
+    commands:
+      - sed -i 's/USER app/USER root/g' ./Dockerfile
+      - docker build -t prima/bridge.rs-ci:1 ./
+    depends_on:
+      - cache-restore
+  - name: cargo-format
+    image: prima/bridge.rs-ci:1
+    commands:
+      - cargo make --profile drone format-ci
+    depends_on:
+      - build-image
+
+  - name: cargo-lint
+    image: prima/bridge.rs-ci:1
+    commands:
+      - cargo make --profile drone clippy-ci
+    depends_on:
+      - cargo-format
+
+  - name: cargo-test
+    image: prima/bridge.rs-ci:1
+    commands:
+      - cargo make --profile drone test
+    depends_on:
+      - cargo-lint
+
+  - name: cargo-build
+    image: prima/bridge.rs-ci:1
+    commands:
+      - cargo make --profile drone build-ci
+    depends_on:
+      - cargo-test
+    when:
+      branch:
+        exclude:
+          - master
+
+
+
+  - name: cache-cleanup
+    image: prima/bridge.rs-ci:1
+    commands:
+      - cargo make --profile drone cache-cleanup
+    when:
+      branch: master
+    depends_on:
+      
+        - cargo-build
+        - cargo-format
+        - cargo-lint
+        - cargo-test
+
+
+  - name: cache-save
+    image: prima/drone-tools:1.17.6
+    volumes:
+      - name: ecs
+        path: /etc/profile.d/ecs-credentials-endpoint
+      - name: docker
+        path: /var/run/docker.sock
+    commands:
+      - . /etc/profile.d/ecs-credentials-endpoint
+      - cache-save .cargo target
+    when:
+      branch: master
+    depends_on:
+      - cache-cleanup
+
+trigger:
+  event:
+    - push
+
+
+
+---
+kind: pipeline
+name: email-failure
+
+clone:
+  disable: true
+
+steps:
+  - name: email-failure
+    image: drillster/drone-email
+    environment:
+      PLUGIN_USERNAME:
+        from_secret: email_username
+      PLUGIN_PASSWORD:
+        from_secret: email_password
+    settings:
+      host: email-smtp.eu-west-1.amazonaws.com
+      from: noreply@prima.it
+
+trigger:
+  event:
+    - push
+  status:
+    - failure
+
+depends_on:
+  - default
+
+
