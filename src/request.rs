@@ -111,16 +111,8 @@ impl<'a, S: Serialize> Request<'a, S> {
     }
 
     #[cfg(not(feature = "blocking"))]
-    pub fn send(self) -> impl std::future::Future<Output = BridgeRsResult<Response>> + 'a
-    where
-        Self: 'a,
-    {
-        use futures::future::FutureExt;
+    pub async fn send(self) -> BridgeRsResult<Response> {
         use futures_util::future::TryFutureExt;
-        let url = self.get_url();
-        let url2 = url.clone();
-        let url3 = url.clone();
-        let url4 = url.clone();
         let request_id = self.get_request_type().id();
 
         let request_builder = self
@@ -141,43 +133,45 @@ impl<'a, S: Serialize> Request<'a, S> {
                 request.header(name, value)
             });
 
-        let body_as_string = match self.get_request_type().body_as_string() {
-            Ok(body_as_string) => body_as_string,
-            Err(e) => {
-                return async { Err(e) }.right_future();
-            }
-        };
+        let body_as_string = self.get_request_type().body_as_string()?;
 
-        request_builder
+        let response = request_builder
             .body(body_as_string)
             .send()
-            .map_err(|e| BridgeRsError::HttpError { url, source: e })
-            .and_then(|response| {
-                let status_code = response.status();
-                async move {
-                    if status_code.is_success() {
-                        Ok((response.status(), response))
-                    } else {
-                        Err(BridgeRsError::WrongStatusCode(url2, status_code))
-                    }
-                }
+            .map_err(|e| BridgeRsError::HttpError {
+                url: self.get_url(),
+                source: e,
             })
-            .and_then(move |(status_code, response)| {
-                response
-                    .text()
-                    .map_err(|e| BridgeRsError::HttpError {
-                        source: e,
-                        url: url3,
-                    })
-                    .map_ok(move |response_body| {
-                        if self.get_request_type().is_graphql() {
-                            Response::graphql(url4, response_body, status_code, request_id)
-                        } else {
-                            Response::rest(url4, response_body, status_code, request_id)
-                        }
-                    })
+            .await?;
+
+        let status_code = response.status();
+        if !status_code.is_success() {
+            return Err(BridgeRsError::WrongStatusCode(self.get_url(), status_code));
+        }
+
+        let response_body = response
+            .text()
+            .map_err(|e| BridgeRsError::HttpError {
+                source: e,
+                url: self.get_url(),
             })
-            .left_future()
+            .await?;
+
+        if self.get_request_type().is_graphql() {
+            Ok(Response::graphql(
+                self.get_url(),
+                response_body,
+                status_code,
+                request_id,
+            ))
+        } else {
+            Ok(Response::rest(
+                self.get_url(),
+                response_body,
+                status_code,
+                request_id,
+            ))
+        }
     }
 
     fn get_client(&self) -> &ReqwestClient {
