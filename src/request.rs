@@ -15,6 +15,7 @@ use uuid::Uuid;
 use crate::errors::{BridgeRsError, BridgeRsResult};
 use crate::prelude::*;
 
+/// The Request struct contains all the data to forge a request.
 pub struct Request<'a, S: Serialize> {
     bridge: &'a Bridge,
     request_type: RequestType<S>,
@@ -24,6 +25,7 @@ pub struct Request<'a, S: Serialize> {
 }
 
 impl<'a, S: Serialize> Request<'a, S> {
+    /// Creates a new request
     pub fn new(bridge: &'a Bridge, request_type: RequestType<S>) -> Self {
         Self {
             bridge,
@@ -34,6 +36,7 @@ impl<'a, S: Serialize> Request<'a, S> {
         }
     }
 
+    /// adds custom headers to a Request
     pub fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         Self {
             custom_headers: headers,
@@ -41,6 +44,7 @@ impl<'a, S: Serialize> Request<'a, S> {
         }
     }
 
+    /// routes to request to a subpath of the endpoint defined in the bridge
     pub fn to(self, path: &'a str) -> Self {
         Self {
             path: Some(path),
@@ -48,6 +52,7 @@ impl<'a, S: Serialize> Request<'a, S> {
         }
     }
 
+    /// adds a ?name=value to the request endpoint
     pub fn with_query_pair(self, name: &'a str, value: &'a str) -> Self {
         let mut query_pairs = self.query_pairs;
         query_pairs.push((name, value));

@@ -1,8 +1,7 @@
-//! # prima_bridge
+//! This crate gives an high level api to execute external request.
 //!
-//! This module is responsible of issuing external request.
 //! It is supposed to give the basics building blocks for building bridges to the external world
-//! while abstracting the low level stuffs like adding our custom headers and request tracing.
+//! while abstracting the low level stuffs like adding custom headers and request tracing.
 //!
 //! Right now it supports Rest and GraphQL requests.
 //!
@@ -11,17 +10,20 @@
 //!
 //! **Do not create a new bridge on every request!**
 //!
-//! You should use something like lazy_static, or some sort of inversion of control container to
+//! You should use something like [once_cell](https://crates.io/crates/once_cell) or [lazy_static](https://crates.io/crates/lazy_static), or some sort of inversion of control container to
 //! pass around.
 //!
-//! The bridge implement a type state pattern to build the external request. Follow the types!
+//! The bridge implement a type state pattern to build the external request.
 
 mod errors;
 pub mod prelude;
 mod request;
 mod response;
 
-use self::request::{Request, RequestType};
+pub use self::{
+    request::{Request, RequestType},
+    response::Response,
+};
 use reqwest::Url;
 use serde::Serialize;
 
