@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use reqwest::{StatusCode, Url};
+use reqwest::{header::HeaderMap, StatusCode, Url};
 use uuid::Uuid;
 
 use crate::prelude::*;
@@ -18,6 +18,7 @@ pub struct Response {
     url: Url,
     response_body: String,
     status_code: StatusCode,
+    response_headers: HeaderMap,
     request_id: Uuid,
     request_type: RequestType,
 }
@@ -27,12 +28,14 @@ impl Response {
         url: Url,
         response_body: String,
         status_code: StatusCode,
+        response_headers: HeaderMap,
         request_id: Uuid,
     ) -> Self {
         Self {
             url,
             response_body,
             status_code,
+            response_headers,
             request_id,
             request_type: RequestType::Rest,
         }
@@ -42,12 +45,14 @@ impl Response {
         url: Url,
         response_body: String,
         status_code: StatusCode,
+        response_headers: HeaderMap,
         request_id: Uuid,
     ) -> Self {
         Self {
             url,
             response_body,
             status_code,
+            response_headers,
             request_id,
             request_type: RequestType::GraphQL,
         }
@@ -57,6 +62,9 @@ impl Response {
         self.request_type == RequestType::GraphQL
     }
 
+    pub fn headers(&self) -> &HeaderMap {
+        &self.response_headers
+    }
     pub fn get_data<T>(self, response_extractor: &[&str]) -> BridgeRsResult<T>
     where
         for<'de> T: Deserialize<'de> + Debug,
