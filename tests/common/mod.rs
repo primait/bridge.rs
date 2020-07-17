@@ -36,3 +36,21 @@ pub fn create_bridge_with_path(status_code: usize, body: &str, path: &str) -> (M
 
     (mock, bridge)
 }
+
+pub fn create_bridge_with_path_and_header(
+    status_code: usize,
+    body: &str,
+    path: &str,
+    header: (&str, &str),
+) -> (Mock, Bridge) {
+    let mock = mock("GET", path)
+        .with_status(status_code)
+        .with_header(header.0, header.1)
+        .with_body(body)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    (mock, bridge)
+}

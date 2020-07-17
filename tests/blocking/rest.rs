@@ -142,3 +142,32 @@ fn response_with_empty_body() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[test]
+fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
+    let header = ("header", "custom");
+    let path = "/test_path/simple_request_with_custom_headers";
+
+    let (_m, bridge) =
+        create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
+
+    let body: Option<String> = None;
+    let response = bridge
+        .request(RequestType::rest(body, Method::GET))
+        .to(path)
+        .send()?;
+
+    let custom = response
+        .headers()
+        .get(header.0)
+        .expect("It should contain the custom header")
+        .to_str()?;
+
+    assert_eq!(header.1, custom);
+
+    let result: String = response.get_data(&["hello"])?;
+
+    assert_eq!("world!", result.as_str());
+
+    Ok(())
+}

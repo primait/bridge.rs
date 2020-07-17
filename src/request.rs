@@ -89,6 +89,8 @@ impl<'a, S: Serialize> Request<'a, S> {
         if !status_code.is_success() {
             return Err(BridgeRsError::WrongStatusCode(self.get_url(), status_code));
         }
+        let response_headers = response.headers().clone();
+
         let response_body = response.text().map_err(|e| BridgeRsError::HttpError {
             source: e,
             url: self.get_url(),
@@ -98,12 +100,14 @@ impl<'a, S: Serialize> Request<'a, S> {
                 self.get_url(),
                 response_body,
                 status_code,
+                response_headers,
                 self.get_request_type().id(),
             ),
             RequestType::Rest(_) => Response::rest(
                 self.get_url(),
                 response_body,
                 status_code,
+                response_headers,
                 self.get_request_type().id(),
             ),
         };
@@ -149,6 +153,8 @@ impl<'a, S: Serialize> Request<'a, S> {
             return Err(BridgeRsError::WrongStatusCode(self.get_url(), status_code));
         }
 
+        let response_headers = response.headers().clone();
+
         let response_body = response
             .text()
             .map_err(|e| BridgeRsError::HttpError {
@@ -162,6 +168,7 @@ impl<'a, S: Serialize> Request<'a, S> {
                 self.get_url(),
                 response_body,
                 status_code,
+                response_headers,
                 request_id,
             ))
         } else {
@@ -169,6 +176,7 @@ impl<'a, S: Serialize> Request<'a, S> {
                 self.get_url(),
                 response_body,
                 status_code,
+                response_headers,
                 request_id,
             ))
         }
