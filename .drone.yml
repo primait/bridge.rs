@@ -8,18 +8,67 @@ platform:
 
 clone:
   depth: 1
+  disable: true
 
+environment:
+  CARGO_HTTP_CAINFO: /drone/src/certs/sys/proxy_deps_ca.pem
+  CURL_CA_BUNDLE: /drone/src/certs/sys/proxy_deps_ca.pem
+  GIT_SSL_CAINFO: /drone/src/certs/sys/proxy_deps_ca.pem
+  HEX_CACERTS_PATH: /drone/src/certs/sys/proxy_deps_ca.pem
+  NODE_EXTRA_CA_CERTS: /drone/src/certs/sys/proxy_deps_ca.pem
+  REQUESTS_CA_BUNDLE: /drone/src/certs/sys/proxy_deps_ca.pem
+  SYSTEM_CERTIFICATE_PATH: /drone/src/certs/sys/proxy_deps_ca.pem
+  http_proxy: http://mitmproxy.servicediscovery.prima:8080
+  https_proxy: http://mitmproxy.servicediscovery.prima:8080
+  no_proxy: localhost,redis,rabbit,aws,statsd,postgres,mysql,web,e2e-backend,127.0.0.1,elasticsearch,db,kibana,mock
 steps:
+- name: clone
+  image: drone/git
+  environment:
+    CARGO_HTTP_CAINFO: ""
+    CURL_CA_BUNDLE: ""
+    GIT_SSL_CAINFO: ""
+    HEX_CACERTS_PATH: ""
+    NODE_EXTRA_CA_CERTS: ""
+    REQUESTS_CA_BUNDLE: ""
+    SYSTEM_CERTIFICATE_PATH: ""
+    http_proxy: ""
+    https_proxy: ""
+
 - name: pre-start
-  image: prima/drone-tools:1.17.6
+  image: prima/drone-tools:1.17.8
   commands:
+  - . /etc/profile.d/ecs-credentials-endpoint
   - pre-start-scripts
+  environment:
+    CARGO_HTTP_CAINFO: ""
+    CURL_CA_BUNDLE: ""
+    GIT_SSL_CAINFO: ""
+    HEX_CACERTS_PATH: ""
+    NODE_EXTRA_CA_CERTS: ""
+    REQUESTS_CA_BUNDLE: ""
+    SYSTEM_CERTIFICATE_PATH: ""
+    http_proxy: ""
+    https_proxy: ""
+  volumes:
+  - name: ecs
+    path: /etc/profile.d/ecs-credentials-endpoint
 
 - name: cache-restore
-  image: prima/drone-tools:1.17.6
+  image: prima/drone-tools:1.17.8
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - cache-restore
+  environment:
+    CARGO_HTTP_CAINFO: ""
+    CURL_CA_BUNDLE: ""
+    GIT_SSL_CAINFO: ""
+    HEX_CACERTS_PATH: ""
+    NODE_EXTRA_CA_CERTS: ""
+    REQUESTS_CA_BUNDLE: ""
+    SYSTEM_CERTIFICATE_PATH: ""
+    http_proxy: ""
+    https_proxy: ""
   volumes:
   - name: ecs
     path: /etc/profile.d/ecs-credentials-endpoint
@@ -27,24 +76,45 @@ steps:
     path: /var/run/docker.sock
 
 - name: check-secrets
-  image: prima/drone-tools:1.17.6
+  image: prima/drone-tools:1.17.8
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - check-secrets-grants
+  environment:
+    CARGO_HTTP_CAINFO: ""
+    CURL_CA_BUNDLE: ""
+    GIT_SSL_CAINFO: ""
+    HEX_CACERTS_PATH: ""
+    NODE_EXTRA_CA_CERTS: ""
+    REQUESTS_CA_BUNDLE: ""
+    SYSTEM_CERTIFICATE_PATH: ""
+    http_proxy: ""
+    https_proxy: ""
   volumes:
   - name: ecs
     path: /etc/profile.d/ecs-credentials-endpoint
 
 - name: build-image
-  image: prima/drone-tools:1.17.6
+  image: prima/drone-tools:1.17.8
   commands:
   - sed -i 's/USER app/USER root/g' ./Dockerfile
   - docker build -t prima/bridge.rs-ci:1 ./
+  environment:
+    CARGO_HTTP_CAINFO: ""
+    CURL_CA_BUNDLE: ""
+    GIT_SSL_CAINFO: ""
+    HEX_CACERTS_PATH: ""
+    NODE_EXTRA_CA_CERTS: ""
+    REQUESTS_CA_BUNDLE: ""
+    SYSTEM_CERTIFICATE_PATH: ""
+    http_proxy: ""
+    https_proxy: ""
   volumes:
   - name: docker
     path: /var/run/docker.sock
   depends_on:
   - cache-restore
+  - clone
 
 - name: cargo-format
   image: prima/bridge.rs-ci:1
@@ -54,6 +124,7 @@ steps:
     CARGO_HOME: /drone/src/.cargo
   depends_on:
   - build-image
+  - pre-start
 
 - name: cargo-lint
   image: prima/bridge.rs-ci:1
@@ -70,6 +141,9 @@ steps:
   - cargo make --profile drone test
   environment:
     CARGO_HOME: /drone/src/.cargo
+    CARGO_HTTP_CAINFO: ""
+    http_proxy: ""
+    https_proxy: ""
   depends_on:
   - cargo-lint
 
@@ -100,10 +174,20 @@ steps:
   - cargo-test
 
 - name: cache-save
-  image: prima/drone-tools:1.17.6
+  image: prima/drone-tools:1.17.8
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - cache-save .cargo target
+  environment:
+    CARGO_HTTP_CAINFO: ""
+    CURL_CA_BUNDLE: ""
+    GIT_SSL_CAINFO: ""
+    HEX_CACERTS_PATH: ""
+    NODE_EXTRA_CA_CERTS: ""
+    REQUESTS_CA_BUNDLE: ""
+    SYSTEM_CERTIFICATE_PATH: ""
+    http_proxy: ""
+    https_proxy: ""
   volumes:
   - name: ecs
     path: /etc/profile.d/ecs-credentials-endpoint
@@ -161,6 +245,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: eef791c773163fc62c089742242f07f42109992341ec52a6e8514fa3b93adcb2
+hmac: 99e9322c10fe27e9865f432008ac09ae997d68782cb683eb6ac5518fd85ca443
 
 ...
