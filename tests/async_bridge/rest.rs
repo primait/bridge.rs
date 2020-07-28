@@ -30,12 +30,12 @@ async fn unserializable_response() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
     let body: Option<String> = None;
 
-    let result: BridgeRsResult<Response> = bridge
+    let result: PrimaBridgeResult<Response> = bridge
         .request(RequestType::rest(body, Method::GET))
         .send()
         .await;
     assert!(result.is_ok());
-    let result: BridgeRsResult<Data> = result?.get_data(&["some_strange_selector"]);
+    let result: PrimaBridgeResult<Data> = result?.get_data(&["some_strange_selector"]);
     assert!(result.is_err());
     let error_str = result.err().map(|e| e.to_string()).unwrap();
     assert!(error_str.contains("the data for key `some_strange_selector`"));

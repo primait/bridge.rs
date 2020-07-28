@@ -2,10 +2,10 @@ use reqwest::{StatusCode, Url};
 use serde_json::Value;
 use thiserror::Error;
 
-pub type BridgeRsResult<T> = Result<T, BridgeRsError>;
+pub type PrimaBridgeResult<T> = Result<T, PrimaBridgeError>;
 
 #[derive(Debug, Error)]
-pub enum BridgeRsError {
+pub enum PrimaBridgeError {
     #[error("http error while calling {url}, error: {source}")]
     HttpError { url: Url, source: reqwest::Error },
     #[error(transparent)]

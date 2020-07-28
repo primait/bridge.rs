@@ -66,12 +66,12 @@ impl Response {
     pub fn headers(&self) -> &HeaderMap {
         &self.response_headers
     }
-    pub fn get_data<T>(self, response_extractor: &[&str]) -> BridgeRsResult<T>
+    pub fn get_data<T>(self, response_extractor: &[&str]) -> PrimaBridgeResult<T>
     where
         for<'de> T: Deserialize<'de> + Debug,
     {
         let json_value = serde_json::from_str(self.response_body.as_str()).map_err(|e| {
-            BridgeRsError::ResponseBodyNotDeserializable {
+            PrimaBridgeError::ResponseBodyNotDeserializable {
                 status_code: self.status_code,
                 source: e,
             }
@@ -88,7 +88,7 @@ impl Response {
     }
 }
 
-fn extract_inner_json<T>(url: Url, selectors: Vec<&str>, json_value: Value) -> BridgeRsResult<T>
+fn extract_inner_json<T>(url: Url, selectors: Vec<&str>, json_value: Value) -> PrimaBridgeResult<T>
 where
     for<'de> T: Deserialize<'de> + Debug,
 {
@@ -97,7 +97,11 @@ where
             .into_iter()
             .try_fold(&json_value, |acc: &Value, accessor: &str| {
                 acc.get(accessor).ok_or_else(|| {
-                    BridgeRsError::SelectorNotFound(url.clone(), accessor.to_string(), acc.clone())
+                    PrimaBridgeError::SelectorNotFound(
+                        url.clone(),
+                        accessor.to_string(),
+                        acc.clone(),
+                    )
                 })
             })?;
     Ok(serde_json::from_value::<T>(inner_result.clone())?)

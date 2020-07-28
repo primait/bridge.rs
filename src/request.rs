@@ -12,7 +12,7 @@ use reqwest::{
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::errors::{BridgeRsError, BridgeRsResult};
+use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::prelude::*;
 
 /// The Request struct contains all the data to forge a request.
@@ -65,7 +65,7 @@ impl<'a, S: Serialize> Request<'a, S> {
     /// issue the external request by consuming the bridge request and
     /// returning a [Response](struct.Response.html)
     #[cfg(feature = "blocking")]
-    pub fn send(self) -> BridgeRsResult<Response> {
+    pub fn send(self) -> PrimaBridgeResult<Response> {
         let request = self.get_request_type();
 
         let request_builder = self
@@ -86,17 +86,20 @@ impl<'a, S: Serialize> Request<'a, S> {
         let response = request_builder
             .body(request.body_as_string()?)
             .send()
-            .map_err(|e| BridgeRsError::HttpError {
+            .map_err(|e| PrimaBridgeError::HttpError {
                 url: self.get_url(),
                 source: e,
             })?;
         let status_code = response.status();
         if !status_code.is_success() {
-            return Err(BridgeRsError::WrongStatusCode(self.get_url(), status_code));
+            return Err(PrimaBridgeError::WrongStatusCode(
+                self.get_url(),
+                status_code,
+            ));
         }
         let response_headers = response.headers().clone();
 
-        let response_body = response.text().map_err(|e| BridgeRsError::HttpError {
+        let response_body = response.text().map_err(|e| PrimaBridgeError::HttpError {
             source: e,
             url: self.get_url(),
         })?;
@@ -120,7 +123,7 @@ impl<'a, S: Serialize> Request<'a, S> {
     }
 
     #[cfg(not(feature = "blocking"))]
-    pub async fn send(self) -> BridgeRsResult<Response> {
+    pub async fn send(self) -> PrimaBridgeResult<Response> {
         use futures_util::future::TryFutureExt;
         let request_id = self.get_request_type().id();
 
@@ -147,7 +150,7 @@ impl<'a, S: Serialize> Request<'a, S> {
         let response = request_builder
             .body(body_as_string)
             .send()
-            .map_err(|e| BridgeRsError::HttpError {
+            .map_err(|e| PrimaBridgeError::HttpError {
                 url: self.get_url(),
                 source: e,
             })
@@ -155,14 +158,17 @@ impl<'a, S: Serialize> Request<'a, S> {
 
         let status_code = response.status();
         if !status_code.is_success() {
-            return Err(BridgeRsError::WrongStatusCode(self.get_url(), status_code));
+            return Err(PrimaBridgeError::WrongStatusCode(
+                self.get_url(),
+                status_code,
+            ));
         }
 
         let response_headers = response.headers().clone();
 
         let response_body = response
             .text()
-            .map_err(|e| BridgeRsError::HttpError {
+            .map_err(|e| PrimaBridgeError::HttpError {
                 source: e,
                 url: self.get_url(),
             })
@@ -271,7 +277,7 @@ impl<S: Serialize> RequestType<S> {
         }
     }
 
-    pub fn body_as_string(&self) -> BridgeRsResult<String> {
+    pub fn body_as_string(&self) -> PrimaBridgeResult<String> {
         match self {
             RequestType::GraphQL(request) => Ok(serde_json::to_string(&request.body)?),
             RequestType::Rest(request) => Ok(serde_json::to_string(&request.body)?),

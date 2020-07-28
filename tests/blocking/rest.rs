@@ -81,10 +81,10 @@ fn unserializable_response() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
     let body: Option<String> = None;
 
-    let result: BridgeRsResult<Response> =
+    let result: PrimaBridgeResult<Response> =
         bridge.request(RequestType::rest(body, Method::GET)).send();
     assert!(result.is_ok());
-    let result: BridgeRsResult<Data> = result?.get_data(&["some_strange_selector"]);
+    let result: PrimaBridgeResult<Data> = result?.get_data(&["some_strange_selector"]);
     assert!(result.is_err());
     let error_str = result.err().map(|e| e.to_string()).unwrap();
     assert!(error_str.contains("the data for key `some_strange_selector`"));
@@ -97,7 +97,7 @@ fn wrong_status_code() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(400, "{\"hello\": \"world!\"}");
     let body: Option<String> = None;
 
-    let result: BridgeRsResult<Response> =
+    let result: PrimaBridgeResult<Response> =
         bridge.request(RequestType::rest(body, Method::GET)).send();
 
     assert!(result.is_err());
@@ -112,10 +112,10 @@ fn response_body_not_deserializable() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(201, "{\"hello\": \"worl______________}");
     let body: Option<String> = None;
 
-    let result: BridgeRsResult<Response> =
+    let result: PrimaBridgeResult<Response> =
         bridge.request(RequestType::rest(body, Method::GET)).send();
     assert!(result.is_ok());
-    let result: BridgeRsResult<Data> = result?.get_data(&["hello"]);
+    let result: PrimaBridgeResult<Data> = result?.get_data(&["hello"]);
     assert!(result.is_err());
     //let error_str = result.err().map(|e| e.to_string()).unwrap();
     assert_eq!(
@@ -133,7 +133,7 @@ fn response_with_empty_body() -> Result<(), Box<dyn Error>> {
 
     let result = bridge.request(RequestType::rest(body, Method::GET)).send();
     assert!(result.is_ok());
-    let result: BridgeRsResult<Data> = result?.get_data(&["hello"]);
+    let result: PrimaBridgeResult<Data> = result?.get_data(&["hello"]);
     assert!(result.is_err());
     assert_eq!(
         result.err().map(|e| e.to_string()),
