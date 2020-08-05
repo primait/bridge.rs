@@ -101,7 +101,7 @@ impl<'a, S: Serialize> Request<'a, S> {
                 source: e,
             })?;
         let status_code = response.status();
-        if !status_code.is_success() && !self.ignore_status_code {
+        if !self.ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(
                 self.get_url(),
                 status_code,
@@ -167,7 +167,7 @@ impl<'a, S: Serialize> Request<'a, S> {
             .await?;
 
         let status_code = response.status();
-        if !status_code.is_success() && !self.ignore_status_code {
+        if !self.ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(
                 self.get_url(),
                 status_code,
