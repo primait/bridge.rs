@@ -13,8 +13,8 @@ struct Person {
     name: String,
 }
 
-#[test]
-fn simple_request() -> Result<(), Box<dyn Error>> {
+#[tokio::test]
+async fn simple_request() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
     let (_m, bridge) = create_gql_bridge(
         200,
@@ -25,33 +25,8 @@ fn simple_request() -> Result<(), Box<dyn Error>> {
 
     let result: Person = bridge
         .request(RequestType::graphql(query, variables))
-        .send()?
-        .get_data(&["person"])?;
-
-    assert_eq!(
-        Person {
-            name: "Pippo".to_string()
-        },
-        result
-    );
-
-    Ok(())
-}
-
-#[test]
-fn simple_request_ignoring_status_code() -> Result<(), Box<dyn Error>> {
-    let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(
-        400,
-        query,
-        "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
-    );
-    let variables: Option<String> = None;
-
-    let result: Person = bridge
-        .request(RequestType::graphql(query, variables))
-        .ignore_status_code()
-        .send()?
+        .send()
+        .await?
         .get_data(&["person"])?;
 
     assert_eq!(

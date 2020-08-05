@@ -90,3 +90,20 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(403, "{\"hello\": \"world!\"}");
+    let body: Option<String> = None;
+
+    let result: String = bridge
+        .request(RequestType::rest(body, Method::GET))
+        .ignore_status_code()
+        .send()
+        .await?
+        .get_data(&["hello"])?;
+
+    assert_eq!("world!", result.as_str());
+
+    Ok(())
+}

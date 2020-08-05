@@ -171,3 +171,40 @@ fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
+
+#[test]
+fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(400, "{\"hello\": \"world!\"}");
+    let body: Option<String> = None;
+
+    let result: String = bridge
+        .request(RequestType::rest(body, Method::GET))
+        .ignore_status_code()
+        .send()?
+        .get_data(&["hello"])?;
+
+    assert_eq!("world!", result.as_str());
+
+    Ok(())
+}
+
+#[test]
+fn simple_request_with_wrong_status_code_and_wrong_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(400, "{\"hello\": \"worl______________}");
+    let body: Option<String> = None;
+
+    let result: PrimaBridgeResult<Response> = bridge
+        .request(RequestType::rest(body, Method::GET))
+        .ignore_status_code()
+        .send();
+    assert!(result.is_ok());
+    let result: PrimaBridgeResult<Data> = result?.get_data(&["hello"]);
+    assert!(result.is_err());
+    //let error_str = result.err().map(|e| e.to_string()).unwrap();
+    assert_eq!(
+        result.err().map(|e| e.to_string()),
+        Some("unserializable body. response status code: 400 Bad Request, error: EOF while parsing a string at line 1 column 30".to_string())
+    );
+
+    Ok(())
+}

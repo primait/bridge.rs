@@ -22,6 +22,7 @@ pub struct Request<'a, S: Serialize> {
     custom_headers: Vec<(HeaderName, HeaderValue)>,
     path: Option<&'a str>,
     query_pairs: Vec<(&'a str, &'a str)>,
+    ignore_status_code: bool,
 }
 
 impl<'a, S: Serialize> Request<'a, S> {
@@ -33,6 +34,7 @@ impl<'a, S: Serialize> Request<'a, S> {
             custom_headers: vec![],
             path: None,
             query_pairs: vec![],
+            ignore_status_code: false,
         }
     }
 
@@ -58,6 +60,14 @@ impl<'a, S: Serialize> Request<'a, S> {
         query_pairs.push((name, value));
         Self {
             query_pairs,
+            ..self
+        }
+    }
+
+    /// try to deserialize body even if the status code is not successful
+    pub fn ignore_status_code(self) -> Self {
+        Self {
+            ignore_status_code: true,
             ..self
         }
     }
@@ -91,7 +101,7 @@ impl<'a, S: Serialize> Request<'a, S> {
                 source: e,
             })?;
         let status_code = response.status();
-        if !status_code.is_success() {
+        if !self.ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(
                 self.get_url(),
                 status_code,
@@ -157,7 +167,7 @@ impl<'a, S: Serialize> Request<'a, S> {
             .await?;
 
         let status_code = response.status();
-        if !status_code.is_success() {
+        if !self.ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(
                 self.get_url(),
                 status_code,
