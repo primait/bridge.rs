@@ -10,16 +10,19 @@ use reqwest::{
     Method, Url,
 };
 use serde::Serialize;
+use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::prelude::*;
 
 /// The Request struct contains all the data to forge a request.
+#[derive(Debug)]
 pub struct Request<'a, S: Serialize> {
     bridge: &'a Bridge,
     request_type: RequestType<S>,
     custom_headers: Vec<(HeaderName, HeaderValue)>,
+    tracing_headers: Option<HashMap<String, String>>,
     path: Option<&'a str>,
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
@@ -32,6 +35,7 @@ impl<'a, S: Serialize> Request<'a, S> {
             bridge,
             request_type,
             custom_headers: vec![],
+            tracing_headers: None,
             path: None,
             query_pairs: vec![],
             ignore_status_code: false,
@@ -72,6 +76,20 @@ impl<'a, S: Serialize> Request<'a, S> {
         }
     }
 
+    #[cfg(feature = "tracing_opentelemetry")]
+    pub fn with_tracing_context(self, ctx: &opentelemetry::api::Context) -> Self {
+        use opentelemetry::api::context::propagation::text_propagator::HttpTextFormat;
+
+        let mut tracing_headers: HashMap<String, String> = HashMap::new();
+        let propagator = opentelemetry::api::TraceContextPropagator::new();
+        propagator.inject_context(ctx, &mut tracing_headers);
+        dbg!(&tracing_headers);
+        Self {
+            tracing_headers: Some(tracing_headers),
+            ..self
+        }
+    }
+
     /// issue the external request by consuming the bridge request and
     /// returning a [Response](struct.Response.html)
     #[cfg(feature = "blocking")]
@@ -86,8 +104,12 @@ impl<'a, S: Serialize> Request<'a, S> {
                 HeaderName::from_static("x-request-id"),
                 &request.id().to_string(),
             );
-        let request_builder = self
-            .custom_headers()
+
+        let mut additional_headers = vec![];
+        additional_headers.append(&mut self.custom_headers().to_vec());
+        additional_headers.append(&mut self.tracing_headers().to_vec());
+        dbg!(&additional_headers);
+        let request_builder = additional_headers
             .iter()
             .fold(request_builder, |request, (name, value)| {
                 request.header(name, value)
@@ -148,8 +170,10 @@ impl<'a, S: Serialize> Request<'a, S> {
                 HeaderName::from_static("x-request-id"),
                 &request_id.to_string(),
             );
-        let request_builder = self
-            .custom_headers()
+        let mut additional_headers = vec![];
+        additional_headers.append(&mut self.custom_headers().to_vec());
+        additional_headers.append(&mut self.tracing_headers().to_vec());
+        let request_builder = additional_headers
             .iter()
             .fold(request_builder, |request, (name, value)| {
                 request.header(name, value)
@@ -213,6 +237,25 @@ impl<'a, S: Serialize> Request<'a, S> {
 
     fn custom_headers(&self) -> &[(HeaderName, HeaderValue)] {
         &self.custom_headers
+    }
+
+    fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
+        match &self.tracing_headers {
+            None => vec![],
+            Some(tracing_headers) => tracing_headers
+                .iter()
+                .flat_map(|(name, value)| {
+                    let header_name = HeaderName::from_bytes(name.as_bytes());
+                    let header_value = HeaderValue::from_bytes(value.as_bytes());
+                    match (header_name, header_value) {
+                        (Ok(valid_header_name), Ok(valid_header_value)) => {
+                            vec![(valid_header_name, valid_header_value)]
+                        }
+                        _ => vec![],
+                    }
+                })
+                .collect(),
+        }
     }
 
     fn get_path(&self) -> Option<&str> {
