@@ -12,7 +12,7 @@ readme = "README.md"
 default = ["async", "tracing_opentelemetry"]
 blocking = ["reqwest/blocking"]
 async = ["reqwest", "futures", "futures-util", "tokio", "tokio-test"]
-tracing_opentelemetry = ["opentelemetry"]
+tracing_opentelemetry = ["opentelemetry", "tracing", "tracing-opentelemetry"]
 
 [dependencies]
 reqwest = { version = "0.10.6", features = ["json", "blocking"], optional = true }
@@ -25,6 +25,7 @@ futures-util = { version = "0.3.5", optional = true }
 tokio = { version = "0.2", features = ["macros"], optional = true }
 tokio-test = { version = "0.2", optional = true }
 opentelemetry = { version = "0.8.0", optional = true }
-
+tracing = { version = "0.1.19", optional = true }
+tracing-opentelemetry = { version = "0.7.0", optional = true }
 [dev-dependencies]
 mockito = "0.25.2"

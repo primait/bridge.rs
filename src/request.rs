@@ -22,7 +22,6 @@ pub struct Request<'a, S: Serialize> {
     bridge: &'a Bridge,
     request_type: RequestType<S>,
     custom_headers: Vec<(HeaderName, HeaderValue)>,
-    tracing_headers: Option<HashMap<String, String>>,
     path: Option<&'a str>,
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
@@ -35,7 +34,6 @@ impl<'a, S: Serialize> Request<'a, S> {
             bridge,
             request_type,
             custom_headers: vec![],
-            tracing_headers: None,
             path: None,
             query_pairs: vec![],
             ignore_status_code: false,
@@ -72,20 +70,6 @@ impl<'a, S: Serialize> Request<'a, S> {
     pub fn ignore_status_code(self) -> Self {
         Self {
             ignore_status_code: true,
-            ..self
-        }
-    }
-
-    #[cfg(feature = "tracing_opentelemetry")]
-    pub fn with_tracing_context(self, ctx: &opentelemetry::api::Context) -> Self {
-        use opentelemetry::api::context::propagation::text_propagator::HttpTextFormat;
-
-        let mut tracing_headers: HashMap<String, String> = HashMap::new();
-        let propagator = opentelemetry::api::TraceContextPropagator::new();
-        propagator.inject_context(ctx, &mut tracing_headers);
-        dbg!(&tracing_headers);
-        Self {
-            tracing_headers: Some(tracing_headers),
             ..self
         }
     }
@@ -240,22 +224,27 @@ impl<'a, S: Serialize> Request<'a, S> {
     }
 
     fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
-        match &self.tracing_headers {
-            None => vec![],
-            Some(tracing_headers) => tracing_headers
-                .iter()
-                .flat_map(|(name, value)| {
-                    let header_name = HeaderName::from_bytes(name.as_bytes());
-                    let header_value = HeaderValue::from_bytes(value.as_bytes());
-                    match (header_name, header_value) {
-                        (Ok(valid_header_name), Ok(valid_header_value)) => {
-                            vec![(valid_header_name, valid_header_value)]
-                        }
-                        _ => vec![],
+        use opentelemetry::api::HttpTextFormat;
+        use tracing_opentelemetry::OpenTelemetrySpanExt;
+
+        let context = tracing::Span::current().context();
+        let mut tracing_headers: HashMap<String, String> = HashMap::new();
+        let extractor = opentelemetry::api::TraceContextPropagator::new();
+        extractor.inject_context(&context, &mut tracing_headers);
+
+        tracing_headers
+            .iter()
+            .flat_map(|(name, value)| {
+                let header_name = HeaderName::from_bytes(name.as_bytes());
+                let header_value = HeaderValue::from_bytes(value.as_bytes());
+                match (header_name, header_value) {
+                    (Ok(valid_header_name), Ok(valid_header_value)) => {
+                        vec![(valid_header_name, valid_header_value)]
                     }
-                })
-                .collect(),
-        }
+                    _ => vec![],
+                }
+            })
+            .collect()
     }
 
     fn get_path(&self) -> Option<&str> {
