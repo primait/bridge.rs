@@ -223,6 +223,7 @@ impl<'a, S: Serialize> Request<'a, S> {
         &self.custom_headers
     }
 
+    #[cfg(feature = "tracing_opentelemetry")]
     fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
         use opentelemetry::api::HttpTextFormat;
         use tracing_opentelemetry::OpenTelemetrySpanExt;
@@ -245,6 +246,11 @@ impl<'a, S: Serialize> Request<'a, S> {
                 }
             })
             .collect()
+    }
+
+    #[cfg(not(feature = "tracing_opentelemetry"))]
+    fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
+        vec![]
     }
 
     fn get_path(&self) -> Option<&str> {
