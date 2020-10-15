@@ -19,11 +19,13 @@ mod errors;
 pub mod prelude;
 mod request;
 mod response;
+mod v2;
 
 pub use self::{
     request::{Request, RequestType},
     response::Response,
 };
+use crate::v2::{GraphQLRequest, RestRequest, SendableRequest};
 use reqwest::Url;
 use serde::Serialize;
 
@@ -51,5 +53,13 @@ impl Bridge {
 
     pub fn request<S: Serialize>(&self, request_type: RequestType<S>) -> Request<S> {
         Request::new(&self, request_type)
+    }
+
+    pub fn rest_request<'a>(&'a self) -> impl SendableRequest + 'a {
+        RestRequest::new(&self)
+    }
+
+    pub fn graphql_request(&self) -> GraphQLRequest {
+        GraphQLRequest::new(&self)
     }
 }

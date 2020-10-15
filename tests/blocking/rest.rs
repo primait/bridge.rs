@@ -27,6 +27,23 @@ fn simple_request() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn simple_request_v2() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let body: Option<String> = None;
+
+    let result: String = bridge
+        .rest_request()
+        .body(body)?
+        .method(Method::GET)
+        .send()?
+        .get_data(&["hello"])?;
+
+    assert_eq!("world!", result.as_str());
+
+    Ok(())
+}
+
+#[test]
 fn simple_request_with_custom_path() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge_with_path(200, "{\"hello\": \"world!\"}", "/test_path");
     let body: Option<String> = None;
