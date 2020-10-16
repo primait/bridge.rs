@@ -24,7 +24,8 @@ fn simple_request() -> Result<(), Box<dyn Error>> {
     let variables: Option<String> = None;
 
     let result: Person = bridge
-        .request(RequestType::graphql(query, variables))
+        .graphql_request((query, variables))?
+        //.request(RequestType::graphql(query, variables))
         .send()?
         .get_data(&["person"])?;
 
