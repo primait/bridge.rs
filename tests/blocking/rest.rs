@@ -15,8 +15,7 @@ struct Data {
 fn simple_request() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
 
-    let result: String = bridge
-        .rest_request()
+    let result: String = RestRequest::new(&bridge)
         .method(Method::GET)
         .send()?
         .get_data(&["hello"])?;
@@ -30,8 +29,7 @@ fn simple_request() -> Result<(), Box<dyn Error>> {
 fn simple_request_with_custom_path() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge_with_path(200, "{\"hello\": \"world!\"}", "/test_path");
 
-    let result: String = bridge
-        .rest_request()
+    let result: String = RestRequest::new(&bridge)
         .to("test_path")
         .send()?
         .get_data(&["hello"])?;
@@ -46,8 +44,7 @@ fn simple_request_with_custom_path_and_base_path() -> Result<(), Box<dyn Error>>
     let (_m, bridge) =
         create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path");
 
-    let result: String = bridge
-        .rest_request()
+    let result: String = RestRequest::new(&bridge)
         .to("test_path")
         .send()?
         .get_data(&["hello"])?;
@@ -62,8 +59,7 @@ fn simple_request_with_custom_sub_path() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) =
         create_bridge_with_path(200, "{\"hello\": \"world!\"}", "/test_path/test_subpath");
 
-    let result: String = bridge
-        .rest_request()
+    let result: String = RestRequest::new(&bridge)
         .to("/test_path/test_subpath")
         .send()?
         .get_data(&["hello"])?;
@@ -77,7 +73,7 @@ fn simple_request_with_custom_sub_path() -> Result<(), Box<dyn Error>> {
 fn unserializable_response() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
 
-    let result: PrimaBridgeResult<Response> = bridge.rest_request().send();
+    let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send();
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["some_strange_selector"]);
     assert!(result.is_err());
@@ -106,7 +102,7 @@ fn wrong_status_code() -> Result<(), Box<dyn Error>> {
 fn response_body_not_deserializable() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(201, "{\"hello\": \"worl______________}");
 
-    let result: PrimaBridgeResult<Response> = bridge.rest_request().send();
+    let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send();
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["hello"]);
     assert!(result.is_err());
@@ -123,7 +119,7 @@ fn response_body_not_deserializable() -> Result<(), Box<dyn Error>> {
 fn response_with_empty_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(204, "");
 
-    let result = bridge.rest_request().send();
+    let result = RestRequest::new(&bridge).send();
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["hello"]);
     assert!(result.is_err());
@@ -143,8 +139,7 @@ fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) =
         create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
 
-    let body: Option<String> = None;
-    let response = bridge.rest_request().to(path).send()?;
+    let response = RestRequest::new(&bridge).to(path).send()?;
 
     let custom = response
         .headers()
@@ -165,8 +160,7 @@ fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(400, "{\"hello\": \"world!\"}");
 
-    let result: String = bridge
-        .rest_request()
+    let result: String = RestRequest::new(&bridge)
         .ignore_status_code()
         .send()?
         .get_data(&["hello"])?;
@@ -180,7 +174,9 @@ fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
 fn simple_request_with_wrong_status_code_and_wrong_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(400, "{\"hello\": \"worl______________}");
 
-    let result: PrimaBridgeResult<Response> = bridge.rest_request().ignore_status_code().send();
+    let request = RestRequest::new(&bridge).ignore_status_code();
+
+    let result = request.send();
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["hello"]);
     assert!(result.is_err());

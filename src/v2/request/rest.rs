@@ -1,11 +1,8 @@
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::v2::{Body, DeliverableRequest, RequestType};
-use crate::{Bridge, Response};
-#[cfg(feature = "blocking")]
-use reqwest::blocking::Client as ReqwestClient;
+use crate::Bridge;
+use async_trait::async_trait;
 use reqwest::header::{HeaderName, HeaderValue};
-#[cfg(not(feature = "blocking"))]
-use reqwest::Client as ReqwestClient;
 use reqwest::{Method, Url};
 use serde::Serialize;
 use std::convert::TryInto;
@@ -65,6 +62,7 @@ impl<'a> RestRequest<'a> {
     }
 }
 
+#[async_trait]
 impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
     fn raw_body(
         self,

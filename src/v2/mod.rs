@@ -2,17 +2,27 @@ mod request;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
+use async_trait::async_trait;
 pub use request::*;
 use reqwest::header::{HeaderName, HeaderValue};
-use reqwest::{Method, StatusCode, Url};
+use reqwest::{Method, Url};
 use serde::Serialize;
 use std::collections::HashMap;
 use std::convert::{TryFrom, TryInto};
+use std::ops::Deref;
 use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct Body {
     inner: Vec<u8>,
+}
+
+impl Deref for Body {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        self.inner.as_slice()
+    }
 }
 
 impl TryFrom<Body> for Vec<u8> {
@@ -66,11 +76,12 @@ impl TryFrom<Vec<u8>> for Body {
     }
 }
 
-enum RequestType {
+pub enum RequestType {
     Rest,
     GraphQL,
 }
 
+#[async_trait]
 pub trait DeliverableRequest<'a>: Sized + 'a {
     fn raw_body(
         self,
@@ -93,7 +104,8 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     fn get_body(&self) -> PrimaBridgeResult<Vec<u8>>;
     fn get_request_type(&self) -> RequestType;
 
-    fn send(&self) -> PrimaBridgeResult<Response> {
+    #[cfg(feature = "blocking")]
+    fn send(&'a self) -> PrimaBridgeResult<Response> {
         let request_builder = self
             .get_bridge()
             .client
@@ -112,6 +124,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                 request.header(name, value)
             });
 
+        dbg!(self.get_body()?);
         let response = request_builder.body(self.get_body()?).send().map_err(|e| {
             PrimaBridgeError::HttpError {
                 url: self.get_url(),
@@ -149,9 +162,77 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         }
     }
 
+    #[cfg(not(feature = "blocking"))]
+    async fn send(&'a self) -> PrimaBridgeResult<Response> {
+        use futures_util::future::TryFutureExt;
+        use reqwest::header::CONTENT_TYPE;
+        let request_id = self.get_id();
+
+        let request_builder = self
+            .get_bridge()
+            .client
+            .request(self.get_method(), self.get_url().as_str())
+            .header(CONTENT_TYPE, "application/json")
+            .header(
+                HeaderName::from_static("x-request-id"),
+                &request_id.to_string(),
+            );
+        let mut additional_headers = vec![];
+        additional_headers.append(&mut self.get_custom_headers().to_vec());
+        additional_headers.append(&mut self.tracing_headers().to_vec());
+        let request_builder = additional_headers
+            .iter()
+            .fold(request_builder, |request, (name, value)| {
+                request.header(name, value)
+            });
+
+        let response = request_builder
+            .body(self.get_body()?)
+            .send()
+            .map_err(|e| PrimaBridgeError::HttpError {
+                url: self.get_url(),
+                source: e,
+            })
+            .await?;
+
+        let status_code = response.status();
+        if !self.get_ignore_status_code() && !status_code.is_success() {
+            return Err(PrimaBridgeError::WrongStatusCode(
+                self.get_url(),
+                status_code,
+            ));
+        }
+
+        let response_headers = response.headers().clone();
+
+        let response_body = response
+            .text()
+            .map_err(|e| PrimaBridgeError::HttpError {
+                source: e,
+                url: self.get_url(),
+            })
+            .await?;
+
+        match self.get_request_type() {
+            RequestType::Rest => Ok(Response::graphql(
+                self.get_url(),
+                response_body,
+                status_code,
+                response_headers,
+                request_id,
+            )),
+            RequestType::GraphQL => Ok(Response::rest(
+                self.get_url(),
+                response_body,
+                status_code,
+                response_headers,
+                request_id,
+            )),
+        }
+    }
+
     fn get_url(&self) -> Url {
         let mut final_endpoint = self.endpoint();
-        let path_segments = self.endpoint().path_segments();
         let path = self.get_path();
         let endpoint = match path {
             Some(path) => {

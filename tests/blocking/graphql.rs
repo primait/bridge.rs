@@ -14,7 +14,7 @@ struct Person {
 }
 
 #[test]
-fn simple_request() -> Result<(), Box<dyn Error>> {
+fn simple_request_ok() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
     let (_m, bridge) = create_gql_bridge(
         200,
@@ -23,9 +23,7 @@ fn simple_request() -> Result<(), Box<dyn Error>> {
     );
     let variables: Option<String> = None;
 
-    let result: Person = bridge
-        .graphql_request((query, variables))?
-        //.request(RequestType::graphql(query, variables))
+    let result: Person = GraphQLRequest::new(&bridge, (query, variables))?
         .send()?
         .get_data(&["person"])?;
 

@@ -1,7 +1,8 @@
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::request::GraphQLBody;
 use crate::v2::{Body, DeliverableRequest, RequestType};
-use crate::{Bridge, Response};
+use crate::Bridge;
+use async_trait::async_trait;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::{Method, Url};
 use serde::Serialize;
@@ -22,13 +23,14 @@ pub struct GraphQLRequest<'a> {
 impl<'a> GraphQLRequest<'a> {
     pub fn new<S: Serialize>(
         bridge: &'a Bridge,
-        graphql_body: GraphQLBody<S>,
+        graphql_body: impl Into<GraphQLBody<S>>,
     ) -> PrimaBridgeResult<Self> {
+        //let body: Body = serde_json::to_string(&graphql_body.into())?.try_into()?;
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
-            body: Some(serde_json::to_string(&graphql_body)?.try_into()?),
-            method: Default::default(), // GET
+            body: Some(serde_json::to_string(&graphql_body.into())?.try_into()?),
+            method: Method::POST,
             path: Default::default(),
             query_pairs: Default::default(),
             ignore_status_code: Default::default(),
@@ -37,11 +39,8 @@ impl<'a> GraphQLRequest<'a> {
     }
 }
 
+#[async_trait]
 impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
-    fn send(&self) -> PrimaBridgeResult<Response> {
-        unimplemented!()
-    }
-
     fn raw_body(
         self,
         body: impl TryInto<Body, Error = PrimaBridgeError>,
@@ -84,6 +83,14 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         }
     }
 
+    fn get_id(&self) -> Uuid {
+        self.id
+    }
+
+    fn get_bridge(&self) -> &Bridge {
+        self.bridge
+    }
+
     fn get_path(&self) -> Option<&str> {
         self.path
     }
@@ -100,14 +107,6 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         self.ignore_status_code
     }
 
-    fn get_id(&self) -> Uuid {
-        self.id
-    }
-
-    fn get_bridge(&self) -> &Bridge {
-        self.bridge
-    }
-
     fn get_method(&self) -> Method {
         self.method.clone()
     }
@@ -117,7 +116,10 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
     }
 
     fn get_body(&self) -> PrimaBridgeResult<Vec<u8>> {
-        unimplemented!()
+        self.body
+            .clone()
+            .map(TryInto::try_into)
+            .unwrap_or_else(|| Ok(vec![]))
     }
 
     fn get_request_type(&self) -> RequestType {

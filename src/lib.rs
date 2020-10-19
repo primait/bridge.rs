@@ -25,9 +25,6 @@ pub use self::{
     request::{Request, RequestType},
     response::Response,
 };
-use crate::errors::PrimaBridgeResult;
-use crate::request::GraphQLBody;
-use crate::v2::{DeliverableRequest, GraphQLRequest, RestRequest};
 use reqwest::Url;
 use serde::Serialize;
 
@@ -55,16 +52,5 @@ impl Bridge {
 
     pub fn request<S: Serialize>(&self, request_type: RequestType<S>) -> Request<S> {
         Request::new(&self, request_type)
-    }
-
-    pub fn rest_request<'a>(&'a self) -> impl DeliverableRequest + 'a {
-        RestRequest::new(&self)
-    }
-
-    pub fn graphql_request<T: Serialize>(
-        &self,
-        graphql_body: impl Into<GraphQLBody<T>>,
-    ) -> PrimaBridgeResult<GraphQLRequest> {
-        GraphQLRequest::new(&self, graphql_body.into())
     }
 }
