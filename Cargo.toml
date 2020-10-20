@@ -1,6 +1,6 @@
 [package]
 name = "prima_bridge"
-version = "0.1.7"
+version = "0.2.0"
 authors = ["Matteo Giachino <matteog@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -31,3 +31,4 @@ async-trait = "0.1.41"
 
 [dev-dependencies]
 mockito = "0.25.2"
+tracing-subscriber = "0.2.13"

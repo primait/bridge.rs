@@ -47,8 +47,7 @@ fn simple_request_ignoring_status_code() -> Result<(), Box<dyn Error>> {
     );
     let variables: Option<String> = None;
 
-    let result: Person = bridge
-        .request(RequestType::graphql(query, variables))
+    let result: Person = GraphQLRequest::new(&bridge, (query, variables))?
         .ignore_status_code()
         .send()?
         .get_data(&["person"])?;

@@ -1,80 +1,17 @@
+mod body;
 mod request;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
 use async_trait::async_trait;
+use body::Body;
 pub use request::*;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use std::collections::HashMap;
-use std::convert::{TryFrom, TryInto};
-use std::ops::Deref;
+use std::convert::TryInto;
 use uuid::Uuid;
-
-#[derive(Clone)]
-pub struct Body {
-    inner: Vec<u8>,
-}
-
-impl Deref for Body {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        self.inner.as_slice()
-    }
-}
-
-impl TryFrom<Body> for Vec<u8> {
-    type Error = PrimaBridgeError;
-
-    fn try_from(value: Body) -> Result<Self, Self::Error> {
-        Ok(value.inner)
-    }
-}
-
-impl Default for Body {
-    fn default() -> Self {
-        Self { inner: vec![] }
-    }
-}
-
-impl From<Body> for reqwest::blocking::Body {
-    fn from(body: Body) -> Self {
-        body.into()
-    }
-}
-
-impl TryFrom<String> for Body {
-    type Error = PrimaBridgeError;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Ok(Self {
-            inner: value.into_bytes(),
-        })
-    }
-}
-
-impl TryFrom<Option<String>> for Body {
-    type Error = PrimaBridgeError;
-
-    fn try_from(value: Option<String>) -> Result<Self, Self::Error> {
-        match value {
-            None => Ok(Body::default()),
-            Some(val) => Ok(Self {
-                inner: val.into_bytes(),
-            }),
-        }
-    }
-}
-
-impl TryFrom<Vec<u8>> for Body {
-    type Error = PrimaBridgeError;
-
-    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        Ok(Self { inner: value })
-    }
-}
 
 pub enum RequestType {
     Rest,
@@ -83,14 +20,27 @@ pub enum RequestType {
 
 #[async_trait]
 pub trait DeliverableRequest<'a>: Sized + 'a {
+    /// sets the raw body for the request
+    /// it will get delivered in the request as is.
     fn raw_body(
         self,
         body: impl TryInto<Body, Error = PrimaBridgeError>,
     ) -> PrimaBridgeResult<Self>;
+
+    /// sets a serializable body for the request
     fn json_body<B: Serialize>(self, body: B) -> PrimaBridgeResult<Self>;
+
+    /// sets request method. Defaults to GET.
     fn method(self, method: Method) -> Self;
+
+    /// sets the destination path (relative to the url defined in the bridge) for the request
     fn to(self, path: &'a str) -> Self;
+
+    /// ignore the status code, and parse the results even if the response has a wrong status code.
+    /// This is useful when you are dealing with an api that return errors with a not 2XX status codes.
     fn ignore_status_code(self) -> Self;
+
+    /// add a custom header to the request
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self;
 
     fn get_id(&self) -> Uuid;
@@ -101,7 +51,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     fn get_ignore_status_code(&self) -> bool;
     fn get_method(&self) -> Method;
     fn get_custom_headers(&self) -> &[(HeaderName, HeaderValue)];
-    fn get_body(&self) -> PrimaBridgeResult<Vec<u8>>;
+    fn get_body(&self) -> Vec<u8>;
     fn get_request_type(&self) -> RequestType;
 
     #[cfg(feature = "blocking")]
@@ -117,15 +67,14 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
         let mut additional_headers = vec![];
         additional_headers.append(&mut self.get_custom_headers().to_vec());
-        additional_headers.append(&mut self.tracing_headers().to_vec());
+        additional_headers.append(&mut dbg!(self.tracing_headers().to_vec()));
         let request_builder = additional_headers
             .iter()
             .fold(request_builder, |request, (name, value)| {
                 request.header(name, value)
             });
 
-        dbg!(self.get_body()?);
-        let response = request_builder.body(self.get_body()?).send().map_err(|e| {
+        let response = request_builder.body(self.get_body()).send().map_err(|e| {
             PrimaBridgeError::HttpError {
                 url: self.get_url(),
                 source: e,
@@ -187,7 +136,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             });
 
         let response = request_builder
-            .body(self.get_body()?)
+            .body(self.get_body())
             .send()
             .map_err(|e| PrimaBridgeError::HttpError {
                 url: self.get_url(),
@@ -214,14 +163,14 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .await?;
 
         match self.get_request_type() {
-            RequestType::Rest => Ok(Response::graphql(
+            RequestType::Rest => Ok(Response::rest(
                 self.get_url(),
                 response_body,
                 status_code,
                 response_headers,
                 request_id,
             )),
-            RequestType::GraphQL => Ok(Response::rest(
+            RequestType::GraphQL => Ok(Response::graphql(
                 self.get_url(),
                 response_body,
                 status_code,

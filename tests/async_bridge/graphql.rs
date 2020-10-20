@@ -23,8 +23,7 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
     );
     let variables: Option<String> = None;
 
-    let result: Person = bridge
-        .request(RequestType::graphql(query, variables))
+    let result: Person = GraphQLRequest::new(&bridge, (query, variables))?
         .send()
         .await?
         .get_data(&["person"])?;

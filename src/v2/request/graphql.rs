@@ -25,7 +25,6 @@ impl<'a> GraphQLRequest<'a> {
         bridge: &'a Bridge,
         graphql_body: impl Into<GraphQLBody<S>>,
     ) -> PrimaBridgeResult<Self> {
-        //let body: Body = serde_json::to_string(&graphql_body.into())?.try_into()?;
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
@@ -115,11 +114,8 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         self.custom_headers.as_slice()
     }
 
-    fn get_body(&self) -> PrimaBridgeResult<Vec<u8>> {
-        self.body
-            .clone()
-            .map(TryInto::try_into)
-            .unwrap_or_else(|| Ok(vec![]))
+    fn get_body(&self) -> Vec<u8> {
+        self.body.clone().map(Into::into).unwrap_or_else(|| vec![])
     }
 
     fn get_request_type(&self) -> RequestType {

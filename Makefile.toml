@@ -11,6 +11,11 @@ command = "cargo"
 args = ["test"]
 dependencies = ["build"]
 
+[tasks.test-opentelemetry]
+command = "cargo"
+args = ["test", "--features", "opentelemetry"]
+dependencies = ["build"]
+
 [tasks.clean]
 command = "cargo"
 args = ["clean"]

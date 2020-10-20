@@ -86,10 +86,7 @@ fn unserializable_response() -> Result<(), Box<dyn Error>> {
 #[test]
 fn wrong_status_code() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(400, "{\"hello\": \"world!\"}");
-    let body: Option<String> = None;
-
-    let result: PrimaBridgeResult<Response> =
-        bridge.request(RequestType::rest(body, Method::GET)).send();
+    let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send();
 
     assert!(result.is_err());
     let error_str = result.err().map(|e| e.to_string()).unwrap();
@@ -186,5 +183,13 @@ fn simple_request_with_wrong_status_code_and_wrong_body() -> Result<(), Box<dyn 
         Some("unserializable body. response status code: 400 Bad Request, error: EOF while parsing a string at line 1 column 30".to_string())
     );
 
+    Ok(())
+}
+
+#[test]
+fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_body_matcher("abcde");
+    let result = RestRequest::new(&bridge).raw_body("abcde")?.send();
+    assert!(result.is_ok());
     Ok(())
 }

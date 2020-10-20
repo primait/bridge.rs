@@ -32,8 +32,11 @@ impl<'a> RestRequest<'a> {
             custom_headers: Default::default(),
         }
     }
+}
 
-    pub fn raw_body(
+#[async_trait]
+impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
+    fn raw_body(
         self,
         body: impl TryInto<Body, Error = PrimaBridgeError>,
     ) -> PrimaBridgeResult<Self> {
@@ -43,40 +46,15 @@ impl<'a> RestRequest<'a> {
         })
     }
 
-    pub fn json_body<B: Serialize>(self, body: B) -> PrimaBridgeResult<Self> {
+    fn json_body<B: Serialize>(self, body: B) -> PrimaBridgeResult<Self> {
         Ok(Self {
             body: Some(serde_json::to_string(&body)?.try_into()?),
             ..self
         })
     }
 
-    pub fn method(self, method: Method) -> Self {
-        Self { method, ..self }
-    }
-
-    pub fn get_body(&self) -> PrimaBridgeResult<Vec<u8>> {
-        self.body
-            .clone()
-            .map(TryInto::try_into)
-            .unwrap_or_else(|| Ok(vec![]))
-    }
-}
-
-#[async_trait]
-impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
-    fn raw_body(
-        self,
-        body: impl TryInto<Body, Error = PrimaBridgeError>,
-    ) -> PrimaBridgeResult<Self> {
-        self.raw_body(body)
-    }
-
-    fn json_body<B: Serialize>(self, body: B) -> PrimaBridgeResult<Self> {
-        self.json_body(body)
-    }
-
     fn method(self, method: Method) -> Self {
-        self.method(method)
+        Self { method, ..self }
     }
 
     fn to(self, path: &'a str) -> Self {
@@ -132,8 +110,8 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         self.custom_headers.as_slice()
     }
 
-    fn get_body(&self) -> PrimaBridgeResult<Vec<u8>> {
-        self.get_body()
+    fn get_body(&self) -> Vec<u8> {
+        self.body.clone().map(Into::into).unwrap_or_else(|| vec![])
     }
 
     fn get_request_type(&self) -> RequestType {
