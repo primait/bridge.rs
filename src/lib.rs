@@ -21,10 +21,8 @@ mod request;
 mod response;
 mod v2;
 
-pub use self::{
-    request::{Request, RequestType},
-    response::Response,
-};
+pub use self::{response::Response, v2::GraphQLRequest, v2::RestRequest};
+use crate::request::{Request, RequestType};
 use reqwest::Url;
 use serde::Serialize;
 

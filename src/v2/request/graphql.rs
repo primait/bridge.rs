@@ -9,6 +9,7 @@ use serde::Serialize;
 use std::convert::TryInto;
 use uuid::Uuid;
 
+/// The GraphQLRequest is a struct that represent a GraphQL request to be done with the [Bridge](./../struct.Bridge.html)
 pub struct GraphQLRequest<'a> {
     pub id: Uuid,
     bridge: &'a Bridge,
@@ -21,6 +22,7 @@ pub struct GraphQLRequest<'a> {
 }
 
 impl<'a> GraphQLRequest<'a> {
+    /// creates a new GraphQLRequest
     pub fn new<S: Serialize>(
         bridge: &'a Bridge,
         graphql_body: impl Into<GraphQLBody<S>>,
@@ -115,7 +117,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
     }
 
     fn get_body(&self) -> Vec<u8> {
-        self.body.clone().map(Into::into).unwrap_or_else(|| vec![])
+        self.body.clone().map(Into::into).unwrap_or_default()
     }
 
     fn get_request_type(&self) -> RequestType {

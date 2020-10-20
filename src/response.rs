@@ -25,6 +25,7 @@ pub struct Response {
 }
 
 impl Response {
+    #[doc(hidden)]
     pub fn rest(
         url: Url,
         response_body: String,
@@ -42,6 +43,7 @@ impl Response {
         }
     }
 
+    #[doc(hidden)]
     pub fn graphql(
         url: Url,
         response_body: String,
@@ -59,13 +61,17 @@ impl Response {
         }
     }
 
+    #[doc(hidden)]
     fn is_graphql(&self) -> bool {
         self.request_type == RequestType::GraphQL
     }
 
+    /// Returns an `HeaderMap` of response headers.
     pub fn headers(&self) -> &HeaderMap {
         &self.response_headers
     }
+
+    /// Returns data from the function.
     pub fn get_data<T>(self, response_extractor: &[&str]) -> PrimaBridgeResult<T>
     where
         for<'de> T: Deserialize<'de> + Debug,
@@ -83,6 +89,7 @@ impl Response {
         Ok(extract_inner_json(self.url, selectors, json_value)?)
     }
 
+    /// returns `true` if the response is successful
     pub fn is_ok(&self) -> bool {
         self.status_code.is_success()
     }

@@ -8,6 +8,7 @@ use serde::Serialize;
 use std::convert::TryInto;
 use uuid::Uuid;
 
+/// The RestRequest is a struct that represent a REST request to be done with the [Bridge](./../struct.Bridge.html)
 pub struct RestRequest<'a> {
     pub id: Uuid,
     pub bridge: &'a Bridge,
@@ -20,6 +21,7 @@ pub struct RestRequest<'a> {
 }
 
 impl<'a> RestRequest<'a> {
+    /// creates a new RestRequest
     pub fn new(bridge: &'a Bridge) -> Self {
         Self {
             id: Uuid::new_v4(),
@@ -111,7 +113,7 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
     }
 
     fn get_body(&self) -> Vec<u8> {
-        self.body.clone().map(Into::into).unwrap_or_else(|| vec![])
+        self.body.clone().map(Into::into).unwrap_or_default()
     }
 
     fn get_request_type(&self) -> RequestType {

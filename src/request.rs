@@ -304,27 +304,6 @@ pub struct GraphQLBody<T> {
     variables: Option<T>,
 }
 
-impl<T: Serialize> From<(&str, Option<T>)> for GraphQLBody<T> {
-    fn from((query, variables): (&str, Option<T>)) -> Self {
-        Self {
-            query: query.to_owned(),
-            variables,
-        }
-    }
-}
-
-impl<T: Serialize> From<(String, Option<T>)> for GraphQLBody<T> {
-    fn from((query, variables): (String, Option<T>)) -> Self {
-        (query.as_str(), variables).into()
-    }
-}
-
-impl<T: Serialize> From<(String, T)> for GraphQLBody<T> {
-    fn from((query, variables): (String, T)) -> Self {
-        (query.as_str(), Some(variables)).into()
-    }
-}
-
 #[derive(Debug)]
 pub struct Rest<S: Serialize> {
     request_id: Uuid,

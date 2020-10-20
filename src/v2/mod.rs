@@ -18,6 +18,7 @@ pub enum RequestType {
     GraphQL,
 }
 
+/// Represent a request that is ready to be delivered to the server
 #[async_trait]
 pub trait DeliverableRequest<'a>: Sized + 'a {
     /// sets the raw body for the request
