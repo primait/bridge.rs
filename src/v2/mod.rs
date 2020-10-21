@@ -68,7 +68,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
         let mut additional_headers = vec![];
         additional_headers.append(&mut self.get_custom_headers().to_vec());
-        additional_headers.append(&mut dbg!(self.tracing_headers().to_vec()));
+        additional_headers.append(&mut self.tracing_headers().to_vec());
         let request_builder = additional_headers
             .iter()
             .fold(request_builder, |request, (name, value)| {

@@ -92,7 +92,6 @@ impl<'a, S: Serialize> Request<'a, S> {
         let mut additional_headers = vec![];
         additional_headers.append(&mut self.custom_headers().to_vec());
         additional_headers.append(&mut self.tracing_headers().to_vec());
-        dbg!(&additional_headers);
         let request_builder = additional_headers
             .iter()
             .fold(request_builder, |request, (name, value)| {
