@@ -1,7 +1,7 @@
 use crate::errors::PrimaBridgeError;
 use std::convert::TryFrom;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Body {
     inner: Vec<u8>,
 }

@@ -1,11 +1,11 @@
 use std::error::Error;
 
-use serde::Deserialize;
-
 use crate::common::*;
 use prima_bridge::prelude::*;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 
-#[derive(Deserialize, Clone, Debug, PartialEq)]
+#[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
     hello: String,
 }
@@ -183,9 +183,20 @@ fn simple_request_with_wrong_status_code_and_wrong_body() -> Result<(), Box<dyn 
 }
 
 #[test]
-fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_body_matcher("abcde");
+fn request_with_custom_raw_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde");
     let result = RestRequest::new(&bridge).raw_body("abcde")?.send();
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[test]
+fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+    let data = Data {
+        hello: "world".to_string(),
+    };
+    let result = RestRequest::new(&bridge).json_body(&data)?.send();
     assert!(result.is_ok());
     Ok(())
 }

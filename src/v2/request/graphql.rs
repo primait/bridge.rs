@@ -52,9 +52,9 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         })
     }
 
-    fn json_body<B: Serialize>(self, body: B) -> PrimaBridgeResult<Self> {
+    fn json_body<B: Serialize>(self, body: &B) -> PrimaBridgeResult<Self> {
         Ok(Self {
-            body: Some(serde_json::to_string(&body)?.try_into()?),
+            body: Some(serde_json::to_string(body)?.try_into()?),
             ..self
         })
     }

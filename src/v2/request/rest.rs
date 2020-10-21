@@ -9,6 +9,7 @@ use std::convert::TryInto;
 use uuid::Uuid;
 
 /// The RestRequest is a struct that represent a REST request to be done with the [Bridge](./../struct.Bridge.html)
+#[derive(Debug)]
 pub struct RestRequest<'a> {
     id: Uuid,
     bridge: &'a Bridge,
@@ -48,9 +49,9 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         })
     }
 
-    fn json_body<B: Serialize>(self, body: B) -> PrimaBridgeResult<Self> {
+    fn json_body<B: Serialize>(self, body: &B) -> PrimaBridgeResult<Self> {
         Ok(Self {
-            body: Some(serde_json::to_string(&body)?.try_into()?),
+            body: Some(serde_json::to_string(body)?.try_into()?),
             ..self
         })
     }

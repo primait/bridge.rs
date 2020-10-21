@@ -29,7 +29,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     ) -> PrimaBridgeResult<Self>;
 
     /// sets a serializable body for the request
-    fn json_body<B: Serialize>(self, body: B) -> PrimaBridgeResult<Self>;
+    fn json_body<B: Serialize>(self, body: &B) -> PrimaBridgeResult<Self>;
 
     /// sets request method. Defaults to GET.
     fn method(self, method: Method) -> Self;

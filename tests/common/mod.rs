@@ -55,9 +55,21 @@ pub fn create_bridge_with_path_and_header(
     (mock, bridge)
 }
 
-pub fn create_bridge_with_body_matcher(body: &str) -> (Mock, Bridge) {
+pub fn create_bridge_with_raw_body_matcher(body: &str) -> (Mock, Bridge) {
     let mock = mock("GET", "/")
         .match_body(Matcher::Exact(body.to_owned()))
+        .with_status(200)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    (mock, bridge)
+}
+
+pub fn create_bridge_with_json_body_matcher(json: serde_json::Value) -> (Mock, Bridge) {
+    let mock = mock("GET", "/")
+        .match_body(Matcher::Json(json))
         .with_status(200)
         .create();
 

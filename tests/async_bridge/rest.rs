@@ -1,9 +1,10 @@
 use crate::common::*;
 use prima_bridge::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::error::Error;
 
-#[derive(Deserialize, Clone, Debug, PartialEq)]
+#[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
     hello: String,
 }
@@ -90,9 +91,20 @@ async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_body_matcher("abcde");
+    let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde");
 
     let result = RestRequest::new(&bridge).raw_body("abcde")?.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+    let data = Data {
+        hello: "world".to_string(),
+    };
+    let result = RestRequest::new(&bridge).json_body(&data)?.send().await;
     assert!(result.is_ok());
     Ok(())
 }
