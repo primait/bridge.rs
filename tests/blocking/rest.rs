@@ -1,6 +1,5 @@
 use std::error::Error;
 
-use reqwest::Method;
 use serde::Deserialize;
 
 use crate::common::*;
