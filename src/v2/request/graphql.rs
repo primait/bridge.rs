@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 /// The GraphQLRequest is a struct that represent a GraphQL request to be done with the [Bridge](./../struct.Bridge.html)
 pub struct GraphQLRequest<'a> {
-    pub id: Uuid,
+    id: Uuid,
     bridge: &'a Bridge,
     body: Option<Body>,
     method: Method,

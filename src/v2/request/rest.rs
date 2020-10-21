@@ -10,8 +10,8 @@ use uuid::Uuid;
 
 /// The RestRequest is a struct that represent a REST request to be done with the [Bridge](./../struct.Bridge.html)
 pub struct RestRequest<'a> {
-    pub id: Uuid,
-    pub bridge: &'a Bridge,
+    id: Uuid,
+    bridge: &'a Bridge,
     body: Option<Body>,
     method: Method,
     path: Option<&'a str>,

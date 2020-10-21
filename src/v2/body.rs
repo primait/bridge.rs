@@ -1,17 +1,9 @@
 use crate::errors::PrimaBridgeError;
-use std::{convert::TryFrom, ops::Deref};
+use std::convert::TryFrom;
 
 #[derive(Clone)]
 pub struct Body {
     inner: Vec<u8>,
-}
-
-impl Deref for Body {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        self.inner.as_slice()
-    }
 }
 
 impl Default for Body {

@@ -15,10 +15,7 @@ struct Data {
 fn simple_request() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
 
-    let result: String = RestRequest::new(&bridge)
-        .method(Method::GET)
-        .send()?
-        .get_data(&["hello"])?;
+    let result: String = RestRequest::new(&bridge).send()?.get_data(&["hello"])?;
 
     assert_eq!("world!", result.as_str());
 

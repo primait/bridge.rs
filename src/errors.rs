@@ -19,8 +19,6 @@ pub enum PrimaBridgeError {
         status_code: StatusCode,
         source: serde_json::error::Error,
     },
-    #[error(transparent)]
-    EncodingError(#[from] std::str::Utf8Error),
     #[error("empty body")]
     EmptyBody,
 }

@@ -44,23 +44,43 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// add a custom header to the request
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self;
 
+    /// retrurns a unique id for the request
     fn get_id(&self) -> Uuid;
+
+    #[doc(hidden)]
     fn get_bridge(&self) -> &Bridge;
+
+    #[doc(hidden)]
     fn get_path(&self) -> Option<&str>;
+
+    #[doc(hidden)]
     fn endpoint(&self) -> Url;
+
+    #[doc(hidden)]
     fn get_query_pairs(&self) -> &[(&'a str, &'a str)];
+
+    #[doc(hidden)]
     fn get_ignore_status_code(&self) -> bool;
+
+    #[doc(hidden)]
     fn get_method(&self) -> Method;
+
+    #[doc(hidden)]
     fn get_custom_headers(&self) -> &[(HeaderName, HeaderValue)];
+
+    #[doc(hidden)]
     fn get_body(&self) -> Vec<u8>;
+
+    #[doc(hidden)]
     fn get_request_type(&self) -> RequestType;
 
     #[cfg(feature = "blocking")]
     fn send(&'a self) -> PrimaBridgeResult<Response> {
+        let url = self.get_url();
         let request_builder = self
             .get_bridge()
             .client
-            .request(self.get_method(), self.get_url().as_str())
+            .request(self.get_method(), url.as_str())
             .header(
                 HeaderName::from_static("x-request-id"),
                 &self.get_id().to_string(),
@@ -77,33 +97,30 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
         let response = request_builder.body(self.get_body()).send().map_err(|e| {
             PrimaBridgeError::HttpError {
-                url: self.get_url(),
+                url: url.clone(),
                 source: e,
             }
         })?;
         let status_code = response.status();
         if !self.get_ignore_status_code() && !status_code.is_success() {
-            return Err(PrimaBridgeError::WrongStatusCode(
-                Self::get_url(self),
-                status_code,
-            ));
+            return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
         let response_headers = response.headers().clone();
         let response_body = response.text().map_err(|e| PrimaBridgeError::HttpError {
             source: e,
-            url: self.get_url(),
+            url: url.clone(),
         })?;
 
         match self.get_request_type() {
             RequestType::Rest => Ok(Response::rest(
-                Self::get_url(self),
+                url.clone(),
                 response_body,
                 status_code,
                 response_headers,
                 self.get_id(),
             )),
             RequestType::GraphQL => Ok(Response::graphql(
-                Self::get_url(self),
+                url.clone(),
                 response_body,
                 status_code,
                 response_headers,
@@ -117,11 +134,12 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         use futures_util::future::TryFutureExt;
         use reqwest::header::CONTENT_TYPE;
         let request_id = self.get_id();
+        let url = self.get_url();
 
         let request_builder = self
             .get_bridge()
             .client
-            .request(self.get_method(), self.get_url().as_str())
+            .request(self.get_method(), url.as_str())
             .header(CONTENT_TYPE, "application/json")
             .header(
                 HeaderName::from_static("x-request-id"),
@@ -140,17 +158,14 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .body(self.get_body())
             .send()
             .map_err(|e| PrimaBridgeError::HttpError {
-                url: self.get_url(),
+                url: url.clone(),
                 source: e,
             })
             .await?;
 
         let status_code = response.status();
         if !self.get_ignore_status_code() && !status_code.is_success() {
-            return Err(PrimaBridgeError::WrongStatusCode(
-                self.get_url(),
-                status_code,
-            ));
+            return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
 
         let response_headers = response.headers().clone();
@@ -159,20 +174,20 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .text()
             .map_err(|e| PrimaBridgeError::HttpError {
                 source: e,
-                url: self.get_url(),
+                url: url.clone(),
             })
             .await?;
 
         match self.get_request_type() {
             RequestType::Rest => Ok(Response::rest(
-                self.get_url(),
+                url.clone(),
                 response_body,
                 status_code,
                 response_headers,
                 request_id,
             )),
             RequestType::GraphQL => Ok(Response::graphql(
-                self.get_url(),
+                url.clone(),
                 response_body,
                 status_code,
                 response_headers,
