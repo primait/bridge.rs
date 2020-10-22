@@ -1,17 +1,19 @@
-mod body;
-mod request;
+use std::collections::HashMap;
 
-use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
-use crate::{Bridge, Response};
 use async_trait::async_trait;
-use body::Body;
-pub use request::*;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::{Method, Url};
 use serde::Serialize;
-use std::collections::HashMap;
-use std::convert::TryInto;
 use uuid::Uuid;
+
+use body::Body;
+pub use request::*;
+
+use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
+use crate::{Bridge, Response};
+
+mod body;
+mod request;
 
 pub enum RequestType {
     Rest,
@@ -23,10 +25,7 @@ pub enum RequestType {
 pub trait DeliverableRequest<'a>: Sized + 'a {
     /// sets the raw body for the request
     /// it will get delivered in the request as is.
-    fn raw_body(
-        self,
-        body: impl TryInto<Body, Error = PrimaBridgeError>,
-    ) -> PrimaBridgeResult<Self>;
+    fn raw_body(self, body: impl Into<Body>) -> Self;
 
     /// sets a serializable body for the request
     fn json_body<B: Serialize>(self, body: &B) -> PrimaBridgeResult<Self>;

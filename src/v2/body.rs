@@ -1,6 +1,3 @@
-use crate::errors::PrimaBridgeError;
-use std::convert::TryFrom;
-
 #[derive(Clone, Debug)]
 pub struct Body {
     inner: Vec<u8>,
@@ -12,44 +9,11 @@ impl Default for Body {
     }
 }
 
-impl TryFrom<&str> for Body {
-    type Error = PrimaBridgeError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        Ok(Self {
-            inner: value.to_owned().into_bytes(),
-        })
-    }
-}
-
-impl TryFrom<String> for Body {
-    type Error = PrimaBridgeError;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        Ok(Self {
-            inner: value.into_bytes(),
-        })
-    }
-}
-
-impl TryFrom<Option<String>> for Body {
-    type Error = PrimaBridgeError;
-
-    fn try_from(value: Option<String>) -> Result<Self, Self::Error> {
-        match value {
-            None => Ok(Body::default()),
-            Some(val) => Ok(Self {
-                inner: val.into_bytes(),
-            }),
+impl<T: ToString> From<T> for Body {
+    fn from(val: T) -> Self {
+        Self {
+            inner: val.to_string().into_bytes(),
         }
-    }
-}
-
-impl TryFrom<Vec<u8>> for Body {
-    type Error = PrimaBridgeError;
-
-    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
-        Ok(Self { inner: value })
     }
 }
 

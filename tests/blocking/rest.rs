@@ -1,9 +1,14 @@
 use std::error::Error;
 
-use crate::common::*;
-use prima_bridge::prelude::*;
+use mockito::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+
+use prima_bridge::prelude::*;
+
+use crate::common::*;
+use prima_bridge::Request;
+use reqwest::Url;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
@@ -185,7 +190,23 @@ fn simple_request_with_wrong_status_code_and_wrong_body() -> Result<(), Box<dyn 
 #[test]
 fn request_with_custom_raw_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde");
-    let result = RestRequest::new(&bridge).raw_body("abcde")?.send();
+    let result = RestRequest::new(&bridge).raw_body("abcde").send();
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[test]
+fn request_post_with_custom_raw_body() -> Result<(), Box<dyn Error>> {
+    let body = "abcde";
+    let _mock = mock("POST", "/")
+        .match_body(Matcher::Exact(body.to_owned()))
+        .with_status(200)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    let result = Request::post(&bridge).raw_body(body).send();
     assert!(result.is_ok());
     Ok(())
 }

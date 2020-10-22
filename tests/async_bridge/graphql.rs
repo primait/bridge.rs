@@ -7,6 +7,7 @@ use serde::Deserialize;
 use serde_json::json;
 
 use prima_bridge::prelude::*;
+use prima_bridge::Request;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 struct Person {
@@ -23,7 +24,7 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
     );
     let variables: Option<String> = None;
 
-    let result: Person = GraphQLRequest::new(&bridge, (query, variables))?
+    let result: Person = Request::graphql(&bridge, (query, variables))?
         .send()
         .await?
         .get_data(&["person"])?;

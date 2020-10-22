@@ -21,8 +21,8 @@ mod request;
 mod response;
 mod v2;
 
-pub use self::{response::Response, v2::GraphQLRequest, v2::RestRequest};
-use crate::request::{Request, RequestType};
+pub use self::{response::Response, v2::GraphQLRequest, v2::Request};
+use crate::request::{Request as OldRequest, RequestType};
 use reqwest::Url;
 use serde::Serialize;
 
@@ -52,7 +52,7 @@ impl Bridge {
         since = "0.2.0",
         note = "Use the RestRequest and GraphQLRequest ::new constructor instead of this function"
     )]
-    pub fn request<S: Serialize>(&self, request_type: RequestType<S>) -> Request<S> {
-        Request::new(&self, request_type)
+    pub fn request<S: Serialize>(&self, request_type: RequestType<S>) -> OldRequest<S> {
+        OldRequest::new(&self, request_type)
     }
 }

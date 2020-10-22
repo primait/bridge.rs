@@ -93,7 +93,7 @@ async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
 async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde");
 
-    let result = RestRequest::new(&bridge).raw_body("abcde")?.send().await;
+    let result = RestRequest::new(&bridge).raw_body("abcde").send().await;
     assert!(result.is_ok());
     Ok(())
 }

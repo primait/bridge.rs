@@ -1,4 +1,4 @@
-use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
+use crate::errors::PrimaBridgeResult;
 use crate::v2::{Body, DeliverableRequest, RequestType};
 use crate::Bridge;
 use async_trait::async_trait;
@@ -39,14 +39,11 @@ impl<'a> RestRequest<'a> {
 
 #[async_trait]
 impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
-    fn raw_body(
-        self,
-        body: impl TryInto<Body, Error = PrimaBridgeError>,
-    ) -> PrimaBridgeResult<Self> {
-        Ok(Self {
-            body: Some(body.try_into()?),
+    fn raw_body(self, body: impl Into<Body>) -> Self {
+        Self {
+            body: Some(body.into()),
             ..self
-        })
+        }
     }
 
     fn json_body<B: Serialize>(self, body: &B) -> PrimaBridgeResult<Self> {
