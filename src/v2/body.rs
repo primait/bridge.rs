@@ -9,8 +9,16 @@ impl Default for Body {
     }
 }
 
-impl<T: ToString> From<T> for Body {
-    fn from(val: T) -> Self {
+impl From<String> for Body {
+    fn from(val: String) -> Self {
+        Self {
+            inner: val.to_string().into_bytes(),
+        }
+    }
+}
+
+impl From<&str> for Body {
+    fn from(val: &str) -> Self {
         Self {
             inner: val.to_string().into_bytes(),
         }
