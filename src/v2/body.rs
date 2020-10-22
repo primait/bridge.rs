@@ -17,6 +17,12 @@ impl<T: ToString> From<T> for Body {
     }
 }
 
+impl From<Vec<u8>> for Body {
+    fn from(value: Vec<u8>) -> Self {
+        Self { inner: value }
+    }
+}
+
 impl From<Body> for Vec<u8> {
     fn from(body: Body) -> Self {
         body.inner
