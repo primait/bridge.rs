@@ -15,12 +15,13 @@ struct DeserializableData {
     test: String
 }
 
-// using once_cell we make sure that `Bridge` get instantiated only once
+// using we make sure that `Bridge` get instantiated only once
 fn bridge() -> &'static Bridge {
     static BRIDGE: OnceCell<Bridge> = OnceCell::new();
     BRIDGE.get_or_init(|| Bridge::new("https://prima.it/api"))
 }
 
+// Do not use expect in production! It will cause runtime errors. Use Result.
 pub fn fetch_data() -> YourResult<DeserializableData> {
     Request::get(bridge())
         .send()?
