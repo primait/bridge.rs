@@ -12,7 +12,7 @@ impl Default for Body {
 impl From<String> for Body {
     fn from(val: String) -> Self {
         Self {
-            inner: val.to_string().into_bytes(),
+            inner: val.into_bytes(),
         }
     }
 }
