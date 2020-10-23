@@ -40,10 +40,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// This is useful when you are dealing with an api that return errors with a not 2XX status codes.
     fn ignore_status_code(self) -> Self;
 
-    #[doc(hidden)]
+    /// adds a new set of headers to the request. Any header already present gets removed.
     fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self;
 
-    /// add a custom header to the request
+    /// add a custom header to the set of request headers
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         let mut custom_headers = self.get_custom_headers().to_vec();
         custom_headers = headers
