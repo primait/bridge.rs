@@ -8,7 +8,7 @@ use prima_bridge::prelude::*;
 
 use crate::common::*;
 use prima_bridge::Request;
-use reqwest::header::{HeaderValue, CONTENT_TYPE};
+use reqwest::header::{HeaderName, HeaderValue, CONTENT_TYPE};
 use reqwest::Url;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
@@ -225,6 +225,21 @@ fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
     );
     let result = request.send();
 
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[test]
+fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_header_matcher(("content-type", "application/json"));
+
+    let result = RestRequest::new(&bridge)
+        .json_body(&"test".to_owned())?
+        .with_custom_headers(vec![(
+            HeaderName::from_static("x-prima"),
+            HeaderValue::from_static("test-value"),
+        )])
+        .send()?;
     assert!(result.is_ok());
     Ok(())
 }

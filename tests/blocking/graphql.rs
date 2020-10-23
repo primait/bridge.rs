@@ -7,6 +7,7 @@ use serde::Deserialize;
 use serde_json::json;
 
 use prima_bridge::prelude::*;
+use reqwest::header::{HeaderName, HeaderValue};
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 struct Person {
@@ -62,8 +63,33 @@ fn simple_request_ignoring_status_code() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[test]
+fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
+    let bridge = mock_bridge();
+    let query = "query { hello }";
+    let _mock = mock_server(
+        query,
+        200,
+        "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
+    )
+    .create();
+
+    let variables: Option<String> = None;
+    let response = GraphQLRequest::new(&bridge, (query, variables))?
+        .with_custom_headers(vec![(
+            HeaderName::from_static("x-prima"),
+            HeaderValue::from_static("test-value"),
+        )])
+        .send()?;
+
+    assert!(response.is_ok());
+
+    Ok(())
+}
+
 fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Bridge) {
     let mock = mock("POST", "/")
+        .match_header("content-type", "application/json")
         .match_body(Matcher::Json(json!({ "query": query })))
         .with_status(status_code)
         .with_body(body)
@@ -73,4 +99,17 @@ fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Brid
     let bridge = Bridge::new(url);
 
     (mock, bridge)
+}
+
+fn mock_bridge() -> Bridge {
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    Bridge::new(url)
+}
+
+fn mock_server(query: &str, status_code: usize, body: &str) -> Mock {
+    mock("POST", "/")
+        .match_header("content-type", "application/json")
+        .match_body(Matcher::Json(json!({ "query": query })))
+        .with_status(status_code)
+        .with_body(body)
 }

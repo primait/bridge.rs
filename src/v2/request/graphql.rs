@@ -74,7 +74,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         }
     }
 
-    fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+    fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         Self {
             custom_headers: headers,
             ..self

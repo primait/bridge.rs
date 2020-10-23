@@ -40,8 +40,20 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// This is useful when you are dealing with an api that return errors with a not 2XX status codes.
     fn ignore_status_code(self) -> Self;
 
+    #[doc(hidden)]
+    fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self;
+
     /// add a custom header to the request
-    fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self;
+    fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+        let mut custom_headers = self.get_custom_headers().to_vec();
+        custom_headers = headers
+            .into_iter()
+            .fold(custom_headers, |mut acc, (name, value)| {
+                acc.push((name, value));
+                acc
+            });
+        self.set_custom_headers(custom_headers)
+    }
 
     /// retrurns a unique id for the request
     fn get_id(&self) -> Uuid;

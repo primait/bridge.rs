@@ -77,7 +77,7 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         }
     }
 
-    fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+    fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         Self {
             custom_headers: headers,
             ..self

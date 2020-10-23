@@ -1,5 +1,6 @@
 use crate::common::*;
 use prima_bridge::prelude::*;
+use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::error::Error;
@@ -105,6 +106,21 @@ async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
         hello: "world".to_string(),
     };
     let result = RestRequest::new(&bridge).json_body(&data)?.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_header_matcher(("content-type", "application/json"));
+
+    let result = RestRequest::new(&bridge)
+        .with_custom_headers(vec![(
+            HeaderName::from_static("x-prima"),
+            HeaderValue::from_static("test-value"),
+        )])
+        .send()
+        .await;
     assert!(result.is_ok());
     Ok(())
 }
