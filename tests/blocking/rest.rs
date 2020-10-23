@@ -8,6 +8,7 @@ use prima_bridge::prelude::*;
 
 use crate::common::*;
 use prima_bridge::Request;
+use reqwest::header::{HeaderValue, CONTENT_TYPE};
 use reqwest::Url;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
@@ -217,7 +218,13 @@ fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
     let data = Data {
         hello: "world".to_string(),
     };
-    let result = RestRequest::new(&bridge).json_body(&data)?.send();
+    let request = RestRequest::new(&bridge).json_body(&data)?;
+    assert_eq!(
+        request.get_custom_headers(),
+        &[(CONTENT_TYPE, HeaderValue::from_static("application/json"))]
+    );
+    let result = request.send();
+
     assert!(result.is_ok());
     Ok(())
 }

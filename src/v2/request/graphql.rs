@@ -3,7 +3,7 @@ use crate::request::GraphQLBody;
 use crate::v2::{Body, DeliverableRequest, RequestType};
 use crate::Bridge;
 use async_trait::async_trait;
-use reqwest::header::{HeaderName, HeaderValue};
+use reqwest::header::{HeaderName, HeaderValue, CONTENT_TYPE};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use std::convert::TryInto;
@@ -35,7 +35,7 @@ impl<'a> GraphQLRequest<'a> {
             path: Default::default(),
             query_pairs: Default::default(),
             ignore_status_code: Default::default(),
-            custom_headers: Default::default(),
+            custom_headers: vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))],
         })
     }
 }

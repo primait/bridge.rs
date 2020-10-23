@@ -2,7 +2,7 @@ use crate::errors::PrimaBridgeResult;
 use crate::v2::{Body, DeliverableRequest, RequestType};
 use crate::Bridge;
 use async_trait::async_trait;
-use reqwest::header::{HeaderName, HeaderValue};
+use reqwest::header::{HeaderName, HeaderValue, CONTENT_TYPE};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use std::convert::TryInto;
@@ -47,8 +47,14 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
     }
 
     fn json_body<B: Serialize>(self, body: &B) -> PrimaBridgeResult<Self> {
+        let mut custom_headers = self.custom_headers;
+        custom_headers.append(&mut vec![(
+            CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        )]);
         Ok(Self {
             body: Some(serde_json::to_string(body)?.try_into()?),
+            custom_headers,
             ..self
         })
     }
