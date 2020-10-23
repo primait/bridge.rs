@@ -43,7 +43,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// adds a new set of headers to the request. Any header already present gets removed.
     fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self;
 
-    /// add a custom header to the set of request headers
+    /// add a custom header to the set of request headersbeh 500
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         let mut custom_headers = self.get_custom_headers().to_vec();
         custom_headers = headers
