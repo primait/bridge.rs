@@ -43,6 +43,9 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// adds a new set of headers to the request. Any header already present gets removed.
     fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self;
 
+    /// adds a new set of headers to the request. Any header already present gets removed.
+    fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self;
+
     /// add a custom header to the set of request headers
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         let mut custom_headers = self.get_custom_headers().to_vec();
@@ -53,6 +56,24 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                 acc
             });
         self.set_custom_headers(custom_headers)
+    }
+
+    /// add a custom query string param
+    fn with_query_pair(self, name: &'a str, value: &'a str) -> Self {
+        let mut query_pairs = self.get_query_pairs().to_vec();
+        query_pairs.push((name, value));
+        self.set_query_pairs(query_pairs)
+    }
+
+    /// add a custom query string param
+    fn with_query_pairs(self, pairs: Vec<(&'a str, &'a str)>) -> Self {
+        let query_pairs = self.get_query_pairs().to_vec();
+        let query_pairs = pairs.iter().fold(query_pairs, |mut acc, (name, value)| {
+            acc.push((name, value));
+            acc
+        });
+
+        self.set_query_pairs(query_pairs)
     }
 
     /// retrurns a unique id for the request

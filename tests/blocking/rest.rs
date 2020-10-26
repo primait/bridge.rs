@@ -243,3 +243,44 @@ fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     assert!(result.is_ok());
     Ok(())
 }
+
+#[test]
+fn request_with_query_string() -> Result<(), Box<dyn Error>> {
+    let _mock = mock("GET", "/")
+        .match_query(Matcher::AllOf(vec![
+            Matcher::UrlEncoded("hello".into(), "world!".into()),
+            Matcher::UrlEncoded("prima".into(), "bridge".into()),
+        ]))
+        .with_status(200)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    let result = Request::get(&bridge)
+        .with_query_pair("hello", "world!")
+        .with_query_pair("prima", "bridge")
+        .send();
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[test]
+fn request_with_query_string_by_calling_once() -> Result<(), Box<dyn Error>> {
+    let _mock = mock("GET", "/")
+        .match_query(Matcher::AllOf(vec![
+            Matcher::UrlEncoded("hello".into(), "world!".into()),
+            Matcher::UrlEncoded("prima".into(), "bridge".into()),
+        ]))
+        .with_status(200)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    let result = Request::get(&bridge)
+        .with_query_pairs(vec![("hello", "world!"), ("prima", "bridge")])
+        .send();
+    assert!(result.is_ok());
+    Ok(())
+}

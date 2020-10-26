@@ -81,6 +81,13 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         }
     }
 
+    fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self {
+        Self {
+            query_pairs,
+            ..self
+        }
+    }
+
     fn get_id(&self) -> Uuid {
         self.id
     }
