@@ -1,12 +1,17 @@
 use std::error::Error;
 
-use reqwest::Method;
-use serde::Deserialize;
+use mockito::*;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 
-use crate::common::*;
 use prima_bridge::prelude::*;
 
-#[derive(Deserialize, Clone, Debug, PartialEq)]
+use crate::common::*;
+use prima_bridge::Request;
+use reqwest::header::{HeaderName, HeaderValue, CONTENT_TYPE};
+use reqwest::Url;
+
+#[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
     hello: String,
 }
@@ -14,12 +19,8 @@ struct Data {
 #[test]
 fn simple_request() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
-    let body: Option<String> = None;
 
-    let result: String = bridge
-        .request(RequestType::rest(body, Method::GET))
-        .send()?
-        .get_data(&["hello"])?;
+    let result: String = RestRequest::new(&bridge).send()?.get_data(&["hello"])?;
 
     assert_eq!("world!", result.as_str());
 
@@ -29,10 +30,8 @@ fn simple_request() -> Result<(), Box<dyn Error>> {
 #[test]
 fn simple_request_with_custom_path() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge_with_path(200, "{\"hello\": \"world!\"}", "/test_path");
-    let body: Option<String> = None;
 
-    let result: String = bridge
-        .request(RequestType::rest(body, Method::GET))
+    let result: String = RestRequest::new(&bridge)
         .to("test_path")
         .send()?
         .get_data(&["hello"])?;
@@ -46,10 +45,8 @@ fn simple_request_with_custom_path() -> Result<(), Box<dyn Error>> {
 fn simple_request_with_custom_path_and_base_path() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) =
         create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path");
-    let body: Option<String> = None;
 
-    let result: String = bridge
-        .request(RequestType::rest(body, Method::GET))
+    let result: String = RestRequest::new(&bridge)
         .to("test_path")
         .send()?
         .get_data(&["hello"])?;
@@ -63,10 +60,8 @@ fn simple_request_with_custom_path_and_base_path() -> Result<(), Box<dyn Error>>
 fn simple_request_with_custom_sub_path() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) =
         create_bridge_with_path(200, "{\"hello\": \"world!\"}", "/test_path/test_subpath");
-    let body: Option<String> = None;
 
-    let result: String = bridge
-        .request(RequestType::rest(body, Method::GET))
+    let result: String = RestRequest::new(&bridge)
         .to("/test_path/test_subpath")
         .send()?
         .get_data(&["hello"])?;
@@ -79,10 +74,8 @@ fn simple_request_with_custom_sub_path() -> Result<(), Box<dyn Error>> {
 #[test]
 fn unserializable_response() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
-    let body: Option<String> = None;
 
-    let result: PrimaBridgeResult<Response> =
-        bridge.request(RequestType::rest(body, Method::GET)).send();
+    let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send();
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["some_strange_selector"]);
     assert!(result.is_err());
@@ -95,10 +88,7 @@ fn unserializable_response() -> Result<(), Box<dyn Error>> {
 #[test]
 fn wrong_status_code() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(400, "{\"hello\": \"world!\"}");
-    let body: Option<String> = None;
-
-    let result: PrimaBridgeResult<Response> =
-        bridge.request(RequestType::rest(body, Method::GET)).send();
+    let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send();
 
     assert!(result.is_err());
     let error_str = result.err().map(|e| e.to_string()).unwrap();
@@ -110,10 +100,8 @@ fn wrong_status_code() -> Result<(), Box<dyn Error>> {
 #[test]
 fn response_body_not_deserializable() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(201, "{\"hello\": \"worl______________}");
-    let body: Option<String> = None;
 
-    let result: PrimaBridgeResult<Response> =
-        bridge.request(RequestType::rest(body, Method::GET)).send();
+    let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send();
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["hello"]);
     assert!(result.is_err());
@@ -129,9 +117,8 @@ fn response_body_not_deserializable() -> Result<(), Box<dyn Error>> {
 #[test]
 fn response_with_empty_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(204, "");
-    let body: Option<String> = None;
 
-    let result = bridge.request(RequestType::rest(body, Method::GET)).send();
+    let result = RestRequest::new(&bridge).send();
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["hello"]);
     assert!(result.is_err());
@@ -151,11 +138,7 @@ fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) =
         create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
 
-    let body: Option<String> = None;
-    let response = bridge
-        .request(RequestType::rest(body, Method::GET))
-        .to(path)
-        .send()?;
+    let response = RestRequest::new(&bridge).to(path).send()?;
 
     let custom = response
         .headers()
@@ -175,10 +158,8 @@ fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 #[test]
 fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(400, "{\"hello\": \"world!\"}");
-    let body: Option<String> = None;
 
-    let result: String = bridge
-        .request(RequestType::rest(body, Method::GET))
+    let result: String = RestRequest::new(&bridge)
         .ignore_status_code()
         .send()?
         .get_data(&["hello"])?;
@@ -191,12 +172,10 @@ fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
 #[test]
 fn simple_request_with_wrong_status_code_and_wrong_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(400, "{\"hello\": \"worl______________}");
-    let body: Option<String> = None;
 
-    let result: PrimaBridgeResult<Response> = bridge
-        .request(RequestType::rest(body, Method::GET))
-        .ignore_status_code()
-        .send();
+    let request = RestRequest::new(&bridge).ignore_status_code();
+
+    let result = request.send();
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["hello"]);
     assert!(result.is_err());
@@ -206,5 +185,61 @@ fn simple_request_with_wrong_status_code_and_wrong_body() -> Result<(), Box<dyn 
         Some("unserializable body. response status code: 400 Bad Request, error: EOF while parsing a string at line 1 column 30".to_string())
     );
 
+    Ok(())
+}
+
+#[test]
+fn request_with_custom_raw_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde");
+    let result = RestRequest::new(&bridge).raw_body("abcde").send();
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[test]
+fn request_post_with_custom_raw_body() -> Result<(), Box<dyn Error>> {
+    let body = "abcde";
+    let _mock = mock("POST", "/")
+        .match_body(Matcher::Exact(body.to_owned()))
+        .with_status(200)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    let result = Request::post(&bridge).raw_body(body).send();
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[test]
+fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+    let data = Data {
+        hello: "world".to_string(),
+    };
+    let request = RestRequest::new(&bridge).json_body(&data)?;
+    assert_eq!(
+        request.get_custom_headers(),
+        &[(CONTENT_TYPE, HeaderValue::from_static("application/json"))]
+    );
+    let result = request.send();
+
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[test]
+fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_header_matcher(("content-type", "application/json"));
+
+    let result = RestRequest::new(&bridge)
+        .json_body(&"test".to_owned())?
+        .with_custom_headers(vec![(
+            HeaderName::from_static("x-prima"),
+            HeaderValue::from_static("test-value"),
+        )])
+        .send()?;
+    assert!(result.is_ok());
     Ok(())
 }

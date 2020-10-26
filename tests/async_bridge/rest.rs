@@ -1,10 +1,11 @@
 use crate::common::*;
 use prima_bridge::prelude::*;
-use reqwest::Method;
-use serde::Deserialize;
+use reqwest::header::{HeaderName, HeaderValue};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::error::Error;
 
-#[derive(Deserialize, Clone, Debug, PartialEq)]
+#[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
     hello: String,
 }
@@ -12,10 +13,7 @@ struct Data {
 #[tokio::test]
 async fn simple_request() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
-    let body: Option<String> = None;
-
-    let result: String = bridge
-        .request(RequestType::rest(body, Method::GET))
+    let result: String = RestRequest::new(&bridge)
         .send()
         .await?
         .get_data(&["hello"])?;
@@ -28,12 +26,8 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn unserializable_response() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
-    let body: Option<String> = None;
 
-    let result: PrimaBridgeResult<Response> = bridge
-        .request(RequestType::rest(body, Method::GET))
-        .send()
-        .await;
+    let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send().await;
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["some_strange_selector"]);
     assert!(result.is_err());
@@ -47,10 +41,7 @@ async fn unserializable_response() -> Result<(), Box<dyn Error>> {
 async fn simple_request_with_custom_path_and_base_path() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) =
         create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path");
-    let body: Option<String> = None;
-
-    let result: String = bridge
-        .request(RequestType::rest(body, Method::GET))
+    let result: String = RestRequest::new(&bridge)
         .to("test_path")
         .send()
         .await?
@@ -68,13 +59,7 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
     let (_m, bridge) =
         create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
-
-    let body: Option<String> = None;
-    let response = bridge
-        .request(RequestType::rest(body, Method::GET))
-        .to(path)
-        .send()
-        .await?;
+    let response = RestRequest::new(&bridge).to(path).send().await?;
 
     let custom = response
         .headers()
@@ -94,10 +79,7 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(403, "{\"hello\": \"world!\"}");
-    let body: Option<String> = None;
-
-    let result: String = bridge
-        .request(RequestType::rest(body, Method::GET))
+    let result: String = RestRequest::new(&bridge)
         .ignore_status_code()
         .send()
         .await?
@@ -105,5 +87,40 @@ async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
 
     assert_eq!("world!", result.as_str());
 
+    Ok(())
+}
+
+#[tokio::test]
+async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde");
+
+    let result = RestRequest::new(&bridge).raw_body("abcde").send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+    let data = Data {
+        hello: "world".to_string(),
+    };
+    let result = RestRequest::new(&bridge).json_body(&data)?.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_header_matcher(("content-type", "application/json"));
+
+    let result = RestRequest::new(&bridge)
+        .with_custom_headers(vec![(
+            HeaderName::from_static("x-prima"),
+            HeaderValue::from_static("test-value"),
+        )])
+        .send()
+        .await;
+    assert!(result.is_ok());
     Ok(())
 }

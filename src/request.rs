@@ -92,7 +92,6 @@ impl<'a, S: Serialize> Request<'a, S> {
         let mut additional_headers = vec![];
         additional_headers.append(&mut self.custom_headers().to_vec());
         additional_headers.append(&mut self.tracing_headers().to_vec());
-        dbg!(&additional_headers);
         let request_builder = additional_headers
             .iter()
             .fold(request_builder, |request, (name, value)| {
@@ -302,6 +301,27 @@ pub struct GraphQLBody<T> {
     query: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     variables: Option<T>,
+}
+
+impl<T: Serialize> From<(&str, Option<T>)> for GraphQLBody<T> {
+    fn from((query, variables): (&str, Option<T>)) -> Self {
+        Self {
+            query: query.to_owned(),
+            variables,
+        }
+    }
+}
+
+impl<T: Serialize> From<(String, Option<T>)> for GraphQLBody<T> {
+    fn from((query, variables): (String, Option<T>)) -> Self {
+        (query.as_str(), variables).into()
+    }
+}
+
+impl<T: Serialize> From<(String, T)> for GraphQLBody<T> {
+    fn from((query, variables): (String, T)) -> Self {
+        (query.as_str(), Some(variables)).into()
+    }
 }
 
 #[derive(Debug)]

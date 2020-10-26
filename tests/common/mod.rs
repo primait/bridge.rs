@@ -1,4 +1,4 @@
-use mockito::{mock, Mock};
+use mockito::{mock, Matcher, Mock};
 use prima_bridge::prelude::*;
 use reqwest::Url;
 
@@ -47,6 +47,42 @@ pub fn create_bridge_with_path_and_header(
         .with_status(status_code)
         .with_header(header.0, header.1)
         .with_body(body)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    (mock, bridge)
+}
+
+pub fn create_bridge_with_raw_body_matcher(body: &str) -> (Mock, Bridge) {
+    let mock = mock("GET", "/")
+        .match_body(Matcher::Exact(body.to_owned()))
+        .with_status(200)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    (mock, bridge)
+}
+
+pub fn create_bridge_with_header_matcher((name, value): (&str, &str)) -> (Mock, Bridge) {
+    let mock = mock("GET", "/")
+        .match_header(name, value)
+        .with_status(200)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    (mock, bridge)
+}
+
+pub fn create_bridge_with_json_body_matcher(json: serde_json::Value) -> (Mock, Bridge) {
+    let mock = mock("GET", "/")
+        .match_body(Matcher::Json(json))
+        .with_status(200)
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();

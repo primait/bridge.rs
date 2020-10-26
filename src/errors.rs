@@ -1,5 +1,6 @@
 use reqwest::{StatusCode, Url};
 use serde_json::Value;
+use std::convert::Infallible;
 use thiserror::Error;
 
 pub type PrimaBridgeResult<T> = Result<T, PrimaBridgeError>;
@@ -21,4 +22,10 @@ pub enum PrimaBridgeError {
     },
     #[error("empty body")]
     EmptyBody,
+}
+
+impl From<Infallible> for PrimaBridgeError {
+    fn from(_: Infallible) -> Self {
+        unimplemented!()
+    }
 }
