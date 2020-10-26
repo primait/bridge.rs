@@ -21,7 +21,6 @@ fn bridge() -> &'static Bridge {
     BRIDGE.get_or_init(|| Bridge::new("https://prima.it/api"))
 }
 
-// Do not use expect in production! It will cause runtime errors. Use Result.
 pub fn fetch_data() -> YourResult<DeserializableData> {
     Request::get(bridge())
         .send()?
