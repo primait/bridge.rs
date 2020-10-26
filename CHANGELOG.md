@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.1
+features:
+- adds back the `with_query_pair` and `with_query_pairs` api
+
 ### 0.2.0
 features:
 - adds the ability to use a binary as the body of a request. The api has changed:
