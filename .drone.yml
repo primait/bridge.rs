@@ -8,67 +8,22 @@ platform:
 
 clone:
   depth: 1
-  disable: true
 
-environment:
-  CARGO_HTTP_CAINFO: /drone/src/certs/sys/proxy_deps_ca.pem
-  CURL_CA_BUNDLE: /drone/src/certs/sys/proxy_deps_ca.pem
-  GIT_SSL_CAINFO: /drone/src/certs/sys/proxy_deps_ca.pem
-  HEX_CACERTS_PATH: /drone/src/certs/sys/proxy_deps_ca.pem
-  NODE_EXTRA_CA_CERTS: /drone/src/certs/sys/proxy_deps_ca.pem
-  REQUESTS_CA_BUNDLE: /drone/src/certs/sys/proxy_deps_ca.pem
-  SYSTEM_CERTIFICATE_PATH: /drone/src/certs/sys/proxy_deps_ca.pem
-  http_proxy: http://mitmproxy.servicediscovery.prima:8080
-  https_proxy: http://mitmproxy.servicediscovery.prima:8080
-  no_proxy: localhost,redis,rabbit,aws,statsd,postgres,mysql,web,e2e-backend,127.0.0.1,elasticsearch,db,kibana,mock
 steps:
-- name: clone
-  image: drone/git
-  environment:
-    CARGO_HTTP_CAINFO: ""
-    CURL_CA_BUNDLE: ""
-    GIT_SSL_CAINFO: ""
-    HEX_CACERTS_PATH: ""
-    NODE_EXTRA_CA_CERTS: ""
-    REQUESTS_CA_BUNDLE: ""
-    SYSTEM_CERTIFICATE_PATH: ""
-    http_proxy: ""
-    https_proxy: ""
-
 - name: pre-start
-  image: prima/drone-tools:1.17.8
+  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.12
   commands:
-  - . /etc/profile.d/ecs-credentials-endpoint
   - pre-start-scripts
   environment:
-    CARGO_HTTP_CAINFO: ""
-    CURL_CA_BUNDLE: ""
-    GIT_SSL_CAINFO: ""
-    HEX_CACERTS_PATH: ""
-    NODE_EXTRA_CA_CERTS: ""
-    REQUESTS_CA_BUNDLE: ""
-    SYSTEM_CERTIFICATE_PATH: ""
-    http_proxy: ""
-    https_proxy: ""
-  volumes:
-  - name: ecs
-    path: /etc/profile.d/ecs-credentials-endpoint
+    COUNTRY: it
 
 - name: cache-restore
-  image: prima/drone-tools:1.17.8
+  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.12
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - cache-restore
   environment:
-    CARGO_HTTP_CAINFO: ""
-    CURL_CA_BUNDLE: ""
-    GIT_SSL_CAINFO: ""
-    HEX_CACERTS_PATH: ""
-    NODE_EXTRA_CA_CERTS: ""
-    REQUESTS_CA_BUNDLE: ""
-    SYSTEM_CERTIFICATE_PATH: ""
-    http_proxy: ""
-    https_proxy: ""
+    COUNTRY: it
   volumes:
   - name: ecs
     path: /etc/profile.d/ecs-credentials-endpoint
@@ -76,45 +31,26 @@ steps:
     path: /var/run/docker.sock
 
 - name: check-secrets
-  image: prima/drone-tools:1.17.8
+  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.12
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - check-secrets-grants
-  environment:
-    CARGO_HTTP_CAINFO: ""
-    CURL_CA_BUNDLE: ""
-    GIT_SSL_CAINFO: ""
-    HEX_CACERTS_PATH: ""
-    NODE_EXTRA_CA_CERTS: ""
-    REQUESTS_CA_BUNDLE: ""
-    SYSTEM_CERTIFICATE_PATH: ""
-    http_proxy: ""
-    https_proxy: ""
   volumes:
   - name: ecs
     path: /etc/profile.d/ecs-credentials-endpoint
 
 - name: build-image
-  image: prima/drone-tools:1.17.8
+  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.12
   commands:
   - sed -i 's/USER app/USER root/g' ./Dockerfile
   - docker build -t prima/bridge.rs-ci:1 ./
-  environment:
-    CARGO_HTTP_CAINFO: ""
-    CURL_CA_BUNDLE: ""
-    GIT_SSL_CAINFO: ""
-    HEX_CACERTS_PATH: ""
-    NODE_EXTRA_CA_CERTS: ""
-    REQUESTS_CA_BUNDLE: ""
-    SYSTEM_CERTIFICATE_PATH: ""
-    http_proxy: ""
-    https_proxy: ""
   volumes:
   - name: docker
     path: /var/run/docker.sock
+  - name: docker-conf
+    path: /root/.docker
   depends_on:
   - cache-restore
-  - clone
 
 - name: cargo-format
   image: prima/bridge.rs-ci:1
@@ -124,13 +60,13 @@ steps:
     CARGO_HOME: /drone/src/.cargo
   depends_on:
   - build-image
-  - pre-start
 
 - name: cargo-lint
   image: prima/bridge.rs-ci:1
   commands:
   - cargo make --profile drone clippy-ci
   environment:
+    BUILD_ENV: dev
     CARGO_HOME: /drone/src/.cargo
   depends_on:
   - cargo-format
@@ -140,10 +76,9 @@ steps:
   commands:
   - cargo make --profile drone test
   environment:
+    BUILD_ENV: dev
     CARGO_HOME: /drone/src/.cargo
     CARGO_HTTP_CAINFO: ""
-    http_proxy: ""
-    https_proxy: ""
   depends_on:
   - cargo-lint
 
@@ -152,6 +87,7 @@ steps:
   commands:
   - cargo make --profile drone build-ci
   environment:
+    BUILD_ENV: dev
     CARGO_HOME: /drone/src/.cargo
   when:
     branch:
@@ -174,20 +110,12 @@ steps:
   - cargo-test
 
 - name: cache-save
-  image: prima/drone-tools:1.17.8
+  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.12
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - cache-save .cargo target
   environment:
-    CARGO_HTTP_CAINFO: ""
-    CURL_CA_BUNDLE: ""
-    GIT_SSL_CAINFO: ""
-    HEX_CACERTS_PATH: ""
-    NODE_EXTRA_CA_CERTS: ""
-    REQUESTS_CA_BUNDLE: ""
-    SYSTEM_CERTIFICATE_PATH: ""
-    http_proxy: ""
-    https_proxy: ""
+    COUNTRY: it
   volumes:
   - name: ecs
     path: /etc/profile.d/ecs-credentials-endpoint
@@ -206,6 +134,9 @@ volumes:
 - name: ecs
   host:
     path: /etc/profile.d/ecs-credentials-endpoint
+- name: docker-conf
+  host:
+    path: /home/ec2-user/.docker
 
 trigger:
   event:
@@ -245,6 +176,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: 99e9322c10fe27e9865f432008ac09ae997d68782cb683eb6ac5518fd85ca443
+hmac: c9e0fe96b424e29883946fb2f3a6f1cbef0324c740baa93cd10660f77c18277c
 
 ...
