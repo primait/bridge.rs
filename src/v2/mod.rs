@@ -270,6 +270,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         let mut tracing_headers: HashMap<String, String> = HashMap::new();
         let extractor = opentelemetry::api::TraceContextPropagator::new();
         extractor.inject_context(&context, &mut tracing_headers);
+        tracing_headers.insert("x-test".to_string(), "test-value".to_string());
 
         tracing_headers
             .iter()
