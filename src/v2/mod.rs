@@ -1,13 +1,11 @@
-use std::collections::HashMap;
-
 use async_trait::async_trait;
+use body::Body;
+pub use request::*;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::{Method, Url};
 use serde::Serialize;
+use std::collections::HashMap;
 use uuid::Uuid;
-
-use body::Body;
-pub use request::*;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
@@ -99,6 +97,13 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
     #[doc(hidden)]
     fn get_custom_headers(&self) -> &[(HeaderName, HeaderValue)];
+
+    fn get_all_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
+        let mut additional_headers = vec![];
+        additional_headers.append(&mut self.get_custom_headers().to_vec());
+        additional_headers.append(&mut self.tracing_headers().to_vec());
+        additional_headers
+    }
 
     #[doc(hidden)]
     fn get_body(&self) -> Vec<u8>;
