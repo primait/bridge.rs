@@ -1,10 +1,11 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
 use body::Body;
 pub use request::*;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::{Method, Url};
 use serde::Serialize;
-use std::collections::HashMap;
 use uuid::Uuid;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
@@ -272,6 +273,13 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         extractor.inject_context(&context, &mut tracing_headers);
         tracing_headers.insert("x-test".to_string(), "test-value".to_string());
 
+        if tracing_headers.is_empty() {
+            return vec![(
+                HeaderName::from_static("x-prima"),
+                HeaderValue::from_str("vuoto!").unwrap(),
+            )];
+        }
+
         tracing_headers
             .iter()
             .flat_map(|(name, value)| {
@@ -281,7 +289,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                     (Ok(valid_header_name), Ok(valid_header_value)) => {
                         vec![(valid_header_name, valid_header_value)]
                     }
-                    _ => vec![],
+                    _ => vec![(
+                        HeaderName::from_static("x-prima"),
+                        HeaderValue::from_str("cazzo2").unwrap(),
+                    )],
                 }
             })
             .collect()
