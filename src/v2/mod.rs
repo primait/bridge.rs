@@ -48,13 +48,14 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// add a custom header to the set of request headers
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         let mut custom_headers = self.get_custom_headers().to_vec();
+        dbg!(&custom_headers);
         custom_headers = headers
             .into_iter()
             .fold(custom_headers, |mut acc, (name, value)| {
                 acc.push((name, value));
                 acc
             });
-        self.set_custom_headers(custom_headers)
+        self.set_custom_headers(dbg!(custom_headers))
     }
 
     /// add a custom query string param
@@ -124,14 +125,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                 &self.get_id().to_string(),
             );
 
-        let mut additional_headers = vec![];
-        additional_headers.append(&mut self.get_custom_headers().to_vec());
-        additional_headers.append(&mut self.tracing_headers().to_vec());
-        let request_builder = additional_headers
+        let request_builder = self
+            .get_all_headers()
             .iter()
-            .fold(request_builder, |request, (name, value)| {
-                request.header(name, value)
-            });
+            .fold(request_builder, |rb, (name, value)| rb.header(name, value));
 
         let response = request_builder.body(self.get_body()).send().map_err(|e| {
             PrimaBridgeError::HttpError {
@@ -183,10 +180,9 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                 HeaderName::from_static("x-request-id"),
                 &request_id.to_string(),
             );
-        let mut additional_headers = vec![];
-        additional_headers.append(&mut self.get_custom_headers().to_vec());
-        additional_headers.append(&mut self.tracing_headers().to_vec());
-        let request_builder = additional_headers
+
+        let request_builder = self
+            .get_all_headers()
             .iter()
             .fold(request_builder, |request, (name, value)| {
                 request.header(name, value)
@@ -271,7 +267,6 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         let mut tracing_headers: HashMap<String, String> = HashMap::new();
         let extractor = opentelemetry::api::TraceContextPropagator::new();
         extractor.inject_context(&context, &mut tracing_headers);
-        tracing_headers.insert("x-test".to_string(), "test-value".to_string());
 
         if tracing_headers.is_empty() {
             return vec![(
