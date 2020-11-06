@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 
 use async_trait::async_trait;
+use body::Body;
+pub use request::*;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
-
-use body::Body;
-pub use request::*;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
@@ -100,6 +99,13 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[doc(hidden)]
     fn get_custom_headers(&self) -> &[(HeaderName, HeaderValue)];
 
+    fn get_all_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
+        let mut additional_headers = vec![];
+        additional_headers.append(&mut self.get_custom_headers().to_vec());
+        additional_headers.append(&mut self.tracing_headers().to_vec());
+        additional_headers
+    }
+
     #[doc(hidden)]
     fn get_body(&self) -> Vec<u8>;
 
@@ -118,14 +124,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                 &self.get_id().to_string(),
             );
 
-        let mut additional_headers = vec![];
-        additional_headers.append(&mut self.get_custom_headers().to_vec());
-        additional_headers.append(&mut self.tracing_headers().to_vec());
-        let request_builder = additional_headers
+        let request_builder = self
+            .get_all_headers()
             .iter()
-            .fold(request_builder, |request, (name, value)| {
-                request.header(name, value)
-            });
+            .fold(request_builder, |rb, (name, value)| rb.header(name, value));
 
         let response = request_builder.body(self.get_body()).send().map_err(|e| {
             PrimaBridgeError::HttpError {
@@ -135,7 +137,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         })?;
         let status_code = response.status();
         if !self.get_ignore_status_code() && !status_code.is_success() {
-            return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
+            return Err(PrimaBridgeError::WrongStatusCode(url, status_code));
         }
         let response_headers = response.headers().clone();
         let response_body = response.text().map_err(|e| PrimaBridgeError::HttpError {
@@ -145,14 +147,14 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
         match self.get_request_type() {
             RequestType::Rest => Ok(Response::rest(
-                url.clone(),
+                url,
                 response_body,
                 status_code,
                 response_headers,
                 self.get_id(),
             )),
             RequestType::GraphQL => Ok(Response::graphql(
-                url.clone(),
+                url,
                 response_body,
                 status_code,
                 response_headers,
@@ -177,10 +179,9 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                 HeaderName::from_static("x-request-id"),
                 &request_id.to_string(),
             );
-        let mut additional_headers = vec![];
-        additional_headers.append(&mut self.get_custom_headers().to_vec());
-        additional_headers.append(&mut self.tracing_headers().to_vec());
-        let request_builder = additional_headers
+
+        let request_builder = self
+            .get_all_headers()
             .iter()
             .fold(request_builder, |request, (name, value)| {
                 request.header(name, value)
