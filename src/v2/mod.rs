@@ -48,14 +48,13 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// add a custom header to the set of request headers
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         let mut custom_headers = self.get_custom_headers().to_vec();
-        dbg!(&custom_headers);
         custom_headers = headers
             .into_iter()
             .fold(custom_headers, |mut acc, (name, value)| {
                 acc.push((name, value));
                 acc
             });
-        self.set_custom_headers(dbg!(custom_headers))
+        self.set_custom_headers(custom_headers)
     }
 
     /// add a custom query string param
@@ -268,13 +267,6 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         let extractor = opentelemetry::api::TraceContextPropagator::new();
         extractor.inject_context(&context, &mut tracing_headers);
 
-        if tracing_headers.is_empty() {
-            return vec![(
-                HeaderName::from_static("x-prima"),
-                HeaderValue::from_str("vuoto!").unwrap(),
-            )];
-        }
-
         tracing_headers
             .iter()
             .flat_map(|(name, value)| {
@@ -284,10 +276,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                     (Ok(valid_header_name), Ok(valid_header_value)) => {
                         vec![(valid_header_name, valid_header_value)]
                     }
-                    _ => vec![(
-                        HeaderName::from_static("x-prima"),
-                        HeaderValue::from_str("cazzo2").unwrap(),
-                    )],
+                    _ => vec![],
                 }
             })
             .collect()
