@@ -4,10 +4,11 @@ use serde::Serialize;
 pub use graphql::GraphQLRequest;
 pub use rest::RestRequest;
 
-use super::DeliverableRequest;
 use crate::errors::PrimaBridgeResult;
 use crate::request::GraphQLBody;
 use crate::Bridge;
+
+use super::DeliverableRequest;
 
 mod graphql;
 mod rest;

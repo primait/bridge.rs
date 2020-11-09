@@ -1,6 +1,7 @@
+use std::convert::Infallible;
+
 use reqwest::{StatusCode, Url};
 use serde_json::Value;
-use std::convert::Infallible;
 use thiserror::Error;
 
 pub type PrimaBridgeResult<T> = Result<T, PrimaBridgeError>;
