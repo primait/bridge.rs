@@ -174,7 +174,6 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .get_bridge()
             .client
             .request(self.get_method(), url.as_str())
-            .header(CONTENT_TYPE, "application/json")
             .header(
                 HeaderName::from_static("x-request-id"),
                 &request_id.to_string(),
