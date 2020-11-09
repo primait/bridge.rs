@@ -112,7 +112,7 @@ async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_header_matcher(("content-type", "application/json"));
+    let (_m, bridge) = create_bridge_with_header_matcher(("x-prima", "test-value"));
 
     let result = RestRequest::new(&bridge)
         .with_custom_headers(vec![(
