@@ -166,7 +166,6 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[cfg(not(feature = "blocking"))]
     async fn send(&'a self) -> PrimaBridgeResult<Response> {
         use futures_util::future::TryFutureExt;
-        use reqwest::header::CONTENT_TYPE;
         let request_id = self.get_id();
         let url = self.get_url();
 
