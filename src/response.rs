@@ -1,11 +1,11 @@
 use std::fmt::Debug;
 
 use reqwest::{header::HeaderMap, StatusCode, Url};
+use serde::Deserialize;
+use serde_json::Value;
 use uuid::Uuid;
 
 use crate::prelude::*;
-use serde::Deserialize;
-use serde_json::Value;
 
 #[derive(Debug, PartialEq)]
 enum RequestType {

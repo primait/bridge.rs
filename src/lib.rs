@@ -15,16 +15,17 @@
 //!
 //! The bridge implement a type state pattern to build the external request.
 
+use reqwest::Url;
+
+pub use self::{
+    request::{GraphQLRequest, Request},
+    response::Response,
+};
+
 mod errors;
 pub mod prelude;
 mod request;
 mod response;
-mod v2;
-
-pub use self::{response::Response, v2::GraphQLRequest, v2::Request};
-use crate::request::{Request as OldRequest, RequestType};
-use reqwest::Url;
-use serde::Serialize;
 
 /// The bridge instance to issue external requests.
 #[derive(Debug)]
@@ -46,13 +47,5 @@ impl Bridge {
             client: reqwest::Client::new(),
             endpoint,
         }
-    }
-
-    #[deprecated(
-        since = "0.2.0",
-        note = "Use the RestRequest and GraphQLRequest ::new constructor instead of this function"
-    )]
-    pub fn request<S: Serialize>(&self, request_type: RequestType<S>) -> OldRequest<S> {
-        OldRequest::new(&self, request_type)
     }
 }

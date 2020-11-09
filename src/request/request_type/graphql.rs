@@ -1,13 +1,14 @@
-use crate::errors::PrimaBridgeResult;
-use crate::request::GraphQLBody;
-use crate::v2::{Body, DeliverableRequest, RequestType};
-use crate::Bridge;
+use std::convert::TryInto;
+
 use async_trait::async_trait;
 use reqwest::header::{HeaderName, HeaderValue, CONTENT_TYPE};
 use reqwest::{Method, Url};
 use serde::Serialize;
-use std::convert::TryInto;
 use uuid::Uuid;
+
+use crate::errors::PrimaBridgeResult;
+use crate::request::{Body, DeliverableRequest, GraphQLBody, RequestType};
+use crate::Bridge;
 
 /// The GraphQLRequest is a struct that represent a GraphQL request to be done with the [Bridge](./../struct.Bridge.html)
 pub struct GraphQLRequest<'a> {

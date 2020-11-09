@@ -1,18 +1,19 @@
 use std::collections::HashMap;
 
 use async_trait::async_trait;
-use body::Body;
-pub use request::*;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
 
+pub use body::{Body, GraphQLBody};
+pub use request_type::{GraphQLRequest, Request, RestRequest};
+
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
 
 mod body;
-mod request;
+mod request_type;
 
 pub enum RequestType {
     Rest,

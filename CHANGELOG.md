@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.3.0
+breaking change:
+- removed the bridge.request api (deprecated) in favor of `Request::get` or `RestRequest::new` and `GraphQLRequest::new` functions.
+
 ### 0.2.4
 bugfix:
 - fixes the test suite. No impact on the api.
