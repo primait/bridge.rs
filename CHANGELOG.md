@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.4
+bugfix:
+- fixes the test suite. No impact on the api.
+
 ### 0.2.3
 bugfix:
 - double content-type header for graphql request
