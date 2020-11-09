@@ -1,5 +1,13 @@
 # Changelog
 
+### 0.2.3
+bugfix:
+- double content-type header for graphql request
+
+### 0.2.2
+bugfix:
+- better handling of headers
+
 ### 0.2.1
 features:
 - adds back the `with_query_pair` and `with_query_pairs` api
