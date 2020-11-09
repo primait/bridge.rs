@@ -7,18 +7,25 @@ platform:
   arch: amd64
 
 clone:
-  depth: 1
+  disable: true
 
 steps:
+- name: git-clone
+  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-git:1.3-3
+  environment:
+    PLUGIN_DEPTH: 5
+
 - name: pre-start
-  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
+  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
   commands:
   - pre-start-scripts
   environment:
     COUNTRY: it
+  depends_on:
+  - git-clone
 
 - name: cache-restore
-  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
+  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - cache-restore
@@ -31,18 +38,22 @@ steps:
     path: /var/run/docker.sock
   - name: docker-conf
     path: /root/.docker
+  depends_on:
+  - git-clone
 
 - name: check-secrets
-  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
+  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - check-secrets-grants
   volumes:
   - name: ecs
     path: /etc/profile.d/ecs-credentials-endpoint
+  depends_on:
+  - git-clone
 
 - name: build-image
-  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
+  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
   commands:
   - sed -i 's/USER app/USER root/g' ./Dockerfile
   - docker build -t prima/bridge.rs-ci:1 ./
@@ -112,7 +123,7 @@ steps:
   - cargo-test
 
 - name: cache-save
-  image: 001575623345.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
+  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-tools:1.17.16
   commands:
   - . /etc/profile.d/ecs-credentials-endpoint
   - cache-save .cargo target
@@ -180,6 +191,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: cd5bb01c490f9110a1d28f741fce48f6b546893f8fe7bd75dcd1e0bc078a2195
+hmac: f1139d85468effba832be244417a5c73a8408bcf6cebaac4a77651f39a2965cc
 
 ...
