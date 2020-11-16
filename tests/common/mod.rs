@@ -1,4 +1,4 @@
-use mockito::{mock, Matcher, Mock};
+use mockito::{mock, BinaryBody, Matcher, Mock};
 use prima_bridge::prelude::*;
 use reqwest::Url;
 
@@ -119,6 +119,25 @@ pub fn create_bridge_with_json_body_matcher(json: serde_json::Value) -> (Mock, B
         )
         .match_body(Matcher::Json(json))
         .with_status(200)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::new(url);
+
+    (mock, bridge)
+}
+
+pub fn create_bridge_with_binary_body_matcher(body: &[u8]) -> (Mock, Bridge) {
+    let mock = mock("GET", "/")
+        .match_header(
+            "x-request-id",
+            Matcher::Regex(
+                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
+            ),
+        )
+        .match_body(Matcher::Binary(BinaryBody::from_bytes(body.to_vec())))
+        .with_status(200)
+        .with_body(body)
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
