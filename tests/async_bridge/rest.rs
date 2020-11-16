@@ -124,3 +124,19 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     assert!(result.is_ok());
     Ok(())
 }
+
+#[tokio::test]
+async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
+    let body = b"abcde";
+
+    let (_m, bridge) = create_bridge_with_binary_body_matcher(body);
+
+    let result = RestRequest::new(&bridge)
+        .raw_body(body.to_vec())
+        .send()
+        .await?;
+    assert!(result.is_ok());
+
+    assert_eq!(body, &result.raw_body()[..]);
+    Ok(())
+}

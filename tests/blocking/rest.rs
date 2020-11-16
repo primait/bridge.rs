@@ -284,3 +284,15 @@ fn request_with_query_string_by_calling_once() -> Result<(), Box<dyn Error>> {
     assert!(result.is_ok());
     Ok(())
 }
+
+#[test]
+fn request_with_binary_raw_body() -> Result<(), Box<dyn Error>> {
+    let body = b"abcde";
+    let (_m, bridge) = create_bridge_with_binary_body_matcher(body);
+    let result = RestRequest::new(&bridge).raw_body(body.to_vec()).send()?;
+    assert!(result.is_ok());
+
+    assert_eq!(body, &result.raw_body()[..]);
+
+    Ok(())
+}

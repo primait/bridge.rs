@@ -141,10 +141,13 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             return Err(PrimaBridgeError::WrongStatusCode(url, status_code));
         }
         let response_headers = response.headers().clone();
-        let response_body = response.text().map_err(|e| PrimaBridgeError::HttpError {
-            source: e,
-            url: url.clone(),
-        })?;
+        let response_body = response
+            .bytes()
+            .map_err(|e| PrimaBridgeError::HttpError {
+                source: e,
+                url: url.clone(),
+            })?
+            .to_vec();
 
         match self.get_request_type() {
             RequestType::Rest => Ok(Response::rest(
@@ -203,12 +206,13 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         let response_headers = response.headers().clone();
 
         let response_body = response
-            .text()
+            .bytes()
             .map_err(|e| PrimaBridgeError::HttpError {
                 source: e,
                 url: url.clone(),
             })
-            .await?;
+            .await?
+            .to_vec();
 
         match self.get_request_type() {
             RequestType::Rest => Ok(Response::rest(

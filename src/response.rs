@@ -17,7 +17,7 @@ enum RequestType {
 #[derive(Debug)]
 pub struct Response {
     url: Url,
-    response_body: String,
+    response_body: Vec<u8>,
     status_code: StatusCode,
     response_headers: HeaderMap,
     request_id: Uuid,
@@ -28,7 +28,7 @@ impl Response {
     #[doc(hidden)]
     pub fn rest(
         url: Url,
-        response_body: String,
+        response_body: Vec<u8>,
         status_code: StatusCode,
         response_headers: HeaderMap,
         request_id: Uuid,
@@ -46,7 +46,7 @@ impl Response {
     #[doc(hidden)]
     pub fn graphql(
         url: Url,
-        response_body: String,
+        response_body: Vec<u8>,
         status_code: StatusCode,
         response_headers: HeaderMap,
         request_id: Uuid,
@@ -76,7 +76,7 @@ impl Response {
     where
         for<'de> T: Deserialize<'de> + Debug,
     {
-        let json_value = serde_json::from_str(self.response_body.as_str()).map_err(|e| {
+        let json_value = serde_json::from_slice(&self.response_body[..]).map_err(|e| {
             PrimaBridgeError::ResponseBodyNotDeserializable {
                 status_code: self.status_code,
                 source: e,
@@ -87,6 +87,10 @@ impl Response {
             selectors.insert(0, "data");
         };
         Ok(extract_inner_json(self.url, selectors, json_value)?)
+    }
+
+    pub fn raw_body(&self) -> &Vec<u8> {
+        &self.response_body
     }
 
     /// returns `true` if the response is successful
