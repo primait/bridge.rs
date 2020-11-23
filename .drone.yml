@@ -170,7 +170,7 @@ clone:
 
 steps:
 - name: email-failure
-  image: drillster/drone-email
+  image: 595659439703.dkr.ecr.eu-west-1.amazonaws.com/drone-email
   settings:
     from: noreply@prima.it
     host: email-smtp.eu-west-1.amazonaws.com
@@ -191,6 +191,6 @@ depends_on:
 
 ---
 kind: signature
-hmac: f1139d85468effba832be244417a5c73a8408bcf6cebaac4a77651f39a2965cc
+hmac: 8ffac347464a7bd67f45f6b67c13e36aa3b50b0b97c8fc60a7a372f82b4a8a6b
 
 ...
