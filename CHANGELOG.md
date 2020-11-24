@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.4.0
+#####breaking change
+- opentelemetry updated to version 0.10.0. **Careful!!!** The opentelemetry version in your project should match the one in this library
+
 ### 0.3.0
 #####features
 - adds support for raw body response ([PR #21](https://github.com/primait/bridge.rs/pull/21))

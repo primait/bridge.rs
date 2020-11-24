@@ -262,12 +262,12 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
     #[cfg(feature = "tracing_opentelemetry")]
     fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
-        use opentelemetry::api::HttpTextFormat;
+        use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
         use tracing_opentelemetry::OpenTelemetrySpanExt;
 
         let context = tracing::Span::current().context();
         let mut tracing_headers: HashMap<String, String> = HashMap::new();
-        let extractor = opentelemetry::api::TraceContextPropagator::new();
+        let extractor = opentelemetry::sdk::propagation::TraceContextPropagator::new();
         extractor.inject_context(&context, &mut tracing_headers);
 
         tracing_headers
