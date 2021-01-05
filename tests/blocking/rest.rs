@@ -245,6 +245,15 @@ fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
+fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_user_agent("test");
+
+    let result = RestRequest::new(&bridge).send()?;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[test]
 fn request_with_query_string() -> Result<(), Box<dyn Error>> {
     let _mock = mock("GET", "/")
         .match_query(Matcher::AllOf(vec![

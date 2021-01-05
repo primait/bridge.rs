@@ -48,4 +48,20 @@ impl Bridge {
             endpoint,
         }
     }
+
+    pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
+        Self {
+            #[cfg(feature = "blocking")]
+            client: reqwest::blocking::Client::builder()
+                .user_agent(user_agent)
+                .build()
+                .expect("Bridge::with_user_agent()"),
+            #[cfg(not(feature = "blocking"))]
+            client: reqwest::Client::builder()
+                .user_agent(user_agent)
+                .build()
+                .expect("Bridge::with_user_agent()"),
+            endpoint,
+        }
+    }
 }
