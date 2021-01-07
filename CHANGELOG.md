@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.4.1
+#####features
+- adds the ability to set user-agent header
+
 ### 0.4.0
 #####breaking change
 - opentelemetry updated to version 0.10.0. **Careful!!!** The opentelemetry version in your project should match the one in this library
