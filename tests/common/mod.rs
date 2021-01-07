@@ -109,6 +109,24 @@ pub fn create_bridge_with_header_matcher((name, value): (&str, &str)) -> (Mock, 
     (mock, bridge)
 }
 
+pub fn create_bridge_with_user_agent(user_agent: &str) -> (Mock, Bridge) {
+    let mock = mock("GET", "/")
+        .match_header(
+            "x-request-id",
+            Matcher::Regex(
+                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
+            ),
+        )
+        .match_header("User-Agent", user_agent)
+        .with_status(200)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::with_user_agent(url, user_agent);
+
+    (mock, bridge)
+}
+
 pub fn create_bridge_with_json_body_matcher(json: serde_json::Value) -> (Mock, Bridge) {
     let mock = mock("GET", "/")
         .match_header(

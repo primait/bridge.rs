@@ -126,6 +126,15 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
+async fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_user_agent("test");
+
+    let result = RestRequest::new(&bridge).send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
 async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
     let body = b"abcde";
 
