@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.5.0
+#####breaking change
+- opentelemetry updated to version 0.11. **Careful!!!** The opentelemetry version in your project should match the one in this library
+- tracing-opentelemetry updated to version 0.10. **Careful!!!** The tracing-opentelemetry version in your project should match the one in this library
+
 ### 0.4.1
 #####features
 - adds the ability to set user-agent header
