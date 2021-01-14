@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.5.1
+#####features
+- relaxed the uuid requirement
+
 ### 0.5.0
 #####breaking change
 - opentelemetry updated to version 0.11. **Careful!!!** The opentelemetry version in your project should match the one in this library
