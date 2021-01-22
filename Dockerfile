@@ -1,4 +1,4 @@
-FROM 595659439703.dkr.ecr.eu-west-1.amazonaws.com/rust:1.49.0-1
+FROM rust:1.49.0
 
 WORKDIR /code
 
