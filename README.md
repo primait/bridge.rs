@@ -15,7 +15,7 @@ struct DeserializableData {
     test: String
 }
 
-// using we make sure that `Bridge` get instantiated only once
+// using OnceCell we make sure that `Bridge` get instantiated only once
 fn bridge() -> &'static Bridge {
     static BRIDGE: OnceCell<Bridge> = OnceCell::new();
     BRIDGE.get_or_init(|| Bridge::new("https://prima.it/api"))
