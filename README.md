@@ -3,6 +3,8 @@
 # bridge.rs
 Prima bridge pattern implementation for rust
 
+[Api documentation](https://docs.rs/prima_bridge)
+
 ### Example
 
 
@@ -18,7 +20,7 @@ struct DeserializableData {
 // using OnceCell we make sure that `Bridge` gets instantiated only once
 fn bridge() -> &'static Bridge {
     static BRIDGE: OnceCell<Bridge> = OnceCell::new();
-    BRIDGE.get_or_init(|| Bridge::new("https://prima.it/api"))
+    BRIDGE.get_or_init(|| Bridge::new("https://whatever.it/api"))
 }
 
 // Do not use expect in production! It will cause runtime errors. Use Result.
