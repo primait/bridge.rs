@@ -1,6 +1,9 @@
 # Changelog
 
-### 0.6.1
+### Unreleased
+#####breaking change
+- opentelemetry updated to version 0.12. **Careful!!!** The opentelemetry version in your project should match the one in this library
+- several dependencies updated    
 #####bugfix
 - tokio and tokio-test are now dev-dependencies
 
