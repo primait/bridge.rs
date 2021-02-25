@@ -1,14 +1,17 @@
+[config]
+skip_core_tasks = true
+
 [tasks.test]
 dependencies = ["test-blocking", "test-async"]
 
 [tasks.test-blocking]
 command = "cargo"
-args = ["test", "--features", "blocking"]
+args = ["test", "--no-default-features", "--features", "blocking"]
 dependencies = ["build"]
 
 [tasks.test-async]
 command = "cargo"
-args = ["test"]
+args = ["test", "--no-default-features", "--features", "async"]
 dependencies = ["build"]
 
 [tasks.clean]
@@ -65,3 +68,19 @@ args = ["sweep", "-f"]
 description = "Print cache size"
 command = "du"
 args = ["-sh", "target", ".cargo"]
+
+[tasks.build]
+description = "Runs the rust compiler."
+category = "Build"
+install_crate = false
+command = "cargo"
+args = [
+    "build",
+    "@@remove-empty(CARGO_MAKE_CARGO_VERBOSE_FLAGS)",
+    "@@split(CARGO_MAKE_CARGO_BUILD_TEST_FLAGS, )",
+]
+
+[tasks.test-coverage]
+description = "Run tests coverage."
+command = "cargo"
+args = ["tarpaulin", "--exclude-files", "target", "--all-features"]

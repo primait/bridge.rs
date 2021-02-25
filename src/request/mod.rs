@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use async_trait::async_trait;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::{Method, Url};
@@ -263,6 +261,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[cfg(feature = "tracing_opentelemetry")]
     fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
         use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
+        use std::collections::HashMap;
         use tracing_opentelemetry::OpenTelemetrySpanExt;
 
         let context = tracing::Span::current().context();
