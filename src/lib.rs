@@ -21,7 +21,9 @@ pub use self::{
     request::{GraphQLRequest, Request},
     response::Response,
 };
+use crate::collection::BridgesCollection;
 
+mod collection;
 mod errors;
 pub mod prelude;
 mod request;
@@ -47,6 +49,10 @@ impl Bridge {
             client: reqwest::Client::new(),
             endpoint,
         }
+    }
+
+    pub fn add(endpoint: Url) {
+        BridgesCollection::add(endpoint);
     }
 
     pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {

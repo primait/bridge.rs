@@ -1,6 +1,10 @@
 [tasks.test]
 dependencies = ["test-blocking", "test-async"]
 
+[tasks.test-w]
+dependencies = ["test"]
+watch = true
+
 [tasks.test-blocking]
 command = "cargo"
 args = ["test", "--features", "blocking"]
