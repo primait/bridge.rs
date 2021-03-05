@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.6.1
+#####bugfix
+- tokio and tokio-test are now dev-dependencies
+
 ### 0.6.0
 #####breaking change
 - bump tokio to 1.0, which brings rustc minimum version to 1.45

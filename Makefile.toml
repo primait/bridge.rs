@@ -1,3 +1,17 @@
+[config]
+skip_core_tasks = true
+
+[tasks.build]
+description = "Runs the rust compiler."
+category = "Build"
+install_crate = false
+command = "cargo"
+args = [
+    "build",
+    "@@remove-empty(CARGO_MAKE_CARGO_VERBOSE_FLAGS)",
+    "@@split(CARGO_MAKE_CARGO_BUILD_TEST_FLAGS, )",
+]
+
 [tasks.test]
 dependencies = ["test-blocking", "test-async"]
 
