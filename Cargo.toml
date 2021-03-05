@@ -1,6 +1,6 @@
 [package]
 name = "prima_bridge"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Matteo Giachino <matteog@gmail.com>"]
 edition = "2018"
 license = "MIT"
