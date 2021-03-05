@@ -9,26 +9,33 @@ Prima bridge pattern implementation for rust
 
 
 ```rust
-use prima_bridge::prelude::*;
 use serde::Deserialize;
+use prima_bridge::prelude::*;
+use once_cell::sync::OnceCell;
 
-#[derive(Deserialize)]
-struct DeserializableData {
-    test: String
+#[derive(Deserialize, Debug)]
+pub struct MyCustomData {
+    name: String
 }
 
 // using OnceCell we make sure that `Bridge` gets instantiated only once
 fn bridge() -> &'static Bridge {
     static BRIDGE: OnceCell<Bridge> = OnceCell::new();
-    BRIDGE.get_or_init(|| Bridge::new("https://whatever.it/api"))
+    BRIDGE.get_or_init(|| Bridge::new("https://swapi.dev/api".parse().unwrap()))
 }
 
 // Do not use expect in production! It will cause runtime errors. Use Result.
-pub fn fetch_data() -> YourResult<DeserializableData> {
+pub fn fetch_data() -> Result<MyCustomData, PrimaBridgeError> {
     Request::get(bridge())
+        .to("people/1")
         .send()?
-        .get_data(&["nested", "selector"])? // response is {"nested": {"selector": {"data": "test"}}}
-}           
+        .get_data(&[])
+}
+
+fn main() {
+    let data = fetch_data().unwrap();
+    println!("the name is {}", data.name);
+}       
 ```
 
 To understand this example you should know:
