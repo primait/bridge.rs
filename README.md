@@ -24,7 +24,7 @@ fn bridge() -> &'static Bridge {
     BRIDGE.get_or_init(|| Bridge::new("https://swapi.dev/api".parse().unwrap()))
 }
 
-// Do not use expect in production! It will cause runtime errors. Use Result.
+
 pub fn fetch_data() -> Result<MyCustomData, PrimaBridgeError> {
     Request::get(bridge())
         .to("people/1")
@@ -33,7 +33,7 @@ pub fn fetch_data() -> Result<MyCustomData, PrimaBridgeError> {
 }
 
 fn main() {
-    let data = fetch_data().unwrap();
+    let data = fetch_data().expect("there was an error while fetching data");
     println!("the name is {}", data.name);
 }       
 ```
