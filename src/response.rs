@@ -10,6 +10,7 @@ use crate::prelude::*;
 #[derive(Debug, PartialEq)]
 enum RequestType {
     Rest,
+    #[allow(clippy::upper_case_acronyms)]
     GraphQL,
 }
 
@@ -86,7 +87,7 @@ impl Response {
         if self.is_graphql() {
             selectors.insert(0, "data");
         };
-        Ok(extract_inner_json(self.url, selectors, json_value)?)
+        extract_inner_json(self.url, selectors, json_value)
     }
 
     pub fn raw_body(&self) -> &Vec<u8> {

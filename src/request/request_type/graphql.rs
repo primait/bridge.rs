@@ -11,6 +11,7 @@ use crate::request::{Body, DeliverableRequest, GraphQLBody, RequestType};
 use crate::Bridge;
 
 /// The GraphQLRequest is a struct that represent a GraphQL request to be done with the [Bridge](./../struct.Bridge.html)
+#[allow(clippy::upper_case_acronyms)]
 pub struct GraphQLRequest<'a> {
     id: Uuid,
     bridge: &'a Bridge,
