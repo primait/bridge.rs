@@ -17,6 +17,7 @@ mod request_type;
 
 pub enum RequestType {
     Rest,
+    #[allow(clippy::upper_case_acronyms)]
     GraphQL,
 }
 
