@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use async_trait::async_trait;
-use reqwest::header::{HeaderName, HeaderValue};
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
@@ -99,7 +99,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     fn get_method(&self) -> Method;
 
     #[doc(hidden)]
-    fn get_custom_headers(&self) -> &[(HeaderName, HeaderValue)];
+    fn get_custom_headers(&self) -> &HeaderMap;
 
     fn get_all_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
         let mut additional_headers = vec![];

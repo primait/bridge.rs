@@ -149,3 +149,28 @@ async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
     assert_eq!(body, &result.raw_body()[..]);
     Ok(())
 }
+
+#[tokio::test]
+async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let req = RestRequest::new(&bridge).with_custom_headers(vec![
+        (
+            HeaderName::from_static("x-test"),
+            HeaderValue::from_static("value"),
+        ),
+        (
+            HeaderName::from_static("x-test"),
+            HeaderValue::from_static("value"),
+        ),
+    ]);
+
+    assert_eq!(
+        &[(
+            HeaderName::from_static("x-test"),
+            HeaderValue::from_static("value"),
+        )],
+        &req.get_custom_headers()
+    );
+
+    Ok(())
+}
