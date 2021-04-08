@@ -41,15 +41,23 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// This is useful when you are dealing with an api that return errors with a not 2XX status codes.
     fn ignore_status_code(self) -> Self;
 
-    /// adds a new set of headers to the request. Any header already present gets removed.
-    fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self;
+    /// adds a new set of headers to the request. Any header already present gets merged.
+    fn add_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+        let mut custom_headers = HeaderMap::new();
+        custom_headers.extend(self.get_custom_headers());
+        custom_headers.extend(headers);
+        self.set_custom_headers(custom_headers)
+    }
+
+    /// adds a new set of headers to the request. Any header already present gets merged.
+    fn set_custom_headers(self, headers: HeaderMap) -> Self;
 
     /// adds a new set of headers to the request. Any header already present gets removed.
     fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self;
 
     /// add a custom header to the set of request headers
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
-        self.set_custom_headers(headers.into_iter().collect())
+        self.add_custom_headers(headers.into_iter().collect())
     }
 
     /// add a custom query string param
@@ -119,9 +127,6 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                 &self.get_id().to_string(),
             )
             .headers(self.get_all_headers());
-
-        dbg!(self.get_all_headers());
-        dbg!(&request_builder);
 
         let response = request_builder.body(self.get_body()).send().map_err(|e| {
             PrimaBridgeError::HttpError {

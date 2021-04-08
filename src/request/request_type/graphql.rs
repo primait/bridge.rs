@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use async_trait::async_trait;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE};
+use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
@@ -78,12 +78,9 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         }
     }
 
-    fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
-        let mut new_custom_headers = HeaderMap::new();
-        new_custom_headers.extend(self.custom_headers);
-        new_custom_headers.extend(headers);
+    fn set_custom_headers(self, headers: HeaderMap) -> Self {
         Self {
-            custom_headers: new_custom_headers,
+            custom_headers: headers,
             ..self
         }
     }
@@ -124,7 +121,6 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
     }
 
     fn get_custom_headers(&self) -> HeaderMap {
-        dbg!(&self.custom_headers);
         self.custom_headers.clone()
     }
 
