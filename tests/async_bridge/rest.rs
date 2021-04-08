@@ -207,10 +207,13 @@ async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
 
     let auth0_endpoint =
         Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
-
     bridge
         .with_auth0_authentication(auth0_endpoint, "test")
         .await;
+
+    let req = RestRequest::new(&bridge);
+
+    dbg!(req.get_all_headers());
 
     std::thread::sleep(std::time::Duration::from_secs(1));
     assert!(false);

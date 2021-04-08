@@ -23,6 +23,10 @@ pub enum PrimaBridgeError {
     },
     #[error("empty body")]
     EmptyBody,
+    #[error("http error while fetching auth0 token, error: {0}")]
+    Auth0TokenFetchError(reqwest::Error),
+    #[error("http error while deserializing auth0 token, error: {0}")]
+    Auth0TokenDeserializeError(reqwest::Error),
 }
 
 impl From<Infallible> for PrimaBridgeError {

@@ -79,8 +79,13 @@ impl TokenDispenserHandle {
         let (send, recv) = oneshot::channel();
         let msg = TokenDispenserMessage::RefreshToken { respond_to: send };
         let _ = self.sender.send(msg).await;
-        let token = recv
-            .await
-            .expect("TokenDispenserHandle task has been killed");
+        let _ = recv.await.expect("refresh_token task has been killed");
+    }
+
+    pub async fn get_token(&self) -> Option<String> {
+        let (send, recv) = oneshot::channel();
+        let msg = TokenDispenserMessage::GetToken { respond_to: send };
+        let _ = self.sender.send(msg).await;
+        recv.await.expect("get_token task has been killed")
     }
 }
