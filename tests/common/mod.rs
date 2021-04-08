@@ -163,3 +163,10 @@ pub fn create_bridge_with_binary_body_matcher(body: &[u8]) -> (Mock, Bridge) {
 
     (mock, bridge)
 }
+
+pub fn create_auth0_mock() -> Mock {
+    mock("GET", "/token")
+        .with_status(200)
+        .with_body("{\"token\": \"abcdef\"}")
+        .create()
+}
