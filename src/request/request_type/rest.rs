@@ -77,8 +77,11 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
     }
 
     fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+        let mut new_custom_headers = HeaderMap::new();
+        new_custom_headers.extend(self.custom_headers);
+        new_custom_headers.extend(headers);
         Self {
-            custom_headers: headers.into_iter().collect(),
+            custom_headers: new_custom_headers,
             ..self
         }
     }
@@ -118,8 +121,8 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         self.method.clone()
     }
 
-    fn get_custom_headers(&self) -> &HeaderMap {
-        &self.custom_headers
+    fn get_custom_headers(&self) -> HeaderMap {
+        self.custom_headers.clone()
     }
 
     fn get_body(&self) -> Vec<u8> {

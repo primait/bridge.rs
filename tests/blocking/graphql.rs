@@ -69,7 +69,7 @@ fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
     let _mock = mock("POST", "/")
         .match_header("content-type", "application/json")
-        .match_header("x-test", "value")
+        //.match_header("x-test", "value")
         .match_header("x-test2", "value")
         .match_body(Matcher::Json(json!({ "query": query })))
         .with_status(200)

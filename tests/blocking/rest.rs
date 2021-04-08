@@ -220,8 +220,8 @@ fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
     };
     let request = RestRequest::new(&bridge).json_body(&data)?;
     assert_eq!(
-        request.get_custom_headers(),
-        &[(CONTENT_TYPE, HeaderValue::from_static("application/json"))]
+        request.get_custom_headers().get(CONTENT_TYPE),
+        HeaderValue::from_str("application/json").ok().as_ref()
     );
     let result = request.send();
 

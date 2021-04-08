@@ -25,6 +25,31 @@ command = "cargo"
 args = ["test"]
 dependencies = ["build"]
 
+### with cargo-limit installed
+[tasks.lbuild]
+description = "Runs the rust compiler."
+category = "Build"
+install_crate = false
+command = "cargo"
+args = [
+    "lbuild",
+    "@@remove-empty(CARGO_MAKE_CARGO_VERBOSE_FLAGS)",
+    "@@split(CARGO_MAKE_CARGO_BUILD_TEST_FLAGS, )",
+]
+
+[tasks.ltest]
+dependencies = ["ltest-blocking", "ltest-async"]
+
+[tasks.ltest-blocking]
+command = "cargo"
+args = ["ltest", "--features", "blocking"]
+dependencies = ["lbuild"]
+
+[tasks.ltest-async]
+command = "cargo"
+args = ["ltest"]
+dependencies = ["lbuild"]
+
 [tasks.clean]
 command = "cargo"
 args = ["clean"]

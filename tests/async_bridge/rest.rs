@@ -164,12 +164,10 @@ async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> 
         ),
     ]);
 
+    let headers = req.get_custom_headers();
     assert_eq!(
-        &[(
-            HeaderName::from_static("x-test"),
-            HeaderValue::from_static("value"),
-        )],
-        &req.get_custom_headers()
+        HeaderValue::from_str("value").ok().as_ref(),
+        headers.get("x-test")
     );
 
     Ok(())
