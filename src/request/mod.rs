@@ -57,7 +57,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
     /// add a custom header to the set of request headers
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
-        self.add_custom_headers(headers.into_iter().collect())
+        self.add_custom_headers(headers)
     }
 
     /// add a custom query string param
