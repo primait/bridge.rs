@@ -1,6 +1,7 @@
 use crate::common::*;
 use prima_bridge::prelude::*;
 use reqwest::header::{HeaderName, HeaderValue};
+use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::error::Error;
@@ -194,6 +195,25 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
         .await?
         .get_data(&["hello"])?;
     assert_eq!(result, "world!");
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
+    let body = b"abcde";
+    let (_m, mut bridge) = create_bridge_with_binary_body_matcher(body);
+    let _auth0 = create_auth0_mock();
+
+    let auth0_endpoint =
+        Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
+
+    bridge
+        .with_auth0_authentication(auth0_endpoint, "test")
+        .await;
+
+    std::thread::sleep(std::time::Duration::from_secs(1));
+    assert!(false);
 
     Ok(())
 }

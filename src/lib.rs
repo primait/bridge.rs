@@ -22,11 +22,14 @@ pub use self::{
     response::graphql::{Error, ParsedGraphqlResponse, PossiblyParsedData},
     response::Response,
 };
+use crate::token_dispenser::{TokenDispenser, TokenDispenserHandle};
+use tokio::sync::mpsc;
 
 mod errors;
 pub mod prelude;
 mod request;
 mod response;
+mod token_dispenser;
 
 /// The bridge instance to issue external requests.
 #[derive(Debug)]
@@ -37,6 +40,7 @@ pub struct Bridge {
     client: reqwest::Client,
     /// the url this bridge should call to
     endpoint: Url,
+    token_dispenser_handle: Option<TokenDispenserHandle>,
 }
 
 impl Bridge {
@@ -47,6 +51,7 @@ impl Bridge {
             #[cfg(not(feature = "blocking"))]
             client: reqwest::Client::new(),
             endpoint,
+            token_dispenser_handle: None,
         }
     }
 
@@ -63,6 +68,13 @@ impl Bridge {
                 .build()
                 .expect("Bridge::with_user_agent()"),
             endpoint,
+            token_dispenser_handle: None,
         }
+    }
+
+    pub async fn with_auth0_authentication(&mut self, endpoint: Url, audience: &str) {
+        let mut token_dispenser_handle = TokenDispenserHandle::run(endpoint, audience);
+        let new_token = token_dispenser_handle.refresh_token().await;
+        self.token_dispenser_handle = Some(token_dispenser_handle);
     }
 }
