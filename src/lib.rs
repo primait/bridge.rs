@@ -22,8 +22,9 @@ pub use self::{
     response::graphql::{Error, ParsedGraphqlResponse, PossiblyParsedData},
     response::Response,
 };
-use crate::token_dispenser::{TokenDispenser, TokenDispenserHandle};
-use tokio::sync::mpsc;
+use crate::errors::PrimaBridgeResult;
+use crate::token_dispenser::TokenDispenserHandle;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 
 mod errors;
 pub mod prelude;
@@ -74,7 +75,8 @@ impl Bridge {
 
     pub async fn with_auth0_authentication(&mut self, endpoint: Url, audience: &str) {
         let mut token_dispenser_handle = TokenDispenserHandle::run(endpoint, audience);
-        let new_token = token_dispenser_handle.refresh_token().await;
+        let _ = token_dispenser_handle.refresh_token().await;
+
         self.token_dispenser_handle = Some(token_dispenser_handle);
     }
 }

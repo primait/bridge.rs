@@ -25,6 +25,10 @@ pub enum PrimaBridgeError {
     },
     #[error("empty body")]
     EmptyBody,
+    #[error("http error while fetching auth0 token, error: {0}")]
+    Auth0TokenFetchError(reqwest::Error),
+    #[error("http error while deserializing auth0 token, error: {0}")]
+    Auth0TokenDeserializeError(reqwest::Error),
     #[error("the response body id not valid utf-8. error: {source}")]
     Utf8Error { source: Utf8Error },
 }
