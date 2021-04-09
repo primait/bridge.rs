@@ -15,10 +15,9 @@ pub struct TokenDispenser {
     receiver: mpsc::Receiver<TokenDispenserMessage>,
 }
 
+#[derive(Debug)]
 pub enum TokenDispenserMessage {
-    RefreshToken {
-        respond_to: oneshot::Sender<Option<String>>,
-    },
+    RefreshToken,
     GetToken {
         respond_to: oneshot::Sender<Option<String>>,
     },
@@ -44,16 +43,18 @@ impl TokenDispenser {
         }
     }
 
+    async fn handle_refresh(&mut self) -> reqwest::Result<()> {
+        let response: Option<TokenResponse> =
+            reqwest::get(self.endpoint.clone()).await?.json().await?;
+
+        self.token = response.map(|token_response| token_response.token);
+        Ok(())
+    }
+
     async fn handle_message(&mut self, msg: TokenDispenserMessage) {
         match msg {
-            TokenDispenserMessage::RefreshToken { respond_to } => {
-                let response = reqwest::get(self.endpoint.clone()).await;
-                let token_response: Option<TokenResponse> = match response {
-                    Ok(resp) => resp.json().await.ok(),
-                    Err(_) => None,
-                };
-                self.token = token_response.map(|token_response| token_response.token);
-                let _ = respond_to.send(self.token.clone());
+            TokenDispenserMessage::RefreshToken => {
+                self.handle_refresh().await;
             }
             TokenDispenserMessage::GetToken { respond_to } => {
                 let _ = respond_to.send(self.token.to_owned());
@@ -76,10 +77,8 @@ impl TokenDispenserHandle {
     }
 
     pub async fn refresh_token(&mut self) {
-        let (send, recv) = oneshot::channel();
-        let msg = TokenDispenserMessage::RefreshToken { respond_to: send };
+        let msg = TokenDispenserMessage::RefreshToken;
         let _ = self.sender.send(msg).await;
-        let _ = recv.await.expect("refresh_token task has been killed");
     }
 
     pub async fn get_token(&self) -> Option<String> {
