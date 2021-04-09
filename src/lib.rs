@@ -73,10 +73,26 @@ impl Bridge {
         }
     }
 
-    pub async fn with_auth0_authentication(&mut self, endpoint: Url, audience: &str) {
-        let mut token_dispenser_handle = TokenDispenserHandle::run(endpoint, audience);
+    pub async fn with_auth0_authentication(&mut self, auth0_endpoint: Url, audience: &str) {
+        let mut token_dispenser_handle = TokenDispenserHandle::run(auth0_endpoint, audience);
         let _ = token_dispenser_handle.refresh_token().await;
 
         self.token_dispenser_handle = Some(token_dispenser_handle);
+    }
+
+    pub async fn get_headers(&self) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+
+        if let Some(handle) = &self.token_dispenser_handle {
+            let token = handle.get_token().await;
+            token.map(|t| {
+                headers.append(
+                    HeaderName::from_static("x-token"),
+                    HeaderValue::from_str(t.as_str()).unwrap(),
+                );
+            });
+        };
+
+        headers
     }
 }

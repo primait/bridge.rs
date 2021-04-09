@@ -213,7 +213,7 @@ async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
 
     let req = RestRequest::new(&bridge);
 
-    dbg!(req.get_all_headers());
+    dbg!(req.get_bridge().get_headers().await);
 
     std::thread::sleep(std::time::Duration::from_secs(1));
     assert!(false);

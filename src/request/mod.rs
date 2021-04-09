@@ -190,6 +190,15 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             )
             .headers(self.get_all_headers());
 
+        let auth0_headers = self.get_bridge().get_headers().await;
+
+        let request_builder = self
+            .get_all_headers()
+            .iter()
+            .fold(request_builder, |request, (name, value)| {
+                request.header(name, value)
+            });
+
         let response = request_builder
             .body(self.get_body())
             .send()
