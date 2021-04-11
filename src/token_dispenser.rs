@@ -1,5 +1,4 @@
-use crate::token_dispenser::TokenDispenserMessage::RefreshToken;
-use reqwest::{Error, Response, Url};
+use reqwest::Url;
 use serde::Deserialize;
 use tokio::sync::{mpsc, oneshot};
 
@@ -18,6 +17,9 @@ pub struct TokenDispenser {
 #[derive(Debug)]
 pub enum TokenDispenserMessage {
     RefreshToken,
+    TokenNeedsRefresh {
+        respond_to: oneshot::Sender<bool>,
+    },
     GetToken {
         respond_to: oneshot::Sender<Option<String>>,
     },
@@ -59,6 +61,9 @@ impl TokenDispenser {
             TokenDispenserMessage::GetToken { respond_to } => {
                 let _ = respond_to.send(self.token.to_owned());
             }
+            TokenDispenserMessage::TokenNeedsRefresh { respond_to } => {
+                let _ = respond_to.send(true);
+            }
         }
     }
 }
@@ -73,10 +78,31 @@ impl TokenDispenserHandle {
         let (sender, receiver) = mpsc::channel(8);
         let mut actor = TokenDispenser::new(endpoint, audience.to_string(), receiver);
         tokio::spawn(async move { actor.run().await });
+
         Self { sender }
     }
 
-    pub async fn refresh_token(&mut self) {
+    pub async fn periodic_check(&self, duration: std::time::Duration) {
+        let interval_sender = self.sender.clone();
+        tokio::spawn(async move {
+            let mut ticker = tokio::time::interval(duration);
+            loop {
+                ticker.tick().await;
+                let (send, recv) = oneshot::channel();
+                let _ = interval_sender
+                    .send(TokenDispenserMessage::TokenNeedsRefresh { respond_to: send })
+                    .await;
+                let needs_refresh = recv.await.expect("task has been killed");
+                if needs_refresh {
+                    let _ = interval_sender
+                        .send(TokenDispenserMessage::RefreshToken)
+                        .await;
+                }
+            }
+        });
+    }
+
+    pub async fn refresh_token(&self) {
         let msg = TokenDispenserMessage::RefreshToken;
         let _ = self.sender.send(msg).await;
     }

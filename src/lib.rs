@@ -22,7 +22,6 @@ pub use self::{
     response::graphql::{Error, ParsedGraphqlResponse, PossiblyParsedData},
     response::Response,
 };
-use crate::errors::PrimaBridgeResult;
 use crate::token_dispenser::TokenDispenserHandle;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 
@@ -74,15 +73,17 @@ impl Bridge {
     }
 
     pub async fn with_auth0_authentication(&mut self, auth0_endpoint: Url, audience: &str) {
-        let mut token_dispenser_handle = TokenDispenserHandle::run(auth0_endpoint, audience);
+        let token_dispenser_handle = TokenDispenserHandle::run(auth0_endpoint, audience);
         let _ = token_dispenser_handle.refresh_token().await;
+        let _ = token_dispenser_handle
+            .periodic_check(std::time::Duration::from_secs(2))
+            .await;
 
         self.token_dispenser_handle = Some(token_dispenser_handle);
     }
 
     pub async fn get_headers(&self) -> HeaderMap {
         let mut headers = HeaderMap::new();
-
         if let Some(handle) = &self.token_dispenser_handle {
             let token = handle.get_token().await;
             token.map(|t| {
