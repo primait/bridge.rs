@@ -1,6 +1,6 @@
 use crate::common::*;
 use prima_bridge::prelude::*;
-use reqwest::header::{HeaderName, HeaderValue};
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -212,11 +212,9 @@ async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
         .await;
 
     let req = RestRequest::new(&bridge);
-
-    dbg!(req.get_bridge().get_headers().await);
-
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    assert!(false);
+    let mut h = HeaderMap::new();
+    h.insert("x-token", HeaderValue::from_static("abcdef"));
+    assert_eq!(h, req.get_bridge().get_headers().await);
 
     Ok(())
 }
