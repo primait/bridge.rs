@@ -21,8 +21,8 @@ pub use self::{
     request::{GraphQLRequest, Request},
     response::Response,
 };
+
 use crate::token_dispenser::TokenDispenserHandle;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 
 mod errors;
 pub mod prelude;
@@ -39,15 +39,59 @@ pub struct Bridge {
     client: reqwest::Client,
     /// the url this bridge should call to
     endpoint: Url,
-    token_dispenser_handle: Option<TokenDispenserHandle>,
+    token_dispenser_handle: Option<token_dispenser::TokenDispenserHandle>,
 }
 
+#[cfg(feature = "blocking")]
 impl Bridge {
     pub fn new(endpoint: Url) -> Self {
         Self {
-            #[cfg(feature = "blocking")]
             client: reqwest::blocking::Client::new(),
-            #[cfg(not(feature = "blocking"))]
+            endpoint,
+            token_dispenser_handle: None,
+        }
+    }
+
+    pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
+        Self {
+            client: reqwest::blocking::Client::builder()
+                .user_agent(user_agent)
+                .build()
+                .expect("Bridge::with_user_agent()"),
+            endpoint,
+            token_dispenser_handle: None,
+        }
+    }
+
+    pub fn with_auth0_authentication(&mut self, auth0_endpoint: Url, audience: &str) {
+        let token_dispenser_handle = TokenDispenserHandle::run(auth0_endpoint, audience);
+        let _ = token_dispenser_handle.refresh_token();
+        let _ = token_dispenser_handle.periodic_check(std::time::Duration::from_secs(60));
+
+        self.token_dispenser_handle = Some(token_dispenser_handle);
+    }
+
+    pub fn get_headers(&self) -> reqwest::header::HeaderMap {
+        use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+        let mut headers = HeaderMap::new();
+        if let Some(handle) = &self.token_dispenser_handle {
+            let token = handle.get_token();
+            token.map(|t| {
+                headers.append(
+                    HeaderName::from_static("x-token"),
+                    HeaderValue::from_str(t.as_str()).unwrap(),
+                );
+            });
+        };
+
+        headers
+    }
+}
+
+#[cfg(not(feature = "blocking"))]
+impl Bridge {
+    pub fn new(endpoint: Url) -> Self {
+        Self {
             client: reqwest::Client::new(),
             endpoint,
             token_dispenser_handle: None,
@@ -56,12 +100,6 @@ impl Bridge {
 
     pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
         Self {
-            #[cfg(feature = "blocking")]
-            client: reqwest::blocking::Client::builder()
-                .user_agent(user_agent)
-                .build()
-                .expect("Bridge::with_user_agent()"),
-            #[cfg(not(feature = "blocking"))]
             client: reqwest::Client::builder()
                 .user_agent(user_agent)
                 .build()
@@ -81,7 +119,8 @@ impl Bridge {
         self.token_dispenser_handle = Some(token_dispenser_handle);
     }
 
-    pub async fn get_headers(&self) -> HeaderMap {
+    pub async fn get_headers(&self) -> reqwest::header::HeaderMap {
+        use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
         let mut headers = HeaderMap::new();
         if let Some(handle) = &self.token_dispenser_handle {
             let token = handle.get_token().await;
