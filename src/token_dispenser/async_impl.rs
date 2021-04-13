@@ -37,7 +37,7 @@ impl TokenDispenser {
     ) -> Self {
         Self {
             endpoint,
-            audience: audience.to_string(),
+            audience,
             token: None,
             receiver,
         }
