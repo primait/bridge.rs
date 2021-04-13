@@ -125,12 +125,12 @@ impl Bridge {
         let mut headers = HeaderMap::new();
         if let Some(handle) = &self.token_dispenser_handle {
             let token = handle.get_token().await;
-            token.map(|t| {
+            if let Some(t) = token {
                 headers.append(
                     HeaderName::from_static("x-token"),
                     HeaderValue::from_str(t.as_str()).unwrap(),
                 );
-            });
+            }
         };
 
         headers
