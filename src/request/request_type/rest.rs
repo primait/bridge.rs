@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use async_trait::async_trait;
-use reqwest::header::{HeaderName, HeaderValue, CONTENT_TYPE};
+use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
@@ -20,7 +20,7 @@ pub struct RestRequest<'a> {
     path: Option<&'a str>,
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
-    custom_headers: Vec<(HeaderName, HeaderValue)>,
+    custom_headers: HeaderMap,
 }
 
 impl<'a> RestRequest<'a> {
@@ -50,10 +50,7 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
 
     fn json_body<B: Serialize>(self, body: &B) -> PrimaBridgeResult<Self> {
         let mut custom_headers = self.custom_headers;
-        custom_headers.append(&mut vec![(
-            CONTENT_TYPE,
-            HeaderValue::from_static("application/json"),
-        )]);
+        custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         Ok(Self {
             body: Some(serde_json::to_string(body)?.try_into()?),
             custom_headers,
@@ -79,7 +76,7 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         }
     }
 
-    fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+    fn set_custom_headers(self, headers: HeaderMap) -> Self {
         Self {
             custom_headers: headers,
             ..self
@@ -121,8 +118,8 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         self.method.clone()
     }
 
-    fn get_custom_headers(&self) -> &[(HeaderName, HeaderValue)] {
-        self.custom_headers.as_slice()
+    fn get_custom_headers(&self) -> HeaderMap {
+        self.custom_headers.clone()
     }
 
     fn get_body(&self) -> Vec<u8> {

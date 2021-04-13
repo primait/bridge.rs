@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use async_trait::async_trait;
-use reqwest::header::{HeaderName, HeaderValue};
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
@@ -41,22 +41,23 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// This is useful when you are dealing with an api that return errors with a not 2XX status codes.
     fn ignore_status_code(self) -> Self;
 
-    /// adds a new set of headers to the request. Any header already present gets removed.
-    fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self;
+    /// adds a new set of headers to the request. Any header already present gets merged.
+    fn add_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+        let mut custom_headers = HeaderMap::new();
+        custom_headers.extend(self.get_custom_headers());
+        custom_headers.extend(headers);
+        self.set_custom_headers(custom_headers)
+    }
+
+    /// adds a new set of headers to the request. Any header already present gets merged.
+    fn set_custom_headers(self, headers: HeaderMap) -> Self;
 
     /// adds a new set of headers to the request. Any header already present gets removed.
     fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self;
 
     /// add a custom header to the set of request headers
     fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
-        let mut custom_headers = self.get_custom_headers().to_vec();
-        custom_headers = headers
-            .into_iter()
-            .fold(custom_headers, |mut acc, (name, value)| {
-                acc.push((name, value));
-                acc
-            });
-        self.set_custom_headers(custom_headers)
+        self.add_custom_headers(headers)
     }
 
     /// add a custom query string param
@@ -99,12 +100,12 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     fn get_method(&self) -> Method;
 
     #[doc(hidden)]
-    fn get_custom_headers(&self) -> &[(HeaderName, HeaderValue)];
+    fn get_custom_headers(&self) -> HeaderMap;
 
-    fn get_all_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
-        let mut additional_headers = vec![];
-        additional_headers.append(&mut self.get_custom_headers().to_vec());
-        additional_headers.append(&mut self.tracing_headers().to_vec());
+    fn get_all_headers(&self) -> HeaderMap {
+        let mut additional_headers = HeaderMap::new();
+        additional_headers.extend(self.get_custom_headers());
+        additional_headers.extend(self.tracing_headers());
         additional_headers
     }
 
@@ -124,12 +125,8 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .header(
                 HeaderName::from_static("x-request-id"),
                 &self.get_id().to_string(),
-            );
-
-        let request_builder = self
-            .get_all_headers()
-            .iter()
-            .fold(request_builder, |rb, (name, value)| rb.header(name, value));
+            )
+            .headers(self.get_all_headers());
 
         let response = request_builder.body(self.get_body()).send().map_err(|e| {
             PrimaBridgeError::HttpError {
@@ -181,14 +178,8 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .header(
                 HeaderName::from_static("x-request-id"),
                 &request_id.to_string(),
-            );
-
-        let request_builder = self
-            .get_all_headers()
-            .iter()
-            .fold(request_builder, |request, (name, value)| {
-                request.header(name, value)
-            });
+            )
+            .headers(self.get_all_headers());
 
         let response = request_builder
             .body(self.get_body())
@@ -262,7 +253,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     }
 
     #[cfg(feature = "tracing_opentelemetry")]
-    fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
+    fn tracing_headers(&self) -> HeaderMap {
         use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
         use tracing_opentelemetry::OpenTelemetrySpanExt;
 

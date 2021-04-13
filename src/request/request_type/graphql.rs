@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 
 use async_trait::async_trait;
-use reqwest::header::{HeaderName, HeaderValue, CONTENT_TYPE};
+use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
@@ -20,7 +20,7 @@ pub struct GraphQLRequest<'a> {
     path: Option<&'a str>,
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
-    custom_headers: Vec<(HeaderName, HeaderValue)>,
+    custom_headers: HeaderMap,
 }
 
 impl<'a> GraphQLRequest<'a> {
@@ -29,6 +29,8 @@ impl<'a> GraphQLRequest<'a> {
         bridge: &'a Bridge,
         graphql_body: impl Into<GraphQLBody<S>>,
     ) -> PrimaBridgeResult<Self> {
+        let mut custom_headers = HeaderMap::default();
+        custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
@@ -37,7 +39,7 @@ impl<'a> GraphQLRequest<'a> {
             path: Default::default(),
             query_pairs: Default::default(),
             ignore_status_code: Default::default(),
-            custom_headers: vec![(CONTENT_TYPE, HeaderValue::from_static("application/json"))],
+            custom_headers,
         })
     }
 }
@@ -76,7 +78,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         }
     }
 
-    fn set_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+    fn set_custom_headers(self, headers: HeaderMap) -> Self {
         Self {
             custom_headers: headers,
             ..self
@@ -118,8 +120,8 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         self.method.clone()
     }
 
-    fn get_custom_headers(&self) -> &[(HeaderName, HeaderValue)] {
-        self.custom_headers.as_slice()
+    fn get_custom_headers(&self) -> HeaderMap {
+        self.custom_headers.clone()
     }
 
     fn get_body(&self) -> Vec<u8> {
