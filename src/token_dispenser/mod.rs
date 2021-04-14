@@ -10,8 +10,6 @@ mod blocking;
 #[cfg(feature = "blocking")]
 pub use blocking::TokenDispenserHandle;
 
-mod cache;
-
 #[derive(Deserialize, Debug)]
 pub struct TokenResponse {
     token: String,

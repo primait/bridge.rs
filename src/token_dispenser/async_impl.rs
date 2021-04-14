@@ -1,8 +1,9 @@
-use crate::auth0_configuration::Auth0Configuration;
-use crate::errors::PrimaBridgeResult;
-use crate::token_dispenser::cache::Cache;
 use reqwest::Url;
 use tokio::sync::{mpsc, oneshot};
+
+use crate::auth0_configuration::Auth0Configuration;
+use crate::cache::{Cache, Cacher};
+use crate::errors::PrimaBridgeResult;
 
 #[derive(Debug)]
 pub enum TokenDispenserMessage {
@@ -30,6 +31,7 @@ pub struct TokenDispenser {
     audience: String,
     token: Option<String>,
     receiver: mpsc::Receiver<TokenDispenserMessage>,
+    cache: Cache,
 }
 
 impl TokenDispenser {
@@ -37,12 +39,14 @@ impl TokenDispenser {
         endpoint: Url,
         audience: String,
         receiver: mpsc::Receiver<TokenDispenserMessage>,
+        cache: Cache,
     ) -> Self {
         Self {
             endpoint,
             audience,
             token: None,
             receiver,
+            cache,
         }
     }
 
@@ -58,6 +62,10 @@ impl TokenDispenser {
             reqwest::get(self.endpoint.clone()).await?.json().await?;
 
         self.token = response.map(|token_response| token_response.token);
+
+        // todo: cache set value here?
+        // &self.cache.set()
+
         Ok(())
     }
 
@@ -79,18 +87,21 @@ impl TokenDispenser {
 #[derive(Debug)]
 pub struct TokenDispenserHandle {
     sender: mpsc::Sender<TokenDispenserMessage>,
-    cache: Cache,
 }
 
 /// the handle is responsible of exposing a public api to the underlying actor
 impl TokenDispenserHandle {
     pub fn run(config: Auth0Configuration) -> PrimaBridgeResult<Self> {
-        let cache = Cache::new(&config)?;
         let (sender, receiver) = mpsc::channel(8);
-        let mut actor = TokenDispenser::new(config.base_url().clone(), config.audience(), receiver);
+        let mut actor = TokenDispenser::new(
+            config.base_url().clone(),
+            config.audience(),
+            receiver,
+            Cache::new(config.cache_config())?,
+        );
         tokio::spawn(async move { actor.run().await });
 
-        Ok(Self { sender, cache })
+        Ok(Self { sender })
     }
 
     pub async fn periodic_check(&self, duration: std::time::Duration) {
