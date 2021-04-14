@@ -22,13 +22,17 @@ pub use self::{
     response::Response,
 };
 
+use crate::auth0_configuration::Auth0Configuration;
 use crate::token_dispenser::TokenDispenserHandle;
 
+pub mod auth0_configuration;
 mod errors;
 pub mod prelude;
 mod request;
 mod response;
 mod token_dispenser;
+
+static INTERVAL_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
 
 /// The bridge instance to issue external requests.
 #[derive(Debug)]
@@ -66,7 +70,7 @@ impl Bridge {
     pub fn with_auth0_authentication(&mut self, auth0_endpoint: Url, audience: &str) {
         let token_dispenser_handle = TokenDispenserHandle::run(auth0_endpoint, audience);
         let _ = token_dispenser_handle.refresh_token();
-        let _ = token_dispenser_handle.periodic_check(std::time::Duration::from_secs(60));
+        let _ = token_dispenser_handle.periodic_check(INTERVAL_CHECK);
 
         self.token_dispenser_handle = Some(token_dispenser_handle);
     }
@@ -109,14 +113,13 @@ impl Bridge {
         }
     }
 
-    pub async fn with_auth0_authentication(&mut self, auth0_endpoint: Url, audience: &str) {
-        let token_dispenser_handle = TokenDispenserHandle::run(auth0_endpoint, audience);
-        let _ = token_dispenser_handle.refresh_token().await;
-        let _ = token_dispenser_handle
-            .periodic_check(std::time::Duration::from_secs(2))
-            .await;
-
-        self.token_dispenser_handle = Some(token_dispenser_handle);
+    pub async fn with_auth0_authentication(&mut self, config: Auth0Configuration) {
+        let token_dispenser_handle = TokenDispenserHandle::run(config).ok();
+        if let Some(handle) = token_dispenser_handle {
+            handle.refresh_token().await;
+            handle.periodic_check(INTERVAL_CHECK).await;
+            self.token_dispenser_handle = Some(handle);
+        }
     }
 
     pub async fn get_headers(&self) -> reqwest::header::HeaderMap {

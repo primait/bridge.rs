@@ -27,6 +27,8 @@ pub enum PrimaBridgeError {
     Auth0TokenFetchError(reqwest::Error),
     #[error("http error while deserializing auth0 token, error: {0}")]
     Auth0TokenDeserializeError(reqwest::Error),
+    #[error(transparent)]
+    Auth0CacheError(#[from] redis::RedisError),
 }
 
 impl From<Infallible> for PrimaBridgeError {

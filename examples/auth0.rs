@@ -1,4 +1,5 @@
 use mockito::{mock, Mock};
+use prima_bridge::auth0_configuration::Auth0Configuration;
 use prima_bridge::Bridge;
 use rand::Rng;
 use reqwest::Url;
@@ -13,7 +14,8 @@ async fn main() {
     let auth0_url = Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
 
     let mut bridge = Bridge::new(url);
-    bridge.with_auth0_authentication(auth0_url, "test").await;
+    let conf = Auth0Configuration::new(auth0_url, "test".to_string());
+    bridge.with_auth0_authentication(conf).await;
 
     let mut i = 0;
     loop {
