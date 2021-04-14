@@ -27,6 +27,7 @@ use crate::auth0_configuration::Auth0Configuration;
 use crate::token_dispenser::TokenDispenserHandle;
 
 pub mod auth0_configuration;
+pub mod cache;
 mod errors;
 pub mod prelude;
 mod request;

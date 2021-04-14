@@ -15,6 +15,7 @@ async = ["reqwest", "futures", "futures-util"]
 tracing_opentelemetry = ["opentelemetry", "tracing", "tracing-opentelemetry"]
 gzip = ["reqwest/gzip"]
 auth0 = ["redis"]
+inmemory = []
 
 [dependencies]
 reqwest = { version = "0.11.4", features = ["json", "blocking"], optional = true }

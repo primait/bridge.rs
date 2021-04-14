@@ -1,10 +1,11 @@
-use reqwest::Url;
 use std::time::Duration;
+
+use reqwest::Url;
 
 pub struct Auth0Configuration {
     base_url: Url,
     audience: String,
-    //cache: Auth0ConfigurationCache,
+    cache: Auth0CacheConfiguration,
     //client: Auth0ConfigurationClient,
 }
 
@@ -12,13 +13,13 @@ impl Auth0Configuration {
     pub fn new(
         base_url: Url,
         audience: String,
-        //cache: Auth0ConfigurationCache,
+        cache: Auth0CacheConfiguration,
         //client: Auth0ConfigurationClient,
     ) -> Self {
         Self {
             base_url,
             audience,
-            //cache,
+            cache,
             //client,
         }
     }
@@ -28,30 +29,31 @@ impl Auth0Configuration {
     pub fn audience(&self) -> String {
         self.audience.clone()
     }
-    pub fn redis_connection_uri(&self) -> String {
-        //self.cache.redis_connection_uri.clone()
-
-        "".to_string()
+    pub fn cache_config(&self) -> &Auth0CacheConfiguration {
+        &self.cache
     }
 }
 
-pub struct Auth0ConfigurationCache {
+pub struct Auth0CacheConfiguration {
     redis_connection_uri: String,
     namespace: String,
     encryption_key: String,
 }
 
-impl Auth0ConfigurationCache {
-    fn new(redis_connection_uri: String, namespace: String, encryption_key: String) -> Self {
+impl Auth0CacheConfiguration {
+    pub fn new(redis_connection_uri: String, namespace: String, encryption_key: String) -> Self {
         Self {
             redis_connection_uri,
             namespace,
             encryption_key,
         }
     }
+    pub fn redis_connection_uri(&self) -> &str {
+        self.redis_connection_uri.as_str()
+    }
 }
 
-pub struct Auth0ConfigurationClient {
+pub struct Auth0ClientConfiguration {
     check_interval: Duration,
     min_token_duration: f32,
     max_token_duration: f32,
@@ -59,7 +61,7 @@ pub struct Auth0ConfigurationClient {
     client_secret: String,
 }
 
-impl Auth0ConfigurationClient {
+impl Auth0ClientConfiguration {
     fn new(client_id: String, client_secret: String) -> Self {
         Self {
             check_interval: Duration::from_secs(1),
