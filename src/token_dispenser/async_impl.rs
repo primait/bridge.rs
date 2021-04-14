@@ -1,3 +1,6 @@
+use crate::auth0_configuration::Auth0Configuration;
+use crate::errors::PrimaBridgeResult;
+use crate::token_dispenser::cache::Cache;
 use reqwest::Url;
 use tokio::sync::{mpsc, oneshot};
 
@@ -50,6 +53,7 @@ impl TokenDispenser {
     }
 
     async fn handle_refresh(&mut self) -> reqwest::Result<()> {
+        // todo: usare il client del bridge
         let response: Option<super::TokenResponse> =
             reqwest::get(self.endpoint.clone()).await?.json().await?;
 
@@ -72,19 +76,21 @@ impl TokenDispenser {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct TokenDispenserHandle {
     sender: mpsc::Sender<TokenDispenserMessage>,
+    cache: Cache,
 }
 
 /// the handle is responsible of exposing a public api to the underlying actor
 impl TokenDispenserHandle {
-    pub fn run(endpoint: Url, audience: impl ToString) -> Self {
+    pub fn run(config: Auth0Configuration) -> PrimaBridgeResult<Self> {
+        let cache = Cache::new(&config)?;
         let (sender, receiver) = mpsc::channel(8);
-        let mut actor = TokenDispenser::new(endpoint, audience.to_string(), receiver);
+        let mut actor = TokenDispenser::new(config.base_url().clone(), config.audience(), receiver);
         tokio::spawn(async move { actor.run().await });
 
-        Self { sender }
+        Ok(Self { sender, cache })
     }
 
     pub async fn periodic_check(&self, duration: std::time::Duration) {
