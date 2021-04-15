@@ -1,26 +1,20 @@
 use mockito::{mock, Mock};
-use prima_bridge::auth0_configuration::{Auth0CacheConfiguration, Auth0Configuration};
+use prima_bridge::auth0_config::Auth0Config;
 use prima_bridge::Bridge;
 use rand::Rng;
 use reqwest::Url;
+use std::time::Duration;
 
 #[tokio::main]
 #[cfg(not(feature = "blocking"))]
 async fn main() {
     let _m = mock("GET", "/").with_status(200).with_body("OK").create();
     let _auth0 = auth0_mock();
-
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let auth0_url = Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
-
-    let mut bridge = Bridge::new(url);
-    let conf = Auth0Configuration::new(
-        auth0_url,
-        "test".to_string(),
-        Auth0CacheConfiguration::new("".to_string(), "".to_string(), "".to_string()),
-    );
-
-    bridge.with_auth0_authentication(conf).await;
+    let url: Url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let conf: Auth0Config = new_auth0_config();
+    let bridge: Bridge = Bridge::new(url, conf)
+        .await
+        .expect("Cannot create new bridge");
 
     let mut i = 0;
     loop {
@@ -35,12 +29,9 @@ async fn main() {
 fn main() {
     let _m = mock("GET", "/").with_status(200).with_body("OK").create();
     let _auth0 = auth0_mock();
-
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let auth0_url = Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
-
-    let mut bridge = Bridge::new(url);
-    bridge.with_auth0_authentication(auth0_url, "test");
+    let url: Url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let conf: Auth0Config = new_auth0_config();
+    let bridge: Bridge = Bridge::new(url, conf).expect("Cannot create new bridge");
 
     let mut i = 0;
     loop {
@@ -65,4 +56,22 @@ fn auth0_mock() -> Mock {
             })
         })
         .create()
+}
+
+fn new_auth0_config() -> Auth0Config {
+    let auth0_url: Url =
+        Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
+
+    Auth0Config::new(
+        auth0_url,
+        "test".to_string(),
+        "".to_string(),
+        "".to_string(),
+        "".to_string(),
+        Duration::from_secs(1),
+        0,
+        100,
+        "".to_string(),
+        "".to_string(),
+    )
 }

@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
-use crate::auth0_configuration::Auth0CacheConfiguration;
+use crate::auth0_config::Auth0Config;
 use crate::cache::Cacher;
 use crate::errors::PrimaBridgeResult;
-use opentelemetry::propagation::Injector;
 
 #[derive(Debug)]
 pub struct InMemoryCache {
@@ -11,7 +10,7 @@ pub struct InMemoryCache {
 }
 
 impl Cacher for InMemoryCache {
-    fn new(_config: &Auth0CacheConfiguration) -> PrimaBridgeResult<Self> {
+    fn new(_config: &Auth0Config) -> PrimaBridgeResult<Self> {
         Ok(Self {
             key_value: HashMap::new(),
         })
@@ -21,8 +20,8 @@ impl Cacher for InMemoryCache {
         Ok(self.key_value.get(key.as_str()).map(|v| v.to_owned()))
     }
 
-    fn set<T: Into<String>>(&mut self, key: String, val: T) -> PrimaBridgeResult<()> {
-        self.key_value.set(key.as_str(), val.into());
+    fn set(&mut self, key: String, val: String) -> PrimaBridgeResult<()> {
+        let _ = self.key_value.insert(key, val);
         Ok(())
     }
 }
