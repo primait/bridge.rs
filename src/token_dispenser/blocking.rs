@@ -1,76 +1,10 @@
-use reqwest::Url;
 use std::sync::mpsc;
 
-#[derive(Debug)]
-pub enum TokenDispenserMessage {
-    RefreshToken,
-    GetToken {
-        respond_to: mpsc::Sender<Option<String>>,
-    },
-    TokenNeedsRefresh {
-        respond_to: mpsc::Sender<bool>,
-    },
-}
+use reqwest::Url;
 
-impl TokenDispenserMessage {
-    pub fn get_token(respond_to: mpsc::Sender<Option<String>>) -> Self {
-        Self::GetToken { respond_to }
-    }
-
-    pub fn token_needs_refresh(respond_to: mpsc::Sender<bool>) -> Self {
-        Self::TokenNeedsRefresh { respond_to }
-    }
-}
-
-pub struct TokenDispenser {
-    endpoint: Url,
-    audience: String,
-    token: Option<String>,
-    receiver: mpsc::Receiver<TokenDispenserMessage>,
-}
-
-impl TokenDispenser {
-    pub fn new(
-        endpoint: Url,
-        audience: String,
-        receiver: mpsc::Receiver<TokenDispenserMessage>,
-    ) -> Self {
-        Self {
-            endpoint,
-            audience: audience.to_string(),
-            token: None,
-            receiver,
-        }
-    }
-
-    pub fn run(&mut self) {
-        while let Some(msg) = self.receiver.recv().ok() {
-            self.handle_message(msg);
-        }
-    }
-
-    fn handle_message(&mut self, msg: TokenDispenserMessage) {
-        match msg {
-            TokenDispenserMessage::RefreshToken => {
-                let _ = self.handle_refresh();
-            }
-            TokenDispenserMessage::GetToken { respond_to } => {
-                let _ = respond_to.send(self.token.clone());
-            }
-            TokenDispenserMessage::TokenNeedsRefresh { respond_to } => {
-                let _ = respond_to.send(true);
-            }
-        }
-    }
-
-    fn handle_refresh(&mut self) -> reqwest::Result<()> {
-        let response: Option<super::TokenResponse> =
-            reqwest::blocking::get(self.endpoint.clone())?.json()?;
-
-        self.token = response.map(|token_response| token_response.token);
-        Ok(())
-    }
-}
+use crate::auth0_config::Auth0Config;
+use crate::cache::{Cache, Cacher};
+use crate::errors::PrimaBridgeResult;
 
 #[derive(Clone, Debug)]
 pub struct TokenDispenserHandle {
@@ -78,12 +12,22 @@ pub struct TokenDispenserHandle {
 }
 
 impl TokenDispenserHandle {
-    pub fn run(endpoint: Url, audience: impl ToString) -> Self {
+    pub fn run(
+        http_client: reqwest::blocking::Client,
+        config: Auth0Config,
+    ) -> PrimaBridgeResult<Self> {
         let (sender, receiver) = mpsc::channel();
-        let mut actor = TokenDispenser::new(endpoint, audience.to_string(), receiver);
+        let mut actor = TokenDispenser {
+            http_client,
+            endpoint: config.base_url().to_owned(),
+            audience: config.audience().to_string(),
+            token: None,
+            receiver,
+            cache: Cache::new(&config)?,
+        };
         std::thread::spawn(move || actor.run());
 
-        Self { sender }
+        Ok(Self { sender })
     }
 
     pub fn periodic_check(&self, duration: std::time::Duration) {
@@ -132,5 +76,69 @@ impl TokenDispenserHandle {
 
     fn do_cast(sender: &mpsc::Sender<TokenDispenserMessage>, msg: TokenDispenserMessage) {
         let _ = sender.send(msg);
+    }
+}
+
+#[derive(Debug)]
+pub enum TokenDispenserMessage {
+    RefreshToken,
+    GetToken {
+        respond_to: mpsc::Sender<Option<String>>,
+    },
+    TokenNeedsRefresh {
+        respond_to: mpsc::Sender<bool>,
+    },
+}
+
+impl TokenDispenserMessage {
+    pub fn get_token(respond_to: mpsc::Sender<Option<String>>) -> Self {
+        Self::GetToken { respond_to }
+    }
+
+    pub fn token_needs_refresh(respond_to: mpsc::Sender<bool>) -> Self {
+        Self::TokenNeedsRefresh { respond_to }
+    }
+}
+
+pub struct TokenDispenser {
+    pub http_client: reqwest::blocking::Client,
+    pub endpoint: Url,
+    pub audience: String,
+    pub token: Option<String>,
+    pub receiver: mpsc::Receiver<TokenDispenserMessage>,
+    pub cache: Cache,
+}
+
+impl TokenDispenser {
+    pub fn run(&mut self) {
+        while let Ok(msg) = self.receiver.recv() {
+            self.handle_message(msg);
+        }
+    }
+
+    fn handle_refresh(&mut self) -> reqwest::Result<()> {
+        let response: Option<super::TokenResponse> =
+            self.http_client.get(self.endpoint.clone()).send()?.json()?;
+
+        self.token = response.map(|token_response| token_response.token);
+
+        // todo: cache set value here?
+        // &self.cache.set()
+
+        Ok(())
+    }
+
+    fn handle_message(&mut self, msg: TokenDispenserMessage) {
+        match msg {
+            TokenDispenserMessage::RefreshToken => {
+                let _ = self.handle_refresh();
+            }
+            TokenDispenserMessage::GetToken { respond_to } => {
+                let _ = respond_to.send(self.token.clone());
+            }
+            TokenDispenserMessage::TokenNeedsRefresh { respond_to } => {
+                let _ = respond_to.send(true);
+            }
+        }
     }
 }
