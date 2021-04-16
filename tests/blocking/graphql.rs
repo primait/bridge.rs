@@ -2,12 +2,14 @@ use std::error::Error;
 
 use mockito;
 use mockito::{mock, Matcher, Mock};
+use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::Deserialize;
 use serde_json::json;
 
 use prima_bridge::prelude::*;
-use reqwest::header::{HeaderName, HeaderValue};
+
+use crate::Generator;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 struct Person {
@@ -17,13 +19,13 @@ struct Person {
 #[test]
 fn simple_request_ok() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(
+    let (_m, url) = create_gql_mock(
         200,
         query,
         "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
     );
     let variables: Option<String> = None;
-
+    let bridge: Bridge = Generator::bridge(url);
     let result: Person = GraphQLRequest::new(&bridge, (query, variables))?
         .send()?
         .get_data(&["person"])?;
@@ -41,13 +43,13 @@ fn simple_request_ok() -> Result<(), Box<dyn Error>> {
 #[test]
 fn simple_request_ignoring_status_code() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(
+    let (_m, url) = create_gql_mock(
         400,
         query,
         "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
     );
     let variables: Option<String> = None;
-
+    let bridge: Bridge = Generator::bridge(url);
     let result: Person = GraphQLRequest::new(&bridge, (query, variables))?
         .ignore_status_code()
         .send()?
@@ -93,7 +95,7 @@ fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Bridge) {
+fn create_gql_mock(status_code: usize, query: &str, body: &str) -> (Mock, Url) {
     let mock = mock("POST", "/")
         .match_header("content-type", "application/json")
         .match_body(Matcher::Json(json!({ "query": query })))
@@ -101,13 +103,9 @@ fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Brid
         .with_body(body)
         .create();
 
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
-
-    (mock, bridge)
+    (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
 fn mock_bridge() -> Bridge {
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    Bridge::new(url)
+    Generator::bridge(Url::parse(mockito::server_url().as_str()).unwrap())
 }

@@ -29,6 +29,10 @@ pub enum PrimaBridgeError {
     Auth0TokenDeserializeError(reqwest::Error),
     #[error(transparent)]
     Auth0CacheError(#[from] redis::RedisError),
+    #[error(transparent)]
+    DecryptFromUtf8Error(#[from] std::string::FromUtf8Error),
+    #[error(transparent)]
+    DecryptInputError(#[from] block_modes::BlockModeError),
 }
 
 impl From<Infallible> for PrimaBridgeError {
