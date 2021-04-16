@@ -2,10 +2,12 @@ use std::error::Error;
 
 use mockito;
 use mockito::{mock, Matcher, Mock};
+use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::Deserialize;
 use serde_json::json;
 
+use crate::Generator;
 use prima_bridge::prelude::*;
 use prima_bridge::Request;
 use reqwest::header::{HeaderName, HeaderValue};
@@ -19,11 +21,12 @@ struct Person {
 #[tokio::test]
 async fn simple_request() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(
+    let (_m, url) = create_gql_mock(
         200,
         query,
         "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
     );
+    let bridge: Bridge = Generator::bridge(url).await;
     let variables: Option<String> = None;
 
     let result: Person = Request::graphql(&bridge, (query, variables))?
@@ -44,12 +47,12 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(
+    let (_m, url) = create_gql_mock(
         200,
         query,
         "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
     );
-
+    let bridge: Bridge = Generator::bridge(url).await;
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query, variables))?
         .with_custom_headers(vec![(
@@ -145,7 +148,7 @@ async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Bridge) {
+fn create_gql_mock(status_code: usize, query: &str, body: &str) -> (Mock, Url) {
     let mock = mock("POST", "/")
         .match_header("content-type", "application/json")
         .match_body(Matcher::Json(json!({ "query": query })))
@@ -153,10 +156,7 @@ fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Brid
         .with_body(body)
         .create();
 
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
-
-    (mock, bridge)
+    (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
 fn file_content(path_relative_to_recourses: &str) -> String {

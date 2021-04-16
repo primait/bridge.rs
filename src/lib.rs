@@ -23,18 +23,19 @@ pub use self::{
     response::Response,
 };
 
-use crate::auth0_config::Auth0Config;
-use crate::errors::PrimaBridgeResult;
-use crate::token_dispenser::TokenDispenserHandle;
-
+#[cfg(feature = "auth0")]
 pub mod auth0_config;
+#[cfg(feature = "auth0")]
 pub mod cache;
+#[cfg(feature = "auth0")]
+mod token_dispenser;
+
 mod errors;
 pub mod prelude;
 mod request;
 mod response;
-mod token_dispenser;
 
+#[cfg(feature = "auth0")]
 static INTERVAL_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
 
 /// The bridge instance to issue external requests.
@@ -62,7 +63,10 @@ impl Bridge {
     }
 
     #[cfg(feature = "auth0")]
-    pub fn new(endpoint: Url, auth0_config: Auth0Config) -> PrimaBridgeResult<Self> {
+    pub fn new(
+        endpoint: Url,
+        auth0_config: auth0_config::Auth0Config,
+    ) -> errors::PrimaBridgeResult<Self> {
         let http_client: reqwest::blocking::Client = reqwest::blocking::Client::new();
         Ok(Self {
             client: http_client.clone(),
@@ -86,8 +90,8 @@ impl Bridge {
     pub fn with_user_agent(
         endpoint: Url,
         user_agent: &str,
-        auth0_config: Auth0Config,
-    ) -> PrimaBridgeResult<Self> {
+        auth0_config: auth0_config::Auth0Config,
+    ) -> errors::PrimaBridgeResult<Self> {
         let http_client: reqwest::blocking::Client = reqwest::blocking::Client::builder()
             .user_agent(user_agent)
             .build()
@@ -100,6 +104,7 @@ impl Bridge {
         })
     }
 
+    #[cfg(feature = "auth0")]
     pub fn get_headers(&self) -> reqwest::header::HeaderMap {
         use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
         let mut headers = HeaderMap::new();
@@ -109,15 +114,21 @@ impl Bridge {
                 HeaderValue::from_str(t.as_str()).unwrap(),
             );
         });
-
         headers
     }
 
+    #[cfg(not(feature = "auth0"))]
+    pub fn get_headers(&self) -> reqwest::header::HeaderMap {
+        reqwest::header::HeaderMap::new()
+    }
+
+    #[cfg(feature = "auth0")]
     fn new_token_dispenser_handler(
         http_client: reqwest::blocking::Client,
-        auth0_config: Auth0Config,
-    ) -> PrimaBridgeResult<TokenDispenserHandle> {
-        let token_dispenser_handle = TokenDispenserHandle::run(http_client, auth0_config)?;
+        auth0_config: auth0_config::Auth0Config,
+    ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
+        let token_dispenser_handle =
+            token_dispenser::TokenDispenserHandle::run(http_client, auth0_config)?;
         token_dispenser_handle.refresh_token();
         token_dispenser_handle.periodic_check(INTERVAL_CHECK);
         Ok(token_dispenser_handle)
@@ -131,12 +142,14 @@ impl Bridge {
         Self {
             client: reqwest::Client::new(),
             endpoint,
-            token_dispenser_handle: None,
         }
     }
 
     #[cfg(feature = "auth0")]
-    pub async fn new(endpoint: Url, auth0_config: Auth0Config) -> PrimaBridgeResult<Self> {
+    pub async fn new(
+        endpoint: Url,
+        auth0_config: auth0_config::Auth0Config,
+    ) -> errors::PrimaBridgeResult<Self> {
         let http_client: reqwest::Client = reqwest::Client::new();
 
         Ok(Self {
@@ -162,8 +175,8 @@ impl Bridge {
     pub async fn with_user_agent(
         endpoint: Url,
         user_agent: &str,
-        auth0_config: Auth0Config,
-    ) -> PrimaBridgeResult<Self> {
+        auth0_config: auth0_config::Auth0Config,
+    ) -> errors::PrimaBridgeResult<Self> {
         let http_client: reqwest::Client = reqwest::Client::builder()
             .user_agent(user_agent)
             .build()
@@ -181,22 +194,27 @@ impl Bridge {
     pub async fn get_headers(&self) -> reqwest::header::HeaderMap {
         use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
         let mut headers = HeaderMap::new();
-        let token = self.token_dispenser_handle.get_token().await;
-        if let Some(t) = token {
+        self.token_dispenser_handle.get_token().await.map(|t| {
             headers.append(
                 HeaderName::from_static("x-token"),
                 HeaderValue::from_str(t.as_str()).unwrap(),
             );
-        }
-
+        });
         headers
     }
 
+    #[cfg(not(feature = "auth0"))]
+    pub async fn get_headers(&self) -> reqwest::header::HeaderMap {
+        reqwest::header::HeaderMap::new()
+    }
+
+    #[cfg(feature = "auth0")]
     async fn new_token_dispenser_handler(
         http_client: reqwest::Client,
-        auth0_config: Auth0Config,
-    ) -> PrimaBridgeResult<TokenDispenserHandle> {
-        let token_dispenser_handle = TokenDispenserHandle::run(http_client, auth0_config)?;
+        auth0_config: auth0_config::Auth0Config,
+    ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
+        let token_dispenser_handle =
+            token_dispenser::TokenDispenserHandle::run(http_client, auth0_config)?;
         token_dispenser_handle.refresh_token().await;
         token_dispenser_handle.periodic_check(INTERVAL_CHECK).await;
         Ok(token_dispenser_handle)

@@ -13,7 +13,12 @@ args = [
 ]
 
 [tasks.test]
-dependencies = ["test-blocking", "test-async"]
+dependencies = [
+    "test-blocking",
+    "test-async",
+    "test-blocking-auth0",
+    "test-async-auth0"
+]
 
 [tasks.test-blocking]
 command = "cargo"
@@ -23,6 +28,16 @@ dependencies = ["build"]
 [tasks.test-async]
 command = "cargo"
 args = ["test", "--features", "gzip"]
+dependencies = ["build"]
+
+[tasks.test-blocking-auth0]
+command = "cargo"
+args = ["test", "--features=blocking auth0 inmemory"]
+dependencies = ["build"]
+
+[tasks.test-async-auth0]
+command = "cargo"
+args = ["test", "--features=auth0 inmemory"]
 dependencies = ["build"]
 
 ### with cargo-limit installed

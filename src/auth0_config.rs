@@ -38,6 +38,7 @@ impl Auth0Config {
         client_id: String,
         client_secret: String,
     ) -> Self {
+        // todo: fail if `token_encryption_key.len() != 32`
         Self {
             base_url,
             audience,
