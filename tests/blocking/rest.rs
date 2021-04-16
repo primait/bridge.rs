@@ -247,7 +247,7 @@ fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 #[test]
 fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
     let (_m, url) = mock_with_user_agent("test");
-    let bridge: Bridge = Generator::bridge(url);
+    let bridge: Bridge = Generator::bridge_with_user_agent(url, "test");
     let result = RestRequest::new(&bridge).send()?;
     assert!(result.is_ok());
     Ok(())
