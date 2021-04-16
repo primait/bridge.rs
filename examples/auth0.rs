@@ -1,6 +1,3 @@
-use mockito::{mock, Mock};
-use rand::Rng;
-
 #[cfg(not(feature = "auth0"))]
 fn main() {
     println!("Run with `auth0` feature enabled to run this example")
@@ -9,7 +6,10 @@ fn main() {
 #[tokio::main]
 #[cfg(all(not(feature = "blocking"), feature = "auth0"))]
 async fn main() {
-    let _m = mock("GET", "/").with_status(200).with_body("OK").create();
+    let _m = mockito::mock("GET", "/")
+        .with_status(200)
+        .with_body("OK")
+        .create();
     let _auth0 = auth0_mock();
     let url: reqwest::Url = reqwest::Url::parse(mockito::server_url().as_str()).unwrap();
     let conf: prima_bridge::auth0_config::Auth0Config = new_auth0_config();
@@ -28,7 +28,10 @@ async fn main() {
 
 #[cfg(all(feature = "blocking", feature = "auth0"))]
 fn main() {
-    let _m = mock("GET", "/").with_status(200).with_body("OK").create();
+    let _m = mockito::mock("GET", "/")
+        .with_status(200)
+        .with_body("OK")
+        .create();
     let _auth0 = auth0_mock();
     let url: reqwest::Url = reqwest::Url::parse(mockito::server_url().as_str()).unwrap();
     let conf: prima_bridge::auth0_config::Auth0Config = new_auth0_config();
@@ -44,8 +47,10 @@ fn main() {
     }
 }
 
-fn auth0_mock() -> Mock {
-    mock("GET", "/token")
+#[cfg(feature = "auth0")]
+fn auth0_mock() -> mockito::Mock {
+    use rand::Rng;
+    mockito::mock("GET", "/token")
         .with_status(200)
         .with_body_from_fn(move |w| {
             w.write_all({

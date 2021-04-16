@@ -1,7 +1,6 @@
 use std::error::Error;
 
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use reqwest::Url;
+use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -136,7 +135,7 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
     let (_m, url) = mock_with_user_agent("test");
-    let bridge: Bridge = Generator::bridge(url).await;
+    let bridge: Bridge = Generator::bridge_with_user_agent(url, "test").await;
     let result = RestRequest::new(&bridge).send().await;
     assert!(result.is_ok());
     Ok(())
@@ -215,11 +214,12 @@ async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
     let bridge: Bridge = Generator::bridge(url).await;
     let _auth0 = create_auth0_mock();
 
-    let auth0_endpoint =
-        Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
+    // todo: enable and develop
+    // let auth0_endpoint =
+    //     reqwest::Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
 
     let req = RestRequest::new(&bridge);
-    let mut h = HeaderMap::new();
+    let mut h = reqwest::header::HeaderMap::new();
     h.insert("x-token", HeaderValue::from_static("abcdef"));
     assert_eq!(h, req.get_bridge().get_headers().await);
 
