@@ -52,15 +52,17 @@ impl CacheEntry {
         Ok(cipher.encrypt_vec(json.as_bytes()))
     }
 
-    pub fn decrypt(token_encryption_key: &str, encrypted: Vec<u8>) -> PrimaBridgeResult<Self> {
+    pub fn decrypt(token_encryption_key: &str) -> impl Fn(Vec<u8>) -> PrimaBridgeResult<Self> {
         // `unwrap` here is fine because `IV` is set here and the only error returned is: `InvalidKeyIvLength`
         // and this must never happen
         let cipher: Aes256 =
             Aes256::new_var(&token_encryption_key.as_bytes(), IV.as_bytes()).unwrap();
-        let decrypted: Vec<u8> = cipher.decrypt_vec(encrypted.as_slice())?;
-        Ok(serde_json::from_str::<Self>(
-            String::from_utf8(decrypted)?.as_str(),
-        )?)
+        |encrypted| {
+            let decrypted: Vec<u8> = cipher.decrypt_vec(encrypted.as_slice())?;
+            Ok(serde_json::from_str::<Self>(
+                String::from_utf8(decrypted)?.as_str(),
+            )?)
+        }
     }
 }
 
