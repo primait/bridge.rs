@@ -19,12 +19,11 @@ impl Cacher for RedisCache {
     }
 
     fn get(&mut self, key: &str) -> PrimaBridgeResult<Option<CacheEntry>> {
-        let mut connection: redis::Connection = self.client.get_connection()?;
-        let value_opt: Option<Vec<u8>> = connection.get(key)?;
-        Ok(match value_opt {
-            Some(value) => Some(CacheEntry::decrypt(self.encryption_key.as_str(), value)?),
-            None => None,
-        })
+        self.client
+            .get_connection()?
+            .get::<_, Option<Vec<u8>>>(key)?
+            .map(CacheEntry::decrypt(self.encryption_key.as_str()))
+            .transpose()
     }
 
     fn set(&mut self, key: &str, val: CacheEntry) -> PrimaBridgeResult<()> {
