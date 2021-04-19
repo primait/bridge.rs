@@ -22,7 +22,7 @@ impl Cacher for RedisCache {
         self.client
             .get_connection()?
             .get::<_, Option<Vec<u8>>>(key)?
-            .map(CacheEntry::decrypt(self.encryption_key.as_str()))
+            .map(|value| CacheEntry::decrypt(self.encryption_key.as_str(), value))
             .transpose()
     }
 
