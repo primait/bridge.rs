@@ -29,6 +29,10 @@ pub enum PrimaBridgeError {
     Auth0TokenDeserializeError(reqwest::Error),
     #[error(transparent)]
     Auth0CacheError(#[from] redis::RedisError),
+    #[error("http error while fetching jwks from auth0, url: {0}, error: {1}")]
+    Auth0JWKSFetchError(Url, reqwest::Error),
+    #[error("invalid json received while fetching jwks from auth0, url: {0}, error: {1}")]
+    Auth0JWKSFetchInvalidJsonError(Url, reqwest::Error),
     #[error(transparent)]
     DecryptFromUtf8Error(#[from] std::string::FromUtf8Error),
     #[error(transparent)]

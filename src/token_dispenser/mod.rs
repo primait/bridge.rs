@@ -1,5 +1,7 @@
 use serde::Deserialize;
 
+mod jwks;
+
 #[cfg(not(feature = "blocking"))]
 pub use async_impl::TokenDispenserHandle;
 #[cfg(feature = "blocking")]

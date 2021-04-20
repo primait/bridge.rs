@@ -4,15 +4,17 @@ use tokio::sync::{mpsc, oneshot};
 use crate::auth0_config::Auth0Config;
 use crate::cache::{Cache, Cacher};
 use crate::errors::PrimaBridgeResult;
+use crate::token_dispenser::jwks::{TokenChecker, TokenCheckerMsg};
 
 #[derive(Debug)]
 pub struct TokenDispenserHandle {
     sender: mpsc::Sender<TokenDispenserMessage>,
+    sender_jwks_checker: mpsc::Sender<TokenCheckerMsg>,
 }
 
 /// the handle is responsible of exposing a public api to the underlying actor
 impl TokenDispenserHandle {
-    pub fn run(http_client: reqwest::Client, config: Auth0Config) -> PrimaBridgeResult<Self> {
+    pub async fn run(http_client: reqwest::Client, config: Auth0Config) -> PrimaBridgeResult<Self> {
         let (sender, receiver) = mpsc::channel(8);
         let mut actor = TokenDispenser {
             http_client: http_client.clone(),
@@ -24,7 +26,19 @@ impl TokenDispenserHandle {
         };
         tokio::spawn(async move { actor.run().await });
 
-        Ok(Self { sender })
+        let (jwks_token_checker_sender, jwks_token_checker_receiver) = mpsc::channel(8);
+        let mut jwks_checker = TokenChecker::new(
+            jwks_token_checker_receiver,
+            http_client.clone(),
+            config.jwks_url(),
+        )
+        .await?;
+        tokio::spawn(async move { jwks_checker.run().await });
+
+        Ok(Self {
+            sender,
+            sender_jwks_checker: jwks_token_checker_sender,
+        })
     }
 
     pub async fn periodic_check(&self, duration: std::time::Duration) {
