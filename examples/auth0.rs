@@ -69,6 +69,8 @@ fn auth0_mock() -> mockito::Mock {
 fn new_auth0_config() -> prima_bridge::auth0_config::Auth0Config {
     let auth0_url: reqwest::Url =
         reqwest::Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
+    let auth0_jwks_url: reqwest::Url =
+        reqwest::Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "jwks")).unwrap();
 
     prima_bridge::auth0_config::Auth0Config::new(
         auth0_url,
@@ -81,5 +83,6 @@ fn new_auth0_config() -> prima_bridge::auth0_config::Auth0Config {
         100,
         "".to_string(),
         "".to_string(),
+        auth0_jwks_url,
     )
 }

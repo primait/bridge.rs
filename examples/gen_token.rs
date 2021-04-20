@@ -29,7 +29,7 @@ pub struct FetchTokenResponse {
 }
 
 fn main() {
-    let opt = Opt::from_args();
+    let opt: Opt = Opt::from_args();
     let client = Client::new();
     print!("fetching jwks...");
     let jwks = fetch_jwks(&client, &opt.domain);
