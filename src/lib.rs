@@ -214,7 +214,7 @@ impl Bridge {
         auth0_config: auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
         let token_dispenser_handle =
-            token_dispenser::TokenDispenserHandle::run(http_client, auth0_config)?;
+            token_dispenser::TokenDispenserHandle::run(http_client, auth0_config).await?;
         token_dispenser_handle.refresh_token().await;
         token_dispenser_handle.periodic_check(INTERVAL_CHECK).await;
         Ok(token_dispenser_handle)
