@@ -58,6 +58,7 @@ mod tests {
             1000,
             "client_id".to_string(),
             "client_secret".to_string(),
+            Url::from_str("http://should.be/mock/url_for_jwks").unwrap(),
         )
     }
 

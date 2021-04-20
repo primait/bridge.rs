@@ -3,7 +3,8 @@ use std::time::Duration;
 use reqwest::Url;
 
 pub struct Auth0Config {
-    /// Auth0 base url
+    /// Auth0 base url.
+    /// This is the url used by the bridge to fetch new tokens
     base_url: Url,
     /// The microservice I want to connect to. Eg. crash, squillo etc.
     audience: String,
@@ -23,6 +24,9 @@ pub struct Auth0Config {
     client_id: String,
     /// Auth0 client secret. Every machine should share the same secret
     client_secret: String,
+    /// JWKS url
+    /// This is that the bridge uses to fetch JWKS
+    jwks_url: Url,
 }
 
 impl Auth0Config {
@@ -37,6 +41,7 @@ impl Auth0Config {
         max_token_duration: i64,
         client_id: String,
         client_secret: String,
+        jwks_url: Url,
     ) -> Self {
         // todo: fail if `token_encryption_key.len() != 32`
         Self {
@@ -50,6 +55,7 @@ impl Auth0Config {
             max_token_duration,
             client_id,
             client_secret,
+            jwks_url,
         }
     }
     pub fn base_url(&self) -> &Url {
@@ -76,12 +82,12 @@ impl Auth0Config {
         &self.check_interval
     }
 
-    pub fn min_token_duration(&self) -> &i64 {
-        &self.min_token_duration
+    pub fn min_token_duration(&self) -> i64 {
+        self.min_token_duration
     }
 
-    pub fn max_token_duration(&self) -> &i64 {
-        &self.max_token_duration
+    pub fn max_token_duration(&self) -> i64 {
+        self.max_token_duration
     }
 
     pub fn client_id(&self) -> &str {
@@ -90,5 +96,9 @@ impl Auth0Config {
 
     pub fn client_secret(&self) -> &str {
         &self.client_secret
+    }
+
+    pub fn jwks_url(&self) -> &Url {
+        &self.jwks_url
     }
 }
