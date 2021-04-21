@@ -14,7 +14,7 @@ pub struct TokenDispenserHandle {
 
 /// the handle is responsible of exposing a public api to the underlying actor
 impl TokenDispenserHandle {
-    pub async fn run(http_client: reqwest::Client, config: Auth0Config) -> PrimaBridgeResult<Self> {
+    pub fn run(http_client: reqwest::Client, config: Auth0Config) -> PrimaBridgeResult<Self> {
         let (sender, receiver) = mpsc::channel(8);
         let mut actor = TokenDispenser {
             http_client: http_client.clone(),
@@ -31,8 +31,7 @@ impl TokenDispenserHandle {
             jwks_token_checker_receiver,
             http_client.clone(),
             config.jwks_url(),
-        )
-        .await?;
+        );
         tokio::spawn(async move { jwks_checker.run().await });
 
         Ok(Self {
@@ -52,6 +51,10 @@ impl TokenDispenserHandle {
                 }
             }
         });
+    }
+
+    pub async fn fetch_jwks(&self) {
+        let _ = self.sender_jwks_checker.send(TokenCheckerMsg::FetchJwks);
     }
 
     pub async fn refresh_token(&self) {
