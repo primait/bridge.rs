@@ -40,6 +40,7 @@ mod response;
 
 #[cfg(feature = "auth0")]
 static INTERVAL_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
+static INTERVAL_JWKS_CHECK: std::time::Duration = std::time::Duration::from_secs(60);
 
 /// The bridge instance to issue external requests.
 #[derive(Debug)]
@@ -247,6 +248,9 @@ impl Bridge {
         let token_dispenser_handle: token_dispenser::TokenDispenserHandle =
             token_dispenser::TokenDispenserHandle::run(http_client, cache, auth0_config)?;
         token_dispenser_handle.fetch_jwks().await;
+        token_dispenser_handle
+            .periodic_jwks_check(INTERVAL_JWKS_CHECK)
+            .await;
         token_dispenser_handle.refresh_token().await;
         token_dispenser_handle.periodic_check(INTERVAL_CHECK).await;
         Ok(token_dispenser_handle)
