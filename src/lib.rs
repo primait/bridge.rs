@@ -17,6 +17,9 @@
 
 use reqwest::Url;
 
+#[cfg(feature = "auth0")]
+use crate::cache::{Cache, Cacher};
+
 pub use self::{
     request::{GraphQLRequest, Request},
     response::graphql::{Error, ParsedGraphqlResponse, PossiblyParsedData},
@@ -68,10 +71,15 @@ impl Bridge {
         auth0_config: auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<Self> {
         let http_client: reqwest::blocking::Client = reqwest::blocking::Client::new();
+        let cache: Cache = Cache::new(&auth0_config)?;
         Ok(Self {
             client: http_client.clone(),
             endpoint,
-            token_dispenser_handle: Self::new_token_dispenser_handler(http_client, auth0_config)?,
+            token_dispenser_handle: Self::new_token_dispenser_handler(
+                &http_client,
+                &cache,
+                auth0_config,
+            )?,
         })
     }
 
@@ -97,10 +105,16 @@ impl Bridge {
             .build()
             .expect("Bridge::with_user_agent()");
 
+        let cache: Cache = Cache::new(&auth0_config)?;
+
         Ok(Self {
-            client: http_client.clone(),
+            token_dispenser_handle: Self::new_token_dispenser_handler(
+                &http_client,
+                &cache,
+                auth0_config,
+            )?,
+            client: http_client,
             endpoint,
-            token_dispenser_handle: Self::new_token_dispenser_handler(http_client, auth0_config)?,
         })
     }
 
@@ -124,11 +138,12 @@ impl Bridge {
 
     #[cfg(feature = "auth0")]
     fn new_token_dispenser_handler(
-        http_client: reqwest::blocking::Client,
+        http_client: &reqwest::blocking::Client,
+        cache: &Cache,
         auth0_config: auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
-        let token_dispenser_handle =
-            token_dispenser::TokenDispenserHandle::run(http_client, auth0_config)?;
+        let token_dispenser_handle: token_dispenser::TokenDispenserHandle =
+            token_dispenser::TokenDispenserHandle::run(http_client, cache, auth0_config)?;
         token_dispenser_handle.refresh_token();
         token_dispenser_handle.periodic_check(INTERVAL_CHECK);
         Ok(token_dispenser_handle)
@@ -145,18 +160,25 @@ impl Bridge {
         }
     }
 
+    // todo: can we think about add http client and cache as ref here? And create new version where
+    // we create http client and cache
     #[cfg(feature = "auth0")]
     pub async fn new(
         endpoint: Url,
         auth0_config: auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<Self> {
         let http_client: reqwest::Client = reqwest::Client::new();
+        let cache: Cache = Cache::new(&auth0_config)?;
 
         Ok(Self {
             client: http_client.clone(),
             endpoint,
-            token_dispenser_handle: Self::new_token_dispenser_handler(http_client, auth0_config)
-                .await?,
+            token_dispenser_handle: Self::new_token_dispenser_handler(
+                &http_client,
+                &cache,
+                auth0_config,
+            )
+            .await?,
         })
     }
 
@@ -171,6 +193,8 @@ impl Bridge {
         }
     }
 
+    // todo: think about this function. I would leave the choice of how to build the http client to the caller
+    // avoiding the proliferation of http clients
     #[cfg(feature = "auth0")]
     pub async fn with_user_agent(
         endpoint: Url,
@@ -182,11 +206,17 @@ impl Bridge {
             .build()
             .expect("Bridge::with_user_agent()");
 
+        let cache: Cache = Cache::new(&auth0_config)?;
+
         Ok(Self {
-            client: http_client.clone(),
+            token_dispenser_handle: Self::new_token_dispenser_handler(
+                &http_client,
+                &cache,
+                auth0_config,
+            )
+            .await?,
+            client: http_client,
             endpoint,
-            token_dispenser_handle: Self::new_token_dispenser_handler(http_client, auth0_config)
-                .await?,
         })
     }
 
@@ -210,11 +240,12 @@ impl Bridge {
 
     #[cfg(feature = "auth0")]
     async fn new_token_dispenser_handler(
-        http_client: reqwest::Client,
+        http_client: &reqwest::Client,
+        cache: &Cache,
         auth0_config: auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
-        let token_dispenser_handle =
-            token_dispenser::TokenDispenserHandle::run(http_client, auth0_config)?;
+        let token_dispenser_handle: token_dispenser::TokenDispenserHandle =
+            token_dispenser::TokenDispenserHandle::run(http_client, cache, auth0_config)?;
         token_dispenser_handle.fetch_jwks().await;
         token_dispenser_handle.refresh_token().await;
         token_dispenser_handle.periodic_check(INTERVAL_CHECK).await;

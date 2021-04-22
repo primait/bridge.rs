@@ -137,6 +137,7 @@ pub fn mock_with_binary_body_matcher(body: &[u8]) -> (Mock, Url) {
     (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
+#[cfg(feature = "auth0")]
 pub fn create_auth0_mock() -> Mock {
     mock("GET", "/token")
         // .match_query(Matcher::UrlEncoded(

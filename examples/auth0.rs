@@ -74,15 +74,16 @@ fn new_auth0_config() -> prima_bridge::auth0_config::Auth0Config {
 
     prima_bridge::auth0_config::Auth0Config::new(
         auth0_url,
-        "test".to_string(),
-        "".to_string(),
-        "".to_string(),
-        "".to_string(),
-        std::time::Duration::from_secs(1),
-        0,
-        100,
-        "".to_string(),
-        "".to_string(),
         auth0_jwks_url,
+        "caller".to_string(),
+        "audience".to_string(),
+        "none".to_string(),
+        "caller".to_string(),
+        "32char_long_token_encryption_key".to_string(),
+        std::time::Duration::from_secs(1),
+        20,
+        30,
+        "client_id".to_string(),
+        "client_secret".to_string(),
     )
 }

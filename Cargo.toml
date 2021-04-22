@@ -14,7 +14,7 @@ blocking = ["reqwest/blocking"]
 async = ["reqwest", "futures", "futures-util"]
 tracing_opentelemetry = ["opentelemetry", "tracing", "tracing-opentelemetry"]
 gzip = ["reqwest/gzip"]
-auth0 = []
+auth0 = ["rand"]
 inmemory = []
 
 [dependencies]
@@ -36,6 +36,7 @@ async-trait = "0.1.51"
 tokio = { version = "^1", features = ["macros"] }
 redis = { version = "0.20.0" }
 alcoholic_jwt = "1.0.0"
+rand = {version = "0.8.3", optional = true }
 
 [dev-dependencies]
 mockito = "^0.30"

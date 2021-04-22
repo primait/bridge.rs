@@ -4,7 +4,7 @@ use crate::auth0_config::Auth0Config;
 use crate::cache::{CacheEntry, Cacher};
 use crate::errors::PrimaBridgeResult;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct InMemoryCache {
     key_value: HashMap<String, Vec<u8>>,
     encryption_key: String,
@@ -48,17 +48,18 @@ mod tests {
 
     fn auth0_config() -> Auth0Config {
         Auth0Config::new(
-            Url::from_str("http://should.be/mock/url").unwrap(),
+            Url::from_str("http://should.be/token/mock/url").unwrap(),
+            Url::from_str("http://should.be/jwk/mock/url").unwrap(),
+            "caller".to_string(),
             "audience".to_string(),
             "none".to_string(),
             "caller".to_string(),
             "32char_long_token_encryption_key".to_string(),
             Duration::from_secs(10),
-            10,
-            1000,
+            20,
+            30,
             "client_id".to_string(),
             "client_secret".to_string(),
-            Url::from_str("http://should.be/mock/url_for_jwks").unwrap(),
         )
     }
 

@@ -4,7 +4,7 @@ use crate::auth0_config::Auth0Config;
 use crate::cache::{CacheEntry, Cacher};
 use crate::errors::PrimaBridgeResult;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct RedisCache {
     client: Client,
     encryption_key: String,

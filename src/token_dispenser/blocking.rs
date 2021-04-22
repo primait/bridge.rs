@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use reqwest::Url;
 
 use crate::auth0_config::Auth0Config;
-use crate::cache::{Cache, Cacher};
+use crate::cache::Cache;
 use crate::errors::PrimaBridgeResult;
 
 #[derive(Clone, Debug)]
@@ -13,18 +13,19 @@ pub struct TokenDispenserHandle {
 
 impl TokenDispenserHandle {
     pub fn run(
-        http_client: reqwest::blocking::Client,
+        http_client: &reqwest::blocking::Client,
+        cache: &Cache,
         config: Auth0Config,
     ) -> PrimaBridgeResult<Self> {
         let (sender, receiver) = mpsc::channel();
-        let mut actor = TokenDispenser {
+        let mut actor = TokenDispenser::new(
             http_client,
-            endpoint: config.base_url().to_owned(),
-            audience: config.audience().to_string(),
-            token: None,
+            cache,
+            config.base_url(),
+            "caller",
+            config.audience(),
             receiver,
-            cache: Cache::new(&config)?,
-        };
+        );
         std::thread::spawn(move || actor.run());
 
         Ok(Self { sender })
@@ -101,15 +102,34 @@ impl TokenDispenserMessage {
 }
 
 pub struct TokenDispenser {
-    pub http_client: reqwest::blocking::Client,
-    pub endpoint: Url,
-    pub audience: String,
-    pub token: Option<String>,
-    pub receiver: mpsc::Receiver<TokenDispenserMessage>,
-    pub cache: Cache,
+    http_client: reqwest::blocking::Client,
+    cache: Cache,
+    endpoint: Url,
+    key: String,
+    token: Option<String>,
+    receiver: mpsc::Receiver<TokenDispenserMessage>,
 }
 
 impl TokenDispenser {
+    pub fn new(
+        http_client: &reqwest::blocking::Client,
+        cache: &Cache,
+        endpoint: &Url,
+        // Todo: better naming
+        caller: &str,
+        audience: &str,
+        receiver: mpsc::Receiver<TokenDispenserMessage>,
+    ) -> Self {
+        Self {
+            http_client: http_client.clone(),
+            cache: cache.clone(),
+            key: format!("auth0rs_tokens:{}:{}", caller, audience),
+            endpoint: endpoint.clone(),
+            token: None,
+            receiver,
+        }
+    }
+
     pub fn run(&mut self) {
         while let Ok(msg) = self.receiver.recv() {
             self.handle_message(msg);
