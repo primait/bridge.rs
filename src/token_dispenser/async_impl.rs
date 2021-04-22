@@ -62,6 +62,36 @@ impl TokenDispenserHandle {
         });
     }
 
+    pub async fn periodic_jwks_check(&self, duration: std::time::Duration) {
+        let token_dispenser_handle_sender = self.sender.clone();
+        let jwks_interval_sender = self.sender_jwks_checker.clone();
+        tokio::spawn(async move {
+            let mut ticker = tokio::time::interval(duration);
+            loop {
+                ticker.tick().await;
+                let maybe_token = Self::do_retrieve_value(
+                    &token_dispenser_handle_sender,
+                    TokenDispenserMessage::get_token,
+                )
+                .await;
+                if let Some(token) = maybe_token {
+                    let token_valid = Self::do_retrieve_value(
+                        &jwks_interval_sender,
+                        TokenCheckerMsg::check(token),
+                    )
+                    .await;
+                    if !token_valid {
+                        Self::do_cast(
+                            &token_dispenser_handle_sender,
+                            TokenDispenserMessage::RefreshToken,
+                        )
+                        .await;
+                    }
+                }
+            }
+        });
+    }
+
     pub async fn fetch_jwks(&self) {
         let _ = self.sender_jwks_checker.send(TokenCheckerMsg::FetchJwks);
     }
@@ -85,9 +115,9 @@ impl TokenDispenserHandle {
         Self::do_retrieve_value(&self.sender, msg).await
     }
 
-    async fn do_retrieve_value<T>(
-        sender: &mpsc::Sender<TokenDispenserMessage>,
-        msg: impl Fn(oneshot::Sender<T>) -> TokenDispenserMessage,
+    async fn do_retrieve_value<T, M>(
+        sender: &mpsc::Sender<M>,
+        msg: impl FnOnce(oneshot::Sender<T>) -> M,
     ) -> T {
         let (send, recv) = oneshot::channel();
         let _ = sender.send(msg(send)).await;
@@ -98,7 +128,7 @@ impl TokenDispenserHandle {
         Self::do_cast(&self.sender, msg).await;
     }
 
-    async fn do_cast(sender: &mpsc::Sender<TokenDispenserMessage>, msg: TokenDispenserMessage) {
+    async fn do_cast<T>(sender: &mpsc::Sender<T>, msg: T) {
         let _ = sender.send(msg).await;
     }
 }
