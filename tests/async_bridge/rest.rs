@@ -211,12 +211,24 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
 async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
     let body = b"abcde";
     let (_m, url) = mock_with_binary_body_matcher(body);
-    let bridge: Bridge = Generator::bridge(url).await;
     let _auth0 = create_auth0_mock();
 
-    // todo: enable and develop
-    // let auth0_endpoint =
-    //     reqwest::Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap();
+    let config = prima_bridge::auth0_config::Auth0Config::new(
+        reqwest::Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap(),
+        reqwest::Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "jwks")).unwrap(),
+        "caller".to_string(),
+        "audience".to_string(),
+        "none".to_string(),
+        "caller".to_string(),
+        "32char_long_token_encryption_key".to_string(),
+        std::time::Duration::from_secs(10),
+        1,
+        60,
+        "client_id".to_string(),
+        "client_secret".to_string(),
+    );
+
+    let bridge: Bridge = Generator::bridge_with_auth0_config(url, config).await;
 
     let req = RestRequest::new(&bridge);
     let mut h = reqwest::header::HeaderMap::new();

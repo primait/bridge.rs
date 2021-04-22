@@ -59,21 +59,30 @@ impl Generator {
         Bridge::with_user_agent(url, user_agent)
     }
 
+    #[cfg(all(not(feature = "blocking"), feature = "auth0"))]
+    pub async fn bridge_with_auth0_config(
+        url: Url,
+        auth0_config: prima_bridge::auth0_config::Auth0Config,
+    ) -> Bridge {
+        Bridge::new(url, auth0_config).await.expect(BRIDGE_ERROR)
+    }
+
     #[cfg(feature = "auth0")]
     pub fn auth0_config() -> prima_bridge::auth0_config::Auth0Config {
         use std::str::FromStr;
         prima_bridge::auth0_config::Auth0Config::new(
-            Url::from_str("http://should.be/mock/url").unwrap(),
+            Url::from_str("http://should.be/token/mock/url").unwrap(),
+            Url::from_str("http://should.be/jkws/mock/url").unwrap(),
+            "caller".to_string(),
             "audience".to_string(),
             "none".to_string(),
             "caller".to_string(),
             "32char_long_token_encryption_key".to_string(),
             std::time::Duration::from_secs(10),
-            10,
-            1000,
+            20,
+            30,
             "client_id".to_string(),
             "client_secret".to_string(),
-            Url::from_str("http://should.be/mock/url_for_jwks").unwrap(),
         )
     }
 }

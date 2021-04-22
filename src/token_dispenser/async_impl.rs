@@ -1,8 +1,11 @@
+use std::time::Duration;
+
+use chrono::Utc;
 use reqwest::Url;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::auth0_config::Auth0Config;
-use crate::cache::{Cache, Cacher};
+use crate::cache::{Cache, CacheEntry, Cacher};
 use crate::errors::PrimaBridgeResult;
 use crate::token_dispenser::jwks::{TokenChecker, TokenCheckerMsg};
 
@@ -14,16 +17,22 @@ pub struct TokenDispenserHandle {
 
 /// the handle is responsible of exposing a public api to the underlying actor
 impl TokenDispenserHandle {
-    pub fn run(http_client: reqwest::Client, config: Auth0Config) -> PrimaBridgeResult<Self> {
+    pub fn run(
+        http_client: &reqwest::Client,
+        cache: &Cache,
+        config: Auth0Config,
+    ) -> PrimaBridgeResult<Self> {
         let (sender, receiver) = mpsc::channel(8);
-        let mut actor = TokenDispenser {
-            http_client: http_client.clone(),
-            endpoint: config.base_url().to_owned(),
-            audience: config.audience().to_string(),
-            token: None,
+        let mut actor = TokenDispenser::new(
             receiver,
-            cache: Cache::new(&config)?,
-        };
+            http_client,
+            cache,
+            config.base_url(),
+            "caller",
+            config.audience(),
+            config.min_token_remaining_life_percentage(),
+            config.max_token_remaining_life_percentage(),
+        );
         tokio::spawn(async move { actor.run().await });
 
         let (jwks_token_checker_sender, jwks_token_checker_receiver) = mpsc::channel(8);
@@ -116,36 +125,51 @@ impl TokenDispenserMessage {
 }
 
 pub struct TokenDispenser {
-    pub http_client: reqwest::Client,
-    pub endpoint: Url,
-    pub audience: String,
-    pub token: Option<String>,
-    pub receiver: mpsc::Receiver<TokenDispenserMessage>,
-    pub cache: Cache,
+    receiver: mpsc::Receiver<TokenDispenserMessage>,
+    http_client: reqwest::Client,
+    cache: Cache,
+    endpoint: Url,
+    key: String,
+    token: Option<CacheEntry>,
+    min_token_remaining_life_percentage: i32,
+    max_token_remaining_life_percentage: i32,
 }
 
 impl TokenDispenser {
-    pub async fn run(&mut self) {
-        while let Some(msg) = self.receiver.recv().await {
-            self.handle_message(msg).await;
+    pub fn new(
+        receiver: mpsc::Receiver<TokenDispenserMessage>,
+        http_client: &reqwest::Client,
+        cache: &Cache,
+        endpoint: &Url,
+        // Todo: better naming
+        caller: &str,
+        audience: &str,
+        min_token_remaining_life_percentage: i32,
+        max_token_remaining_life_percentage: i32,
+    ) -> Self {
+        Self {
+            receiver,
+            http_client: http_client.clone(),
+            cache: cache.clone(),
+            key: format!("auth0rs_tokens:{}:{}", caller, audience),
+            endpoint: endpoint.clone(),
+            token: None,
+            min_token_remaining_life_percentage,
+            max_token_remaining_life_percentage,
         }
     }
 
-    async fn handle_refresh(&mut self) -> reqwest::Result<()> {
-        let response: Option<super::TokenResponse> = self
-            .http_client
-            .get(self.endpoint.clone())
-            .send()
-            .await?
-            .json()
-            .await?;
+    pub async fn run(&mut self) {
+        // If a token already exists in 2nd level cache then use that.
+        if let Ok(Some(token)) = self.cache.get(&self.key.to_string()) {
+            self.token = Some(token);
+        } else {
+            let _ = self.refresh_token().await;
+        }
 
-        self.token = response.map(|token_response| token_response.token);
-
-        // todo: cache set value here?
-        // &self.cache.set()
-
-        Ok(())
+        while let Some(msg) = self.receiver.recv().await {
+            self.handle_message(msg).await;
+        }
     }
 
     async fn handle_message(&mut self, msg: TokenDispenserMessage) {
@@ -154,11 +178,81 @@ impl TokenDispenser {
                 let _ = self.handle_refresh().await;
             }
             TokenDispenserMessage::GetToken { respond_to } => {
-                let _ = respond_to.send(self.token.to_owned());
+                let _ = respond_to.send(
+                    self.token
+                        .as_ref()
+                        .map(|entry| entry.token().to_string())
+                        .to_owned(),
+                );
             }
             TokenDispenserMessage::TokenNeedsRefresh { respond_to } => {
-                let _ = respond_to.send(true);
+                let _ = respond_to.send(self.token_needs_refresh());
             }
         }
+    }
+
+    async fn handle_refresh(&mut self) -> PrimaBridgeResult<()> {
+        // First of all check in 2nd level cache if exist a newer token
+        let token: Option<CacheEntry> = self.cache.get(&self.key.to_string())?;
+        if self.token_needs_refresh() {
+            self.refresh_token().await
+        } else {
+            self.token = token;
+            Ok(())
+        }
+    }
+
+    async fn refresh_token(&mut self) -> PrimaBridgeResult<()> {
+        // Get token from auth0
+        let response: super::TokenResponse = self
+            .http_client
+            .get(self.endpoint.clone())
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        // todo: decompose token with jwk and create entry getting issue and expire dates.
+        let token: CacheEntry = CacheEntry::new(response.token, Utc::now(), Utc::now());
+        self.token = Some(token.clone());
+        // Putting token in 2nd level cache
+        self.cache.set(&self.key, token)
+    }
+
+    // Check if the token remaining lifetime it's less than a randomized percentage that is between
+    // `max_token_remaining_life_percentage` and `min_token_remaining_life_percentage`
+    fn token_needs_refresh(&self) -> bool {
+        match &self.token {
+            Some(entry) => {
+                let random_percentage = random(
+                    self.max_token_remaining_life_percentage as f64,
+                    self.min_token_remaining_life_percentage as f64,
+                );
+                random_percentage >= entry.remaining_life_percentage()
+            }
+            None => true,
+        }
+    }
+}
+
+fn random(x: f64, y: f64) -> f64 {
+    use rand::Rng;
+    match x - y {
+        z if z == 0.0 => x,
+        z if z > 0.0 => rand::thread_rng().gen_range(y..x),
+        _ => rand::thread_rng().gen_range(x..y),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::token_dispenser::async_impl::random;
+
+    #[test]
+    fn random_test() {
+        // Should never panic
+        let _ = random(0.0, 1.0);
+        let _ = random(1.0, 0.0);
+        assert_eq!(random(0.0, 0.0), 0.0);
     }
 }

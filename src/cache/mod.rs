@@ -1,3 +1,5 @@
+use std::ops::Sub;
+
 use aes::Aes256 as Aes256Alg;
 use block_modes::block_padding::Pkcs7;
 use block_modes::{BlockMode, Cbc};
@@ -27,7 +29,7 @@ pub trait Cacher {
     fn set(&mut self, key: &str, value: CacheEntry) -> PrimaBridgeResult<()>;
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct CacheEntry {
     token: String,
     issue_date: DateTime<Utc>,
@@ -61,6 +63,31 @@ impl CacheEntry {
         Ok(serde_json::from_str::<Self>(
             String::from_utf8(decrypted)?.as_str(),
         )?)
+    }
+
+    pub fn token(&self) -> &str {
+        &self.token
+    }
+
+    pub fn issue_date(&self) -> &DateTime<Utc> {
+        &self.issue_date
+    }
+
+    pub fn expire_date(&self) -> &DateTime<Utc> {
+        &self.expire_date
+    }
+
+    // Return the percentage of the remaining life
+    pub fn remaining_life_percentage(&self) -> f64 {
+        if *&self.expire_date.timestamp_millis() - Utc::now().timestamp_millis() <= 0 {
+            0.0
+        } else {
+            let expire_millis: i64 = *&self.expire_date.timestamp_millis();
+            let issue_millis: i64 = *&self.issue_date.timestamp_millis();
+            let remaining: f64 = (expire_millis - Utc::now().timestamp_millis()) as f64;
+            let total: f64 = (expire_millis - issue_millis) as f64;
+            remaining / total * 100.0
+        }
     }
 }
 
