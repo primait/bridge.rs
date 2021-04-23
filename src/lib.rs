@@ -40,6 +40,7 @@ mod response;
 
 #[cfg(feature = "auth0")]
 static INTERVAL_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
+#[cfg(feature = "auth0")]
 static INTERVAL_JWKS_CHECK: std::time::Duration = std::time::Duration::from_secs(60);
 
 /// The bridge instance to issue external requests.
