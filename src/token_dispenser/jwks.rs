@@ -1,5 +1,5 @@
 use crate::prelude::{
-    PrimaBridgeError::{Auth0JWKSFetchError, Auth0JWKSFetchInvalidJsonError},
+    PrimaBridgeError::{Auth0JwksFetchError, Auth0JwksFetchInvalidJsonError},
     PrimaBridgeResult,
 };
 
@@ -97,9 +97,9 @@ impl TokenChecker {
             .get(self.jwks_url.clone())
             .send()
             .await
-            .map_err(|e| Auth0JWKSFetchError(self.jwks_url.clone(), e))?
+            .map_err(|e| Auth0JwksFetchError(self.jwks_url.clone(), e))?
             .json::<JWKS>()
             .await
-            .map_err(|e| Auth0JWKSFetchInvalidJsonError(self.jwks_url.clone(), e))
+            .map_err(|e| Auth0JwksFetchInvalidJsonError(self.jwks_url.clone(), e))
     }
 }
