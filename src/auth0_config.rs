@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use reqwest::Url;
 
+#[derive(Clone)]
 pub struct Auth0Config {
     /// Auth0 base url.
     /// This is the url used by the bridge to fetch new tokens
@@ -12,8 +13,6 @@ pub struct Auth0Config {
     audience: String,
     /// Redis connection string. Eg. redis://{host}:{port}?{ParamKey1}={ParamKey2}
     redis_connection_uri: String,
-    /// Who am I. The microservice that is instantiating this client
-    token_namespace: String,
     /// The key to use in order to encrypt `CachedToken` in redis
     token_encryption_key: String,
     /// Every {check_interval} the `TokenDispenser` actor checks if token needs to be refreshed
@@ -39,7 +38,6 @@ impl Auth0Config {
         caller: String,
         audience: String,
         redis_connection_uri: String,
-        token_namespace: String,
         token_encryption_key: String,
         check_interval: Duration,
         min_token_remaining_life_percentage: i32,
@@ -53,7 +51,6 @@ impl Auth0Config {
             caller,
             audience,
             redis_connection_uri,
-            token_namespace,
             token_encryption_key,
             check_interval,
             min_token_remaining_life_percentage,
@@ -77,10 +74,6 @@ impl Auth0Config {
 
     pub fn redis_connection_uri(&self) -> &str {
         &self.redis_connection_uri
-    }
-
-    pub fn token_namespace(&self) -> &str {
-        &self.token_namespace
     }
 
     pub fn token_encryption_key(&self) -> &str {
@@ -109,5 +102,23 @@ impl Auth0Config {
 
     pub fn jwks_url(&self) -> &Url {
         &self.jwks_url
+    }
+
+    #[cfg(test)]
+    pub fn test_config() -> Auth0Config {
+        use std::str::FromStr;
+        Auth0Config::new(
+            Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap(),
+            Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "jwks")).unwrap(),
+            "caller".to_string(),
+            "audience".to_string(),
+            "none".to_string(),
+            "32char_long_token_encryption_key".to_string(),
+            Duration::from_secs(10),
+            20,
+            30,
+            "client_id".to_string(),
+            "client_secret".to_string(),
+        )
     }
 }
