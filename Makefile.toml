@@ -40,6 +40,11 @@ command = "cargo"
 args = ["test", "--features=auth0 inmemory"]
 dependencies = ["build"]
 
+[tasks.lint]
+description = "Run lint"
+command = "cargo"
+args = ["clippy", "--all-targets", "--all-features"]
+
 ### with cargo-limit installed
 [tasks.lbuild]
 description = "Runs the rust compiler."

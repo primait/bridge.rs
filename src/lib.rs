@@ -79,7 +79,7 @@ impl Bridge {
             token_dispenser_handle: Self::new_token_dispenser_handler(
                 &http_client,
                 &cache,
-                auth0_config,
+                &auth0_config,
             )?,
         })
     }
@@ -112,7 +112,7 @@ impl Bridge {
             token_dispenser_handle: Self::new_token_dispenser_handler(
                 &http_client,
                 &cache,
-                auth0_config,
+                &auth0_config,
             )?,
             client: http_client,
             endpoint,
@@ -141,7 +141,7 @@ impl Bridge {
     fn new_token_dispenser_handler(
         http_client: &reqwest::blocking::Client,
         cache: &Cache,
-        auth0_config: auth0_config::Auth0Config,
+        auth0_config: &auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
         let token_dispenser_handle: token_dispenser::TokenDispenserHandle =
             token_dispenser::TokenDispenserHandle::run(http_client, cache, auth0_config)?;
@@ -177,7 +177,7 @@ impl Bridge {
             token_dispenser_handle: Self::new_token_dispenser_handler(
                 &http_client,
                 &cache,
-                auth0_config,
+                &auth0_config,
             )
             .await?,
         })
@@ -213,7 +213,7 @@ impl Bridge {
             token_dispenser_handle: Self::new_token_dispenser_handler(
                 &http_client,
                 &cache,
-                auth0_config,
+                &auth0_config,
             )
             .await?,
             client: http_client,
@@ -243,7 +243,7 @@ impl Bridge {
     async fn new_token_dispenser_handler(
         http_client: &reqwest::Client,
         cache: &Cache,
-        auth0_config: auth0_config::Auth0Config,
+        auth0_config: &auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
         let token_dispenser_handle: token_dispenser::TokenDispenserHandle =
             token_dispenser::TokenDispenserHandle::run(http_client, cache, auth0_config)?;

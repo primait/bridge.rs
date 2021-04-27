@@ -1,5 +1,3 @@
-use std::ops::Sub;
-
 use aes::Aes256 as Aes256Alg;
 use block_modes::block_padding::Pkcs7;
 use block_modes::{BlockMode, Cbc};
@@ -7,9 +5,9 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::auth0_config::Auth0Config;
-#[cfg(any(test, feature = "inmemory"))]
+#[cfg(feature = "inmemory")]
 pub use crate::cache::inmemory::InMemoryCache as Cache;
-#[cfg(not(any(test, feature = "inmemory")))]
+#[cfg(not(feature = "inmemory"))]
 pub use crate::cache::redis_cache::RedisCache as Cache;
 use crate::errors::PrimaBridgeResult;
 
@@ -29,7 +27,7 @@ pub trait Cacher {
     fn set(&mut self, key: &str, value: CacheEntry) -> PrimaBridgeResult<()>;
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CacheEntry {
     token: String,
     issue_date: DateTime<Utc>,

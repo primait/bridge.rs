@@ -76,7 +76,6 @@ impl Generator {
             "caller".to_string(),
             "audience".to_string(),
             "none".to_string(),
-            "caller".to_string(),
             "32char_long_token_encryption_key".to_string(),
             std::time::Duration::from_secs(10),
             20,

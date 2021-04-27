@@ -37,35 +37,14 @@ impl Cacher for InMemoryCache {
 
 #[cfg(all(test, feature = "auth0"))]
 mod tests {
-    use std::str::FromStr;
-    use std::time::Duration;
-
     use chrono::Utc;
-    use reqwest::Url;
 
     use crate::auth0_config::Auth0Config;
     use crate::cache::{Cache, CacheEntry, Cacher};
 
-    fn auth0_config() -> Auth0Config {
-        Auth0Config::new(
-            Url::from_str("http://should.be/token/mock/url").unwrap(),
-            Url::from_str("http://should.be/jwk/mock/url").unwrap(),
-            "caller".to_string(),
-            "audience".to_string(),
-            "none".to_string(),
-            "caller".to_string(),
-            "32char_long_token_encryption_key".to_string(),
-            Duration::from_secs(10),
-            20,
-            30,
-            "client_id".to_string(),
-            "client_secret".to_string(),
-        )
-    }
-
     #[test]
     fn get_set_values() {
-        let mut cache: Cache = Cache::new(&auth0_config()).unwrap();
+        let mut cache: Cache = Cache::new(&Auth0Config::test_config()).unwrap();
 
         let cache_key: &str = "key";
         let result: Option<CacheEntry> = cache.get(cache_key).unwrap();

@@ -15,14 +15,14 @@ impl TokenDispenserHandle {
     pub fn run(
         http_client: &reqwest::blocking::Client,
         cache: &Cache,
-        config: Auth0Config,
+        config: &Auth0Config,
     ) -> PrimaBridgeResult<Self> {
         let (sender, receiver) = mpsc::channel();
         let mut actor = TokenDispenser::new(
             http_client,
             cache,
             config.base_url(),
-            "caller",
+            config.caller(),
             config.audience(),
             receiver,
         );
@@ -140,7 +140,7 @@ impl TokenDispenser {
         let response: Option<super::TokenResponse> =
             self.http_client.get(self.endpoint.clone()).send()?.json()?;
 
-        self.token = response.map(|token_response| token_response.token);
+        self.token = response.map(|token_response| token_response.access_token);
 
         // todo: cache set value here?
         // &self.cache.set()
