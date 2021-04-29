@@ -1,10 +1,3 @@
-use std::str::FromStr;
-
-use reqwest::Url;
-
-use prima_bridge::prelude::PrimaBridgeResult;
-use prima_bridge::Bridge;
-
 // To run this example:
 //
 // export TOKEN_URL=https://{tenant}.eu.auth0.com/oauth/token
@@ -16,6 +9,10 @@ use prima_bridge::Bridge;
 #[tokio::main]
 #[cfg(all(not(feature = "blocking"), feature = "auth0", feature = "inmemory"))]
 async fn main() {
+    use prima_bridge::Bridge;
+    use reqwest::Url;
+    use std::str::FromStr;
+
     let _m = app::example_app_mock();
     let url: Url =
         Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "create")).unwrap();
@@ -32,14 +29,12 @@ fn main() {}
 
 #[cfg(all(feature = "auth0", feature = "inmemory"))]
 mod app {
+    use prima_bridge::auth0_config::Auth0Config;
+    use reqwest::Url;
+    use std::str::FromStr;
     use std::time::Duration;
 
-    use prima_bridge::auth0_config::Auth0Config;
-
-    use super::*;
-
     pub fn example_app_mock() -> mockito::Mock {
-        use rand::Rng;
         mockito::mock("GET", "/create")
             .with_status(200)
             .with_body("{\"created\": \"true\"}")

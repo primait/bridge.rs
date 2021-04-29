@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use reqwest::Url;
 
 use crate::auth0_config::Auth0Config;
-use crate::cache::Cache;
+use crate::cache::CacheImpl;
 use crate::errors::PrimaBridgeResult;
 
 #[derive(Clone, Debug)]
@@ -14,7 +14,7 @@ pub struct TokenDispenserHandle {
 impl TokenDispenserHandle {
     pub fn run(
         http_client: &reqwest::blocking::Client,
-        cache: &Cache,
+        cache: &CacheImpl,
         config: &Auth0Config,
     ) -> PrimaBridgeResult<Self> {
         let (sender, receiver) = mpsc::channel();
@@ -103,7 +103,7 @@ impl TokenDispenserMessage {
 
 pub struct TokenDispenser {
     http_client: reqwest::blocking::Client,
-    cache: Cache,
+    cache: CacheImpl,
     endpoint: Url,
     key: String,
     token: Option<String>,
@@ -113,7 +113,7 @@ pub struct TokenDispenser {
 impl TokenDispenser {
     pub fn new(
         http_client: &reqwest::blocking::Client,
-        cache: &Cache,
+        cache: &CacheImpl,
         endpoint: &Url,
         // Todo: better naming
         caller: &str,

@@ -1,11 +1,9 @@
 use chrono::Utc;
-use reqwest::Url;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::auth0_config::Auth0Config;
-use crate::cache::{Cache, CacheEntry, Cacher};
+use crate::cache::{Cache, CacheEntry, CacheImpl};
 use crate::errors::PrimaBridgeResult;
-use crate::token_dispenser::async_impl::jwks::JwtToken;
 use crate::token_dispenser::{random, TokenRequest, TokenResponse};
 
 #[derive(Debug)]
@@ -32,7 +30,7 @@ impl TokenDispenserMessage {
 pub struct TokenDispenser {
     receiver: mpsc::Receiver<TokenDispenserMessage>,
     http_client: reqwest::Client,
-    cache: Cache,
+    cache: CacheImpl,
     config: Auth0Config,
     key: String,
     token: Option<CacheEntry>,
@@ -42,7 +40,7 @@ impl TokenDispenser {
     pub fn new(
         receiver: mpsc::Receiver<TokenDispenserMessage>,
         http_client: &reqwest::Client,
-        cache: &Cache,
+        cache: &CacheImpl,
         config: &Auth0Config,
     ) -> Self {
         Self {
@@ -122,7 +120,7 @@ impl TokenDispenser {
 
         // todo: decode token with jwk and create entry getting issue and expire dates.
         let issue_date = Utc::now() - chrono::Duration::hours(3);
-        let token: CacheEntry = CacheEntry::new(response.access_token, issue_date, Utc::now());
+        let token: CacheEntry = CacheEntry::new(access_token, issue_date, Utc::now());
         self.token = Some(token.clone());
         // Putting token in 2nd level cache
         self.cache.set(&self.key, token)
@@ -163,11 +161,11 @@ mod tests {
     use tokio::sync::{mpsc, oneshot};
 
     use crate::auth0_config::Auth0Config;
-    use crate::cache::{Cache, CacheEntry, Cacher};
+    use crate::cache::{Cache, CacheEntry, CacheImpl};
     use crate::token_dispenser::async_impl::dispenser::{
         token_needs_refresh, TokenDispenser, TokenDispenserMessage,
     };
-    use crate::token_dispenser::random;
+    use crate::token_dispenser::{random, TokenResponse};
 
     #[test]
     fn random_test() {
@@ -216,7 +214,7 @@ mod tests {
 
     #[tokio::test]
     async fn dispenser_get_token_from_auth0_test() {
-        let m = create_auth0_mock();
+        let _m = create_auth0_mock();
 
         let (sender, receiver): (
             mpsc::Sender<TokenDispenserMessage>,
@@ -225,10 +223,10 @@ mod tests {
 
         let http_client = reqwest::Client::new();
         let config = &Auth0Config::test_config();
-        let cache = Cache::new(config).unwrap();
+        let cache = CacheImpl::new(config).unwrap();
 
         let mut token = TokenDispenser::new(receiver, &http_client, &cache, config);
-        let c = tokio::spawn(async move { token.run().await });
+        tokio::spawn(async move { token.run().await });
 
         let (oneshot_sender, oneshot_receiver): (
             oneshot::Sender<Option<String>>,
@@ -259,7 +257,7 @@ mod tests {
 
         let http_client = reqwest::Client::new();
         let config = &Auth0Config::test_config();
-        let mut cache = Cache::new(config).unwrap();
+        let mut cache = CacheImpl::new(config).unwrap();
         cache
             .set(
                 &TokenDispenser::get_key(config),
@@ -289,9 +287,15 @@ mod tests {
     }
 
     pub fn create_auth0_mock() -> Mock {
-        mock("GET", "/token")
+        let token_response = TokenResponse {
+            access_token: "abcdef".to_string(),
+            scope: "test".to_string(),
+            expires_in: 5,
+            token_type: "test".to_string(),
+        };
+        mock("POST", "/token")
             .with_status(200)
-            .with_body("{\"token\": \"abcdef\"}")
+            .with_body(serde_json::to_string(&token_response).unwrap())
             .create()
     }
 }

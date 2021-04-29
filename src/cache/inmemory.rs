@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::auth0_config::Auth0Config;
-use crate::cache::{CacheEntry, Cacher};
+use crate::cache::{Cache, CacheEntry};
 use crate::errors::PrimaBridgeResult;
 
 #[derive(Clone, Debug)]
@@ -10,7 +10,7 @@ pub struct InMemoryCache {
     encryption_key: String,
 }
 
-impl Cacher for InMemoryCache {
+impl Cache for InMemoryCache {
     fn new(config: &Auth0Config) -> PrimaBridgeResult<Self> {
         Ok(Self {
             key_value: HashMap::new(),
@@ -40,11 +40,11 @@ mod tests {
     use chrono::Utc;
 
     use crate::auth0_config::Auth0Config;
-    use crate::cache::{Cache, CacheEntry, Cacher};
+    use crate::cache::{Cache, CacheEntry, CacheImpl};
 
     #[test]
     fn get_set_values() {
-        let mut cache: Cache = Cache::new(&Auth0Config::test_config()).unwrap();
+        let mut cache = CacheImpl::new(&Auth0Config::test_config()).unwrap();
 
         let cache_key: &str = "key";
         let result: Option<CacheEntry> = cache.get(cache_key).unwrap();

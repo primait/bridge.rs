@@ -18,7 +18,7 @@
 use reqwest::Url;
 
 #[cfg(feature = "auth0")]
-use crate::cache::{Cache, Cacher};
+use crate::cache::{Cache, CacheImpl};
 
 pub use self::{
     request::{GraphQLRequest, Request},
@@ -72,7 +72,7 @@ impl Bridge {
         auth0_config: auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<Self> {
         let http_client: reqwest::blocking::Client = reqwest::blocking::Client::new();
-        let cache: Cache = Cache::new(&auth0_config)?;
+        let cache = CacheImpl::new(&auth0_config)?;
         Ok(Self {
             client: http_client.clone(),
             endpoint,
@@ -106,7 +106,7 @@ impl Bridge {
             .build()
             .expect("Bridge::with_user_agent()");
 
-        let cache: Cache = Cache::new(&auth0_config)?;
+        let cache = CacheImpl::new(&auth0_config)?;
 
         Ok(Self {
             token_dispenser_handle: Self::new_token_dispenser_handler(
@@ -140,7 +140,7 @@ impl Bridge {
     #[cfg(feature = "auth0")]
     fn new_token_dispenser_handler(
         http_client: &reqwest::blocking::Client,
-        cache: &Cache,
+        cache: &CacheImpl,
         auth0_config: &auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
         let token_dispenser_handle: token_dispenser::TokenDispenserHandle =
@@ -169,7 +169,7 @@ impl Bridge {
         auth0_config: auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<Self> {
         let http_client: reqwest::Client = reqwest::Client::new();
-        let cache: Cache = Cache::new(&auth0_config)?;
+        let cache = CacheImpl::new(&auth0_config)?;
 
         Ok(Self {
             client: http_client.clone(),
@@ -207,7 +207,7 @@ impl Bridge {
             .build()
             .expect("Bridge::with_user_agent()");
 
-        let cache: Cache = Cache::new(&auth0_config)?;
+        let cache = CacheImpl::new(&auth0_config)?;
 
         Ok(Self {
             token_dispenser_handle: Self::new_token_dispenser_handler(
@@ -242,7 +242,7 @@ impl Bridge {
     #[cfg(feature = "auth0")]
     async fn new_token_dispenser_handler(
         http_client: &reqwest::Client,
-        cache: &Cache,
+        cache: &CacheImpl,
         auth0_config: &auth0_config::Auth0Config,
     ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
         let token_dispenser_handle: token_dispenser::TokenDispenserHandle =

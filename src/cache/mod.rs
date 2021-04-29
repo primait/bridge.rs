@@ -6,9 +6,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::auth0_config::Auth0Config;
 #[cfg(feature = "inmemory")]
-pub use crate::cache::inmemory::InMemoryCache as Cache;
+pub use crate::cache::inmemory::InMemoryCache as CacheImpl;
 #[cfg(not(feature = "inmemory"))]
-pub use crate::cache::redis_cache::RedisCache as Cache;
+pub use crate::cache::redis_cache::RedisCache as CacheImpl;
 use crate::errors::PrimaBridgeResult;
 
 mod inmemory;
@@ -18,7 +18,7 @@ const IV: &str = "301a9e39735f4646";
 
 type Aes256 = Cbc<Aes256Alg, Pkcs7>;
 
-pub trait Cacher {
+pub trait Cache {
     fn new(config: &Auth0Config) -> PrimaBridgeResult<Self>
     where
         Self: Sized;
