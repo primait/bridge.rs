@@ -3,33 +3,20 @@ use crate::prelude::{
     PrimaBridgeResult,
 };
 
-use alcoholic_jwt::{token_kid, validate, ValidJWT, JWKS};
+use alcoholic_jwt::{token_kid, JWKS};
 use reqwest::Url;
 use tokio::sync::{mpsc, oneshot};
 
 pub enum TokenCheckerMsg {
     FetchJwks,
-    Check {
-        token: JwtToken,
-        respond_to: oneshot::Sender<bool>,
-    },
     Validate {
         token: JwtToken,
-        respond_to: oneshot::Sender<Option<ValidJWT>>,
+        respond_to: oneshot::Sender<bool>,
     },
 }
 
 impl TokenCheckerMsg {
-    pub fn check(token: impl Into<JwtToken>) -> impl FnOnce(oneshot::Sender<bool>) -> Self {
-        move |respond_to| Self::Check {
-            token: token.into(),
-            respond_to,
-        }
-    }
-
-    pub fn validate(
-        token: impl Into<JwtToken>,
-    ) -> impl FnOnce(oneshot::Sender<Option<ValidJWT>>) -> Self {
+    pub fn validate(token: impl Into<JwtToken>) -> impl FnOnce(oneshot::Sender<bool>) -> Self {
         move |respond_to| Self::Validate {
             token: token.into(),
             respond_to,
@@ -87,21 +74,13 @@ impl TokenChecker {
                     self.jwks = Some(jwks);
                 }
             }
-            TokenCheckerMsg::Check { token, respond_to } => {
+            TokenCheckerMsg::Validate { token, respond_to } => {
                 // if we don't have jwks, or the token doesn't have a key, we simply return true
                 let _ = respond_to.send(
                     self.jwks
                         .as_ref()
                         .map(|jwks| token.is_signed_by(jwks))
                         .unwrap_or(true),
-                );
-            }
-            TokenCheckerMsg::Validate { token, respond_to } => {
-                let _ = respond_to.send(
-                    self.jwks
-                        .as_ref()
-                        .and_then(|jwks| token.get_kid().and_then(|kid| jwks.find(kid.as_str())))
-                        .and_then(|jwk| validate(token.0.as_str(), jwk, vec![]).ok()),
                 );
             }
         }

@@ -1,15 +1,10 @@
-use std::time::Duration;
-
-use chrono::Utc;
-use reqwest::Url;
 use tokio::sync::{mpsc, oneshot};
 
 use crate::auth0_config::Auth0Config;
-use crate::cache::{Cache, CacheEntry};
+use crate::cache::CacheImpl;
 use crate::errors::PrimaBridgeResult;
 use crate::token_dispenser::async_impl::dispenser::{TokenDispenser, TokenDispenserMessage};
 use crate::token_dispenser::async_impl::jwks::{TokenChecker, TokenCheckerMsg};
-use alcoholic_jwt::ValidJWT;
 
 mod dispenser;
 mod jwks;
@@ -24,7 +19,7 @@ pub struct TokenDispenserHandle {
 impl TokenDispenserHandle {
     pub fn run(
         http_client: &reqwest::Client,
-        cache: &Cache,
+        cache: &CacheImpl,
         config: &Auth0Config,
     ) -> PrimaBridgeResult<Self> {
         let (sender, receiver) = mpsc::channel(8);
@@ -73,13 +68,7 @@ impl TokenDispenserHandle {
                 if let Some(token) = maybe_token {
                     let token_valid = Self::do_retrieve_value(
                         &jwks_interval_sender,
-                        TokenCheckerMsg::check(token.clone()),
-                    )
-                    .await;
-
-                    let claim: Option<ValidJWT> = Self::do_retrieve_value(
-                        &jwks_interval_sender,
-                        TokenCheckerMsg::validate(token),
+                        TokenCheckerMsg::validate(token.clone()),
                     )
                     .await;
 
