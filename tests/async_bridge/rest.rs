@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use reqwest::header::{HeaderName, HeaderValue};
+use reqwest::header::{HeaderName, HeaderValue, AUTHORIZATION};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -231,8 +231,45 @@ async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
 
     let req = RestRequest::new(&bridge);
     let mut h = reqwest::header::HeaderMap::new();
-    h.insert("x-token", HeaderValue::from_static("abcdef"));
+    h.insert(
+        AUTHORIZATION,
+        HeaderValue::from_static("Bearer valid_access_token"),
+    );
     assert_eq!(h, req.get_bridge().get_headers().await);
+
+    Ok(())
+}
+
+#[cfg(feature = "auth0")]
+#[tokio::test]
+async fn full_auth0_cycle() -> Result<(), Box<dyn Error>> {
+    use crate::common::auth0_context::Auth0Context;
+    let mut auth0_context = Auth0Context::new("valid_access_token");
+
+    let url = reqwest::Url::parse(&format!("{}/api", mockito::server_url())).unwrap();
+    let bridge: Bridge =
+        Generator::bridge_with_auth0_config(url, auth0_context.default_config()).await;
+
+    let req = RestRequest::new(&bridge);
+    let res = req.send().await;
+    assert!(res.is_ok());
+
+    // the service now want "another_token"
+    auth0_context.change_token_on_service("another_token");
+
+    // ...so the request fails
+    let res = req.send().await;
+    assert!(res.is_err());
+
+    // now the auth0 server send "another_token"
+    auth0_context.change_token_on_auth0("another_token");
+
+    // ...I wait for the bridge to fetch the new token for 2 seconds (this should be more then the bridge interval)
+    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+
+    // now the request is fine
+    let res = req.send().await;
+    assert!(res.is_ok());
 
     Ok(())
 }

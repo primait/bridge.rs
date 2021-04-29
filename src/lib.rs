@@ -39,7 +39,7 @@ mod request;
 mod response;
 
 #[cfg(feature = "auth0")]
-static INTERVAL_CHECK: std::time::Duration = std::time::Duration::from_secs(2);
+static INTERVAL_CHECK: std::time::Duration = std::time::Duration::from_secs(1);
 #[cfg(feature = "auth0")]
 static INTERVAL_JWKS_CHECK: std::time::Duration = std::time::Duration::from_secs(60);
 
@@ -224,12 +224,12 @@ impl Bridge {
 
     #[cfg(feature = "auth0")]
     pub async fn get_headers(&self) -> reqwest::header::HeaderMap {
-        use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+        use reqwest::header::{HeaderMap, HeaderValue};
         let mut headers = HeaderMap::new();
         self.token_dispenser_handle.get_token().await.map(|t| {
             headers.append(
-                HeaderName::from_static("x-token"),
-                HeaderValue::from_str(t.as_str()).unwrap(),
+                reqwest::header::AUTHORIZATION,
+                HeaderValue::from_str(&format!("Bearer {}", t)).unwrap(),
             );
         });
         headers
