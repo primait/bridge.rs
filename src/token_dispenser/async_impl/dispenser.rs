@@ -122,7 +122,7 @@ impl TokenDispenser {
         let issue_date = Utc::now() - chrono::Duration::hours(3);
         let token: CacheEntry = CacheEntry::new(access_token, issue_date, Utc::now());
         self.token = Some(token.clone());
-        // Putting token in 2nd level cache
+        // Put token in 2nd level cache
         self.cache.set(&self.key, token)
     }
 

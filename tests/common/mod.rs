@@ -1,6 +1,8 @@
 use mockito::{mock, BinaryBody, Matcher, Mock};
 use reqwest::Url;
-use serde::Serialize;
+
+#[cfg(feature = "auth0")]
+pub mod auth0_context;
 
 pub fn get_mock(status_code: usize, body: &str) -> (Mock, Url) {
     mock_with_path(status_code, body, "/")
@@ -138,18 +140,10 @@ pub fn mock_with_binary_body_matcher(body: &[u8]) -> (Mock, Url) {
     (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
-#[derive(Serialize)]
-struct TokenResponse {
-    access_token: String,
-    scope: String,
-    expires_in: i32,
-    token_type: String,
-}
-
 #[cfg(feature = "auth0")]
 pub fn create_auth0_mock() -> Mock {
-    let token_response = TokenResponse {
-        access_token: "abcdef".to_string(),
+    let token_response = auth0_context::TokenResponse {
+        access_token: "valid_access_token".to_string(),
         scope: "test".to_string(),
         expires_in: 5,
         token_type: "test".to_string(),
