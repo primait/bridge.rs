@@ -1,7 +1,7 @@
 use mockito::{mock, BinaryBody, Matcher, Mock};
 use reqwest::Url;
 
-#[cfg(feature = "auth0")]
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
 pub mod auth0_context;
 
 pub fn get_mock(status_code: usize, body: &str) -> (Mock, Url) {
@@ -140,7 +140,7 @@ pub fn mock_with_binary_body_matcher(body: &[u8]) -> (Mock, Url) {
     (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
-#[cfg(feature = "auth0")]
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
 pub fn create_auth0_mock() -> Mock {
     let token_response = auth0_context::TokenResponse {
         access_token: "valid_access_token".to_string(),

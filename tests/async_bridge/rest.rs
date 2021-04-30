@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use reqwest::header::{HeaderName, HeaderValue, AUTHORIZATION};
+use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -232,7 +232,7 @@ async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
     let req = RestRequest::new(&bridge);
     let mut h = reqwest::header::HeaderMap::new();
     h.insert(
-        AUTHORIZATION,
+        reqwest::header::AUTHORIZATION,
         HeaderValue::from_static("Bearer valid_access_token"),
     );
     assert_eq!(h, req.get_bridge().get_headers().await);
