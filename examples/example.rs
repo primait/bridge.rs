@@ -27,7 +27,7 @@ async fn main() {
 #[cfg(not(all(not(feature = "blocking"), feature = "auth0", feature = "inmemory")))]
 fn main() {}
 
-#[cfg(all(feature = "auth0", feature = "inmemory"))]
+#[cfg(all(not(feature = "blocking"), feature = "auth0", feature = "inmemory"))]
 mod app {
     use prima_bridge::auth0_config::Auth0Config;
     use reqwest::Url;

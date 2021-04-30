@@ -9,18 +9,13 @@ mod async_bridge;
 #[cfg(feature = "blocking")]
 mod blocking;
 
-#[cfg(feature = "auth0")]
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
 const BRIDGE_ERROR: &str = "Cannot create new bridge";
 
 pub struct Generator;
 
 impl Generator {
-    #[cfg(all(feature = "blocking", feature = "auth0"))]
-    pub fn bridge(url: Url) -> Bridge {
-        Bridge::new(url, Self::auth0_config()).expect(BRIDGE_ERROR)
-    }
-
-    #[cfg(all(feature = "blocking", not(feature = "auth0")))]
+    #[cfg(feature = "blocking")]
     pub fn bridge(url: Url) -> Bridge {
         Bridge::new(url)
     }
@@ -37,12 +32,7 @@ impl Generator {
         Bridge::new(url)
     }
 
-    #[cfg(all(feature = "blocking", feature = "auth0"))]
-    pub fn bridge_with_user_agent(url: Url, user_agent: &str) -> Bridge {
-        Bridge::with_user_agent(url, user_agent, Self::auth0_config()).expect(BRIDGE_ERROR)
-    }
-
-    #[cfg(all(feature = "blocking", not(feature = "auth0")))]
+    #[cfg(all(feature = "blocking"))]
     pub fn bridge_with_user_agent(url: Url, user_agent: &str) -> Bridge {
         Bridge::with_user_agent(url, user_agent)
     }
@@ -67,7 +57,7 @@ impl Generator {
         Bridge::new(url, auth0_config).await.expect(BRIDGE_ERROR)
     }
 
-    #[cfg(feature = "auth0")]
+    #[cfg(all(not(feature = "blocking"), feature = "auth0"))]
     pub fn auth0_config() -> prima_bridge::auth0_config::Auth0Config {
         use std::str::FromStr;
         prima_bridge::auth0_config::Auth0Config::new(
