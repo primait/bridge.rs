@@ -38,6 +38,12 @@ pub mod prelude;
 mod request;
 mod response;
 
+#[cfg(all(feature = "blocking", feature = "auth0"))]
+compile_error!("feature \"blocking\" and feature \"auth0\" cannot be enabled at the same time, the auth0 feature is supported only if async is enabled");
+
+#[cfg(all(feature = "blocking", feature = "async"))]
+compile_error!("feature \"blocking\" and feature \"async\" cannot be enabled at the same time");
+
 #[cfg(all(feature = "auth0", not(feature = "blocking")))]
 static INTERVAL_CHECK: std::time::Duration = std::time::Duration::from_secs(1);
 #[cfg(all(feature = "auth0", not(feature = "blocking")))]
@@ -184,5 +190,12 @@ impl Bridge {
         token_dispenser_handle.refresh_token().await;
         token_dispenser_handle.periodic_check(INTERVAL_CHECK).await;
         Ok(token_dispenser_handle)
+    }
+
+    /// this function trigger a reload from auth0 of the JWT token.
+    /// Normally you should not call this function, as the library take care of keeping the token updated for you
+    #[cfg(all(feature = "auth0"))]
+    pub async fn force_auth0_token_reload(&self) {
+        self.token_dispenser_handle.refresh_token().await
     }
 }
