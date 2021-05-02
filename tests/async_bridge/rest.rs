@@ -265,7 +265,8 @@ async fn full_auth0_cycle() -> Result<(), Box<dyn Error>> {
     auth0_context.change_token_on_auth0("another_token");
 
     // ...I wait for the bridge to fetch the new token for 2 seconds (this should be more then the bridge interval)
-    tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    //tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    bridge.force_auth0_token_reload().await;
 
     // now the request is fine
     let res = req.send().await;

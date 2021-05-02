@@ -16,23 +16,17 @@ args = [
 dependencies = [
     "test-blocking",
     "test-async",
-    "test-blocking-auth0",
     "test-async-auth0"
 ]
 
 [tasks.test-blocking]
 command = "cargo"
-args = ["test", "--features", "blocking"]
+args = ["test", "--no-default-features", "--features", "blocking"]
 dependencies = ["build"]
 
 [tasks.test-async]
 command = "cargo"
 args = ["test", "--features", "gzip"]
-dependencies = ["build"]
-
-[tasks.test-blocking-auth0]
-command = "cargo"
-args = ["test", "--features=blocking auth0 inmemory"]
 dependencies = ["build"]
 
 [tasks.test-async-auth0]
