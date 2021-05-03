@@ -8,6 +8,8 @@ use prima_bridge::prelude::*;
 
 use crate::common::*;
 use crate::Generator;
+#[cfg(feature = "auth0")]
+use prima_bridge::auth0_config::StalenessCheckPercentage;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
@@ -221,8 +223,7 @@ async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
         "none".to_string(),
         "32char_long_token_encryption_key".to_string(),
         std::time::Duration::from_secs(10),
-        1,
-        60,
+        StalenessCheckPercentage::new(0.01, 0.6),
         "client_id".to_string(),
         "client_secret".to_string(),
     );

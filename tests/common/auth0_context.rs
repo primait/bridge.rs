@@ -1,6 +1,6 @@
 use crate::common::auth0_context;
 use mockito::{mock, Mock};
-use prima_bridge::auth0_config::Auth0Config;
+use prima_bridge::auth0_config::{Auth0Config, StalenessCheckPercentage};
 use reqwest::header::AUTHORIZATION;
 use serde::Serialize;
 
@@ -28,8 +28,7 @@ impl Auth0Context {
             "none".to_string(),
             "32char_long_token_encryption_key".to_string(),
             std::time::Duration::from_secs(1),
-            1,
-            60,
+            StalenessCheckPercentage::new(0.01, 0.6),
             "client_id".to_string(),
             "client_secret".to_string(),
         )

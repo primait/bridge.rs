@@ -59,6 +59,7 @@ impl Generator {
 
     #[cfg(all(not(feature = "blocking"), feature = "auth0"))]
     pub fn auth0_config() -> prima_bridge::auth0_config::Auth0Config {
+        use prima_bridge::auth0_config::StalenessCheckPercentage;
         use std::str::FromStr;
         prima_bridge::auth0_config::Auth0Config::new(
             Url::from_str("http://should.be/token/mock/url").unwrap(),
@@ -68,8 +69,7 @@ impl Generator {
             "none".to_string(),
             "32char_long_token_encryption_key".to_string(),
             std::time::Duration::from_secs(10),
-            20,
-            30,
+            StalenessCheckPercentage::new(0.2, 0.3),
             "client_id".to_string(),
             "client_secret".to_string(),
         )

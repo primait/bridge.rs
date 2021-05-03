@@ -1,15 +1,17 @@
 use std::time::Duration;
 
 use reqwest::Url;
+use std::ops::RangeInclusive;
 
 #[derive(Clone)]
 pub struct Auth0Config {
     /// Auth0 base url.
     /// This is the url used by the bridge to fetch new tokens
-    base_url: Url,
+    token_generator_url: Url,
     /// The microservice implementing this Bridge
     caller: String,
     /// The microservice I want to connect to. Eg. crash, squillo etc.
+    /// This should match the string defined in auth0 as "audience"
     audience: String,
     /// Redis connection string. Eg. redis://{host}:{port}?{ParamKey1}={ParamKey2}
     redis_connection_uri: String,
@@ -17,11 +19,10 @@ pub struct Auth0Config {
     token_encryption_key: String,
     /// Every {check_interval} the `TokenDispenser` actor checks if token needs to be refreshed
     check_interval: Duration,
-    /// todo: explain. todo2: could be useful to cast to something like a Percentage struct. It's good
-    /// todo: if 0 < x < 100
-    min_token_remaining_life_percentage: i32,
-    /// todo: explain
-    max_token_remaining_life_percentage: i32,
+    /// this is a time period in which the token should considered stale. Expressed as a range that represent the whole lifespan of the token.
+    /// The lower bound means that from that from that moment onward the library will try to refresh the token at the scheduled time
+    /// the higher bound means that the library will try to refresh the token as soon as possible
+    staleness_check_percentage: StalenessCheckPercentage,
     /// Auth0 client identifier. Every machine should share the same identifier
     client_id: String,
     /// Auth0 client secret. Every machine should share the same secret
@@ -40,28 +41,26 @@ impl Auth0Config {
         redis_connection_uri: String,
         token_encryption_key: String,
         check_interval: Duration,
-        min_token_remaining_life_percentage: i32,
-        max_token_remaining_life_percentage: i32,
+        staleness_check_percentage: StalenessCheckPercentage,
         client_id: String,
         client_secret: String,
     ) -> Self {
         // todo: fail if `token_encryption_key.len() != 32`
         Self {
-            base_url,
+            token_generator_url: base_url,
             caller,
             audience,
             redis_connection_uri,
             token_encryption_key,
             check_interval,
-            min_token_remaining_life_percentage,
-            max_token_remaining_life_percentage,
+            staleness_check_percentage,
             client_id,
             client_secret,
             jwks_url,
         }
     }
     pub fn base_url(&self) -> &Url {
-        &self.base_url
+        &self.token_generator_url
     }
 
     pub fn caller(&self) -> &str {
@@ -82,14 +81,6 @@ impl Auth0Config {
 
     pub fn check_interval(&self) -> &Duration {
         &self.check_interval
-    }
-
-    pub fn min_token_remaining_life_percentage(&self) -> i32 {
-        self.min_token_remaining_life_percentage
-    }
-
-    pub fn max_token_remaining_life_percentage(&self) -> i32 {
-        self.max_token_remaining_life_percentage
     }
 
     pub fn client_id(&self) -> &str {
@@ -115,10 +106,42 @@ impl Auth0Config {
             "none".to_string(),
             "32char_long_token_encryption_key".to_string(),
             Duration::from_secs(10),
-            20,
-            30,
+            StalenessCheckPercentage::default(),
             "client_id".to_string(),
             "client_secret".to_string(),
         )
+    }
+    pub fn staleness_check_percentage(&self) -> &StalenessCheckPercentage {
+        &self.staleness_check_percentage
+    }
+}
+
+#[derive(Clone)]
+pub struct StalenessCheckPercentage(RangeInclusive<f64>);
+
+impl StalenessCheckPercentage {
+    pub fn new(min: f64, max: f64) -> Self {
+        assert!(min >= 0.0 && min <= 1.0);
+        assert!(max >= 0.0 && max <= 1.0);
+        assert!(min <= max);
+
+        Self(min..=max)
+    }
+
+    pub fn random_value_between(&self) -> f64 {
+        use rand::Rng;
+        rand::thread_rng().gen_range(self.0.clone())
+    }
+}
+
+impl Default for StalenessCheckPercentage {
+    fn default() -> Self {
+        Self(0.6..=0.9)
+    }
+}
+
+impl From<RangeInclusive<f64>> for StalenessCheckPercentage {
+    fn from(range: RangeInclusive<f64>) -> Self {
+        Self::new(*range.start(), *range.end())
     }
 }
