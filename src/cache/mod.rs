@@ -77,6 +77,8 @@ impl CacheEntry {
 
     // Return the percentage of the remaining life
     pub fn remaining_life_percentage(&self) -> f64 {
+        dbg!(*&self.expire_date.timestamp_millis());
+        dbg!(Utc::now().timestamp_millis());
         if *&self.expire_date.timestamp_millis() - Utc::now().timestamp_millis() <= 0 {
             0.0
         } else {

@@ -37,11 +37,11 @@ pub struct TokenResponse {
     token_type: String,
 }
 
-fn random(x: f64, y: f64) -> f64 {
-    use rand::Rng;
-    match x - y {
-        z if z == 0.0 => x,
-        z if z > 0.0 => rand::thread_rng().gen_range(y..=x),
-        _ => rand::thread_rng().gen_range(x..=y),
-    }
-}
+// fn random(x: f64, y: f64) -> f64 {
+//     use rand::Rng;
+//     match x - y {
+//         z if z == 0.0 => x,
+//         z if z > 0.0 => rand::thread_rng().gen_range(y..=x),
+//         _ => rand::thread_rng().gen_range(x..=y),
+//     }
+// }

@@ -1,10 +1,10 @@
 use chrono::Utc;
 use tokio::sync::{mpsc, oneshot};
 
-use crate::auth0_config::Auth0Config;
+use crate::auth0_config::{Auth0Config, StalenessCheckPercentage};
 use crate::cache::{Cache, CacheEntry, CacheImpl};
 use crate::errors::PrimaBridgeResult;
-use crate::token_dispenser::{random, TokenRequest, TokenResponse};
+use crate::token_dispenser::{TokenRequest, TokenResponse};
 
 #[derive(Debug)]
 pub enum TokenDispenserMessage {
@@ -127,11 +127,7 @@ impl TokenDispenser {
     }
 
     fn token_needs_refresh(&self) -> bool {
-        token_needs_refresh(
-            &self.token,
-            self.config.max_token_remaining_life_percentage(),
-            self.config.min_token_remaining_life_percentage(),
-        )
+        token_needs_refresh(&self.token, self.config.staleness_check_percentage())
     }
 }
 
@@ -139,19 +135,14 @@ impl TokenDispenser {
 // `max_token_remaining_life_percentage` and `min_token_remaining_life_percentage`
 fn token_needs_refresh(
     token: &Option<CacheEntry>,
-    max_token_remaining_life_percentage: i32,
-    min_token_remaining_life_percentage: i32,
+    staleness_check_percentage: &StalenessCheckPercentage,
 ) -> bool {
-    match &token {
-        Some(entry) => {
-            let random_percentage = random(
-                max_token_remaining_life_percentage as f64,
-                min_token_remaining_life_percentage as f64,
-            );
-            random_percentage >= entry.remaining_life_percentage()
-        }
-        None => true,
-    }
+    token.as_ref().map_or(true, |entry| {
+        let random_percentage = staleness_check_percentage.random_value_between();
+        dbg!(&random_percentage);
+        dbg!(entry.remaining_life_percentage());
+        random_percentage >= entry.remaining_life_percentage()
+    })
 }
 
 #[cfg(test)]
@@ -160,56 +151,68 @@ mod tests {
     use mockito::{mock, Mock};
     use tokio::sync::{mpsc, oneshot};
 
-    use crate::auth0_config::Auth0Config;
+    use crate::auth0_config::{Auth0Config, StalenessCheckPercentage};
     use crate::cache::{Cache, CacheEntry, CacheImpl};
     use crate::token_dispenser::async_impl::dispenser::{
         token_needs_refresh, TokenDispenser, TokenDispenserMessage,
     };
-    use crate::token_dispenser::{random, TokenResponse};
+    use crate::token_dispenser::TokenResponse;
 
     #[test]
-    fn random_test() {
-        // Should never panic
-        let _ = random(0.0, 1.0);
-        let _ = random(1.0, 0.0);
-        assert_eq!(random(0.0, 0.0), 0.0);
-    }
-
-    #[test]
-    fn token_needs_refresh_test() {
+    fn token_needs_refresh_near_expiration() {
         let now: i64 = Utc::now().timestamp_millis();
-        let max_token_remaining_life_percentage: i32 = 50;
-        let min_token_remaining_life_percentage: i32 = 10;
+        let max_token_remaining_life_percentage = 0.0;
+        let min_token_remaining_life_percentage = 0.0;
+        let staleness_check_percentage = StalenessCheckPercentage::new(
+            min_token_remaining_life_percentage,
+            max_token_remaining_life_percentage,
+        );
 
-        // Token is going to expire
         let issue_date: DateTime<Utc> = Utc.timestamp_millis(now - 1_000_000);
         let expire_date: DateTime<Utc> = Utc.timestamp_millis(now);
         let entry = CacheEntry::new("token".to_string(), issue_date, expire_date);
         assert!(token_needs_refresh(
             &Some(entry),
-            max_token_remaining_life_percentage,
-            min_token_remaining_life_percentage
+            &staleness_check_percentage
         ));
+    }
 
-        // Token has been just emitted
+    #[test]
+    fn token_needs_refresh_just_emitted() {
+        let now: i64 = Utc::now().timestamp_millis();
+        let max_token_remaining_life_percentage = 0.0;
+        let min_token_remaining_life_percentage = 0.0;
+        let staleness_check_percentage = StalenessCheckPercentage::new(
+            min_token_remaining_life_percentage,
+            max_token_remaining_life_percentage,
+        );
+
         let issue_date: DateTime<Utc> = Utc.timestamp_millis(now);
         let expire_date: DateTime<Utc> = Utc.timestamp_millis(now + 10_000);
         let entry = CacheEntry::new("token".to_string(), issue_date, expire_date);
         assert!(!token_needs_refresh(
             &Some(entry),
-            max_token_remaining_life_percentage,
-            min_token_remaining_life_percentage
+            &staleness_check_percentage
         ));
+    }
 
-        // Token has expired long time ago. Not an issue
+    #[test]
+    fn token_needs_refresh_long_time_ago() {
+        let now: i64 = Utc::now().timestamp_millis();
+        let max_token_remaining_life_percentage = 0.0;
+        let min_token_remaining_life_percentage = 0.0;
+        let staleness_check_percentage = StalenessCheckPercentage::new(
+            min_token_remaining_life_percentage,
+            max_token_remaining_life_percentage,
+        );
+
         let issue_date: DateTime<Utc> = Utc.timestamp_millis(now - 1_001_000);
         let expire_date: DateTime<Utc> = Utc.timestamp_millis(now - 1_000_000);
         let entry = CacheEntry::new("token".to_string(), issue_date, expire_date);
         assert!(token_needs_refresh(
             &Some(entry),
-            max_token_remaining_life_percentage,
-            min_token_remaining_life_percentage
-        ))
+            &staleness_check_percentage
+        ));
     }
 
     #[tokio::test]

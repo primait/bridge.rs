@@ -29,7 +29,7 @@ fn main() {}
 
 #[cfg(all(not(feature = "blocking"), feature = "auth0", feature = "inmemory"))]
 mod app {
-    use prima_bridge::auth0_config::Auth0Config;
+    use prima_bridge::auth0_config::{Auth0Config, StalenessCheckPercentage};
     use reqwest::Url;
     use std::str::FromStr;
     use std::time::Duration;
@@ -55,8 +55,7 @@ mod app {
             "inmemory".to_string(),
             "32char_long_token_encryption_key".to_string(),
             Duration::from_secs(2),
-            10,
-            50,
+            StalenessCheckPercentage::new(0.1, 0.5),
             client_id,
             client_secret,
         )
