@@ -80,7 +80,7 @@ args = ["clippy", "--", "-D", "warnings"]
 [tasks.build-ci]
 description = "Build inside CI."
 command = "cargo"
-args = ["build", "-j", "2", "--all-features"]
+args = ["build", "-j", "2"]
 
 [tasks.cache-cleanup]
 description = "Clean CI cache"
