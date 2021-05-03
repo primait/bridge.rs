@@ -17,6 +17,7 @@ pub struct TokenDispenserHandle {
 
 /// the handle is responsible of exposing a public api to the underlying actor
 impl TokenDispenserHandle {
+    /// run the handle
     pub fn run(
         http_client: &reqwest::Client,
         cache: &CacheImpl,
@@ -40,6 +41,8 @@ impl TokenDispenserHandle {
         })
     }
 
+    /// this is responsible to activates every given time and check the actual token if its near
+    /// is natural end. And if it's the case, trigger the retrieval of a new token
     pub async fn periodic_check(&self, duration: std::time::Duration) {
         let interval_sender = self.sender.clone();
         tokio::spawn(async move {
@@ -53,6 +56,10 @@ impl TokenDispenserHandle {
         });
     }
 
+    /// this is responsible for starting a thread that checks the actual token with the internal
+    /// JWKS. In case of negative check it triggers the token reload
+    ///
+    /// This could happen in the rare case where auth0 removes all JWKS at once
     pub async fn periodic_jwks_check(&self, duration: std::time::Duration) {
         let token_dispenser_handle_sender = self.sender.clone();
         let jwks_interval_sender = self.sender_jwks_checker.clone();
