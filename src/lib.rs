@@ -97,8 +97,6 @@ impl Bridge {
         }
     }
 
-    // todo: can we think about add http client and cache as ref here? And create new version where
-    // we create http client and cache
     #[cfg(feature = "auth0")]
     pub async fn new(
         endpoint: Url,
@@ -130,8 +128,6 @@ impl Bridge {
         }
     }
 
-    // todo: think about this function. I would leave the choice of how to build the http client to the caller
-    // avoiding the proliferation of http clients
     #[cfg(feature = "auth0")]
     pub async fn with_user_agent(
         endpoint: Url,
@@ -187,7 +183,7 @@ impl Bridge {
         token_dispenser_handle
             .periodic_jwks_check(INTERVAL_JWKS_CHECK)
             .await;
-        token_dispenser_handle.refresh_token().await;
+        token_dispenser_handle.check_refresh().await;
         token_dispenser_handle.periodic_check(INTERVAL_CHECK).await;
         Ok(token_dispenser_handle)
     }
@@ -196,6 +192,6 @@ impl Bridge {
     /// Normally you should not call this function, as the library take care of keeping the token updated for you
     #[cfg(all(feature = "auth0"))]
     pub async fn force_auth0_token_reload(&self) {
-        self.token_dispenser_handle.refresh_token().await
+        self.token_dispenser_handle.force_refresh().await
     }
 }

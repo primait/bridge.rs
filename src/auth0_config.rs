@@ -45,7 +45,7 @@ impl Auth0Config {
         client_id: String,
         client_secret: String,
     ) -> Self {
-        // todo: fail if `token_encryption_key.len() != 32`
+        assert_eq!(token_encryption_key.len(), 32);
         Self {
             token_generator_url: base_url,
             caller,

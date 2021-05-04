@@ -77,8 +77,6 @@ impl CacheEntry {
 
     // Return the percentage of the remaining life
     pub fn remaining_life_percentage(&self) -> f64 {
-        dbg!(*&self.expire_date.timestamp_millis());
-        dbg!(Utc::now().timestamp_millis());
         if *&self.expire_date.timestamp_millis() - Utc::now().timestamp_millis() <= 0 {
             0.0
         } else {
@@ -88,6 +86,10 @@ impl CacheEntry {
             let total: f64 = (expire_millis - issue_millis) as f64;
             remaining / total * 100.0
         }
+    }
+
+    pub fn lifetime_in_seconds(&self) -> usize {
+        (self.expire_date - self.issue_date).num_seconds() as usize
     }
 }
 

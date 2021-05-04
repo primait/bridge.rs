@@ -1,4 +1,4 @@
-use chrono::Utc;
+use chrono::{Duration, Utc};
 use tokio::sync::{mpsc, oneshot};
 
 use crate::auth0_config::{Auth0Config, StalenessCheckPercentage};
@@ -8,7 +8,8 @@ use crate::token_dispenser::{TokenRequest, TokenResponse};
 
 #[derive(Debug)]
 pub enum TokenDispenserMessage {
-    RefreshToken,
+    RefreshCheck,
+    ForceRefresh,
     TokenNeedsRefresh {
         respond_to: oneshot::Sender<bool>,
     },
@@ -73,7 +74,7 @@ impl TokenDispenser {
 
     async fn handle_message(&mut self, msg: TokenDispenserMessage) {
         match msg {
-            TokenDispenserMessage::RefreshToken => {
+            TokenDispenserMessage::RefreshCheck => {
                 let _ = self.handle_refresh().await;
             }
             TokenDispenserMessage::GetToken { respond_to } => {
@@ -86,6 +87,9 @@ impl TokenDispenser {
             }
             TokenDispenserMessage::TokenNeedsRefresh { respond_to } => {
                 let _ = respond_to.send(self.token_needs_refresh());
+            }
+            TokenDispenserMessage::ForceRefresh => {
+                let _ = self.refresh_token().await;
             }
         }
     }
@@ -119,9 +123,14 @@ impl TokenDispenser {
 
         let access_token: String = response.access_token.clone();
 
-        // todo: decode token with jwk and create entry getting issue and expire dates.
-        let issue_date = Utc::now() - chrono::Duration::hours(3);
-        let token: CacheEntry = CacheEntry::new(access_token, issue_date, Utc::now());
+        // this is not the exact issue_date, nor the exact expire_date. But is a good approximation
+        // as long as we need it just to removes the key from the cache, and calculate the approximation
+        // of the token lifetime. If we need more correctness we can decrypt the token and get
+        // the exact issued_at (iat) and expiration (exp)
+        // reference: https://www.iana.org/assignments/jwt/jwt.xhtml
+        let issue_date = Utc::now();
+        let expire_date = Utc::now() + Duration::seconds(response.expires_in as i64);
+        let token: CacheEntry = CacheEntry::new(access_token, issue_date, expire_date);
         self.token = Some(token.clone());
         // Put token in 2nd level cache
         self.cache.set(&self.key, token)

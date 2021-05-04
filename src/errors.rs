@@ -36,6 +36,12 @@ pub enum PrimaBridgeError {
     Auth0JwksFetchInvalidJsonError(Url, reqwest::Error),
     #[error("the response body id not valid utf-8. error: {source}")]
     Utf8Error { source: Utf8Error },
+    #[cfg(feature = "auth0")]
+    #[error(transparent)]
+    DecryptInputError(#[from] block_modes::BlockModeError),
+    #[cfg(feature = "auth0")]
+    #[error("the encryption key should have 32 chars. given key: {0}")]
+    WrongEncryptionKey(String),
 }
 
 impl PrimaBridgeError {
