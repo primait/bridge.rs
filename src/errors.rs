@@ -34,6 +34,7 @@ pub enum PrimaBridgeError {
     Auth0JwksFetchInvalidJsonError(Url, reqwest::Error),
     #[error(transparent)]
     DecryptFromUtf8Error(#[from] std::string::FromUtf8Error),
+    #[cfg(feature = "auth0")]
     #[error(transparent)]
     DecryptInputError(#[from] block_modes::BlockModeError),
 }
