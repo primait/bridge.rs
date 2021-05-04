@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use reqwest::Url;
 
 use crate::auth0_config::Auth0Config;
-use crate::cache::CacheImpl;
+use crate::cache::{Cache, CacheImpl};
 use crate::errors::PrimaBridgeResult;
 
 #[derive(Clone, Debug)]
@@ -115,7 +115,6 @@ impl TokenDispenser {
         http_client: &reqwest::blocking::Client,
         cache: &CacheImpl,
         endpoint: &Url,
-        // Todo: better naming
         caller: &str,
         audience: &str,
         receiver: mpsc::Receiver<TokenDispenserMessage>,
@@ -141,9 +140,7 @@ impl TokenDispenser {
             self.http_client.get(self.endpoint.clone()).send()?.json()?;
 
         self.token = response.map(|token_response| token_response.access_token);
-
-        // todo: cache set value here?
-        // &self.cache.set()
+        self.cache.set(&self.key, token);
 
         Ok(())
     }

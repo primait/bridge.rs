@@ -50,7 +50,7 @@ impl TokenDispenserHandle {
             loop {
                 ticker.tick().await;
                 if Self::needs_refresh(&interval_sender).await {
-                    Self::do_cast(&interval_sender, TokenDispenserMessage::RefreshToken).await;
+                    Self::do_cast(&interval_sender, TokenDispenserMessage::RefreshCheck).await;
                 }
             }
         });
@@ -82,7 +82,7 @@ impl TokenDispenserHandle {
                     if !token_valid {
                         Self::do_cast(
                             &token_dispenser_handle_sender,
-                            TokenDispenserMessage::RefreshToken,
+                            TokenDispenserMessage::RefreshCheck,
                         )
                         .await;
                     }
@@ -98,8 +98,12 @@ impl TokenDispenserHandle {
             .await;
     }
 
-    pub async fn refresh_token(&self) {
-        self.cast(TokenDispenserMessage::RefreshToken).await;
+    pub async fn check_refresh(&self) {
+        self.cast(TokenDispenserMessage::RefreshCheck).await;
+    }
+
+    pub async fn force_refresh(&self) {
+        self.cast(TokenDispenserMessage::ForceRefresh).await;
     }
 
     pub async fn get_token(&self) -> Option<String> {

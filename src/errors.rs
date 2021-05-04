@@ -37,6 +37,9 @@ pub enum PrimaBridgeError {
     #[cfg(feature = "auth0")]
     #[error(transparent)]
     DecryptInputError(#[from] block_modes::BlockModeError),
+    #[cfg(feature = "auth0")]
+    #[error("the encryption key should have 32 chars. given key: {0}")]
+    WrongEncryptionKey(String),
 }
 
 impl From<Infallible> for PrimaBridgeError {
