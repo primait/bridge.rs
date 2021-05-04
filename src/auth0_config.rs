@@ -19,7 +19,7 @@ pub struct Auth0Config {
     token_encryption_key: String,
     /// Every {check_interval} the `TokenDispenser` actor checks if token needs to be refreshed
     check_interval: Duration,
-    /// this is a time period in which the token should considered stale. Expressed as a range that represent the whole lifespan of the token.
+    /// this is a time period in which the token should be considered stale. Expressed as a range that represent the whole lifespan of the token.
     /// The lower bound means that from that from that moment onward the library will try to refresh the token at the scheduled time
     /// the higher bound means that the library will try to refresh the token as soon as possible
     staleness_check_percentage: StalenessCheckPercentage,
@@ -28,7 +28,7 @@ pub struct Auth0Config {
     /// Auth0 client secret. Every machine should share the same secret
     client_secret: String,
     /// JWKS url
-    /// This is that the bridge uses to fetch JWKS
+    /// This is the url that the bridge uses to fetch JWKS
     jwks_url: Url,
 }
 
