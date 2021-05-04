@@ -14,7 +14,7 @@ blocking = ["reqwest/blocking"]
 async = ["reqwest", "futures", "futures-util"]
 tracing_opentelemetry = ["opentelemetry", "tracing", "tracing-opentelemetry"]
 gzip = ["reqwest/gzip"]
-auth0 = ["rand"]
+auth0 = ["rand", "redis", "alcoholic_jwt"]
 inmemory = []
 
 [dependencies]

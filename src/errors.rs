@@ -27,6 +27,7 @@ pub enum PrimaBridgeError {
     EmptyBody,
     #[error("http error while fetching auth0 token, error: {0}")]
     Auth0TokenFetchError(#[from] reqwest::Error),
+    #[cfg(feature = "auth0")]
     #[error(transparent)]
     Auth0CacheError(#[from] redis::RedisError),
     #[error("http error while fetching jwks from auth0, url: {0}, error: {1}")]
