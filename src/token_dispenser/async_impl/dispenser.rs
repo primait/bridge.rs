@@ -61,6 +61,7 @@ impl TokenDispenser {
             let _ = self.refresh_token().await;
         }
 
+        // starts the loop
         while let Some(msg) = self.receiver.recv().await {
             self.handle_message(msg).await;
         }
