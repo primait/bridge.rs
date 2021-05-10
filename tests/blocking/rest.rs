@@ -85,7 +85,7 @@ fn unserializable_response() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn wrong_status_code() -> Result<(), Box<dyn Error>> {
+fn wrong_status_code() {
     let (_m, url) = get_mock(400, "{\"hello\": \"world!\"}");
     let bridge: Bridge = Generator::bridge(url);
     let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send();
@@ -93,8 +93,6 @@ fn wrong_status_code() -> Result<(), Box<dyn Error>> {
     assert!(result.is_err());
     let error_str = result.err().map(|e| e.to_string()).unwrap();
     assert!(error_str.contains("400 Bad Request"));
-
-    Ok(())
 }
 
 #[test]
@@ -188,16 +186,15 @@ fn simple_request_with_wrong_status_code_and_wrong_body() -> Result<(), Box<dyn 
 }
 
 #[test]
-fn request_with_custom_raw_body() -> Result<(), Box<dyn Error>> {
+fn request_with_custom_raw_body() {
     let (_m, url) = mock_with_raw_body_matcher("abcde");
     let bridge: Bridge = Generator::bridge(url);
     let result = RestRequest::new(&bridge).raw_body("abcde").send();
     assert!(result.is_ok());
-    Ok(())
 }
 
 #[test]
-fn request_post_with_custom_raw_body() -> Result<(), Box<dyn Error>> {
+fn request_post_with_custom_raw_body() {
     let body = "abcde";
     let _mock = mock("POST", "/")
         .match_body(Matcher::Exact(body.to_owned()))
@@ -208,7 +205,6 @@ fn request_post_with_custom_raw_body() -> Result<(), Box<dyn Error>> {
     let bridge: Bridge = Generator::bridge(url);
     let result = Request::post(&bridge).raw_body(body).send();
     assert!(result.is_ok());
-    Ok(())
 }
 
 #[test]
@@ -254,7 +250,7 @@ fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
 }
 
 #[test]
-fn request_with_query_string() -> Result<(), Box<dyn Error>> {
+fn request_with_query_string() {
     let _mock = mock("GET", "/")
         .match_query(Matcher::AllOf(vec![
             Matcher::UrlEncoded("hello".into(), "world!".into()),
@@ -271,11 +267,10 @@ fn request_with_query_string() -> Result<(), Box<dyn Error>> {
         .with_query_pair("prima", "bridge")
         .send();
     assert!(result.is_ok());
-    Ok(())
 }
 
 #[test]
-fn request_with_query_string_by_calling_once() -> Result<(), Box<dyn Error>> {
+fn request_with_query_string_by_calling_once() {
     let _mock = mock("GET", "/")
         .match_query(Matcher::AllOf(vec![
             Matcher::UrlEncoded("hello".into(), "world!".into()),
@@ -291,7 +286,6 @@ fn request_with_query_string_by_calling_once() -> Result<(), Box<dyn Error>> {
         .with_query_pairs(vec![("hello", "world!"), ("prima", "bridge")])
         .send();
     assert!(result.is_ok());
-    Ok(())
 }
 
 #[test]
