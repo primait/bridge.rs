@@ -41,3 +41,8 @@ fn main() {
 To understand this example you should know:
  - [once_cell](https://crates.io/crates/once_cell) library providing the cell type
  - Rust error handling to use ? and convert it to a custom error type. See for example [thiserror](https://crates.io/crates/thiserror)
+
+### Local development
+
+- **cargo make test** *execute the full test suite*
+- **cargo make lint** *execute the full test suite*

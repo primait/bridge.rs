@@ -35,9 +35,20 @@ args = ["test", "--features=auth0 inmemory"]
 dependencies = ["build"]
 
 [tasks.lint]
+dependencies = [
+    "lint-blocking",
+    "lint-async"
+]
+
+[tasks.lint-blocking]
 description = "Run lint"
 command = "cargo"
-args = ["clippy", "--all-targets", "--all-features"]
+args = ["clippy", "--all-targets", "--no-default-features", "--features", "blocking"]
+
+[tasks.lint-async]
+description = "Run lint"
+command = "cargo"
+args = ["clippy", "--all-targets", "--no-default-features", "--features", "async"]
 
 ### with cargo-limit installed
 [tasks.lbuild]
@@ -56,12 +67,12 @@ dependencies = ["ltest-blocking", "ltest-async"]
 
 [tasks.ltest-blocking]
 command = "cargo"
-args = ["ltest", "--features", "blocking"]
+args = ["ltest", "--no-default-features", "--features", "blocking"]
 dependencies = ["lbuild"]
 
 [tasks.ltest-async]
 command = "cargo"
-args = ["ltest"]
+args = ["ltest", "--no-default-features", "--features", "async"]
 dependencies = ["lbuild"]
 
 [tasks.clean]

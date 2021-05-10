@@ -1,6 +1,5 @@
 use std::error::Error;
 
-use mockito;
 use mockito::{mock, Matcher, Mock};
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::Url;
