@@ -8,6 +8,7 @@
 ## 0.7.1
 
 ###breaking change
+
 - opentelemetry updated to version 0.13. **Careful!!!** The opentelemetry version in your project should match the one in this library
 - several dependencies updated
 - docker file based on Rust 1.51
