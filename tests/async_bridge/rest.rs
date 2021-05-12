@@ -172,3 +172,28 @@ async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> 
 
     Ok(())
 }
+
+#[cfg(feature = "gzip")]
+#[tokio::test]
+async fn gzip_compression() -> Result<(), Box<dyn Error>> {
+    use flate2::{write::GzEncoder, Compression};
+    use std::io::prelude::*;
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+    encoder.write(b"{\"hello\": \"world!\"}")?;
+    let body = encoder.finish()?;
+    let _mock = mockito::mock("GET", "/")
+        .with_status(200)
+        .with_header("Content-Encoding", "gzip")
+        .with_body(body)
+        .create();
+
+    let bridge = Bridge::new(mockito::server_url().parse().unwrap());
+
+    let result: String = RestRequest::new(&bridge)
+        .send()
+        .await?
+        .get_data(&["hello"])?;
+    assert_eq!(result, "world!");
+
+    Ok(())
+}

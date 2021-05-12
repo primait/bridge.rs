@@ -22,7 +22,7 @@ dependencies = ["build"]
 
 [tasks.test-async]
 command = "cargo"
-args = ["test"]
+args = ["test", "--features", "gzip"]
 dependencies = ["build"]
 
 ### with cargo-limit installed

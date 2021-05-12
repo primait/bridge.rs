@@ -3,6 +3,7 @@
 ### Next
 #### features
 - fixes the double header issue (#17)
+- adds support for the ```gzip``` feature, which decompress the response content based on the content-type header
 
 ### 0.7.1
 #### breaking change
