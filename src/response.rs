@@ -1,8 +1,12 @@
+pub mod graphql;
+
 use std::fmt::Debug;
 
+use graphql::GraphQlResponse;
 use reqwest::{header::HeaderMap, StatusCode, Url};
 use serde::Deserialize;
 use serde_json::Value;
+use std::convert::TryInto;
 use uuid::Uuid;
 
 use crate::prelude::*;
@@ -88,6 +92,13 @@ impl Response {
             selectors.insert(0, "data");
         };
         extract_inner_json(self.url, selectors, json_value)
+    }
+
+    pub fn get_graphql_response<T>(&self) -> PrimaBridgeResult<GraphQlResponse<T>>
+    where
+        for<'de> T: Deserialize<'de>,
+    {
+        Ok(self.try_into()?)
     }
 
     pub fn raw_body(&self) -> &Vec<u8> {

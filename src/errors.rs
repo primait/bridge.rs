@@ -2,6 +2,7 @@ use std::convert::Infallible;
 
 use reqwest::{StatusCode, Url};
 use serde_json::Value;
+use std::str::Utf8Error;
 use thiserror::Error;
 
 pub type PrimaBridgeResult<T> = Result<T, PrimaBridgeError>;
@@ -23,6 +24,8 @@ pub enum PrimaBridgeError {
     },
     #[error("empty body")]
     EmptyBody,
+    #[error(transparent)]
+    Utf8Error(#[from] Utf8Error),
 }
 
 impl From<Infallible> for PrimaBridgeError {
