@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt::Debug;
 
+#[derive(Debug)]
 pub enum ParsedGraphqlResponse<T> {
     Ok(T),
     Err(PossiblyParsedData<T>),
@@ -38,7 +39,8 @@ where
         let result: serde_json::Result<GraphQlResponse<T>> = serde_json::from_str(body_as_str);
         match result {
             Ok(t) => Ok(t.into()),
-            Err(_) => {
+            Err(e) => {
+                dbg!(e);
                 let value: Value = serde_json::from_str(body_as_str)?;
                 Ok(ParsedGraphqlResponse::Err(
                     PossiblyParsedData::UnparsedData(value, vec![]),
@@ -63,11 +65,13 @@ pub struct Location {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(untagged)]
 pub enum PathSegment {
     String(String),
     Num(u32),
 }
 
+#[derive(Debug)]
 pub enum PossiblyParsedData<T> {
     ParsedData(T, Vec<Error>),
     UnparsedData(Value, Vec<Error>),

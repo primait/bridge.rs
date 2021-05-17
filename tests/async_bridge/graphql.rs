@@ -9,6 +9,7 @@ use serde_json::json;
 use prima_bridge::prelude::*;
 use prima_bridge::Request;
 use reqwest::header::{HeaderName, HeaderValue};
+use std::fs;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 struct Person {
@@ -63,6 +64,44 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[derive(Deserialize, Debug)]
+struct GqlResponse {
+    hero: Hero,
+}
+
+#[derive(Deserialize, Debug)]
+struct Hero {
+    name: String,
+    #[serde(rename = "heroFriends")]
+    friends: Vec<Friend>,
+}
+
+#[derive(Deserialize, Debug)]
+struct Friend {
+    id: String,
+    name: Option<String>,
+}
+
+#[tokio::test]
+async fn error_response_parser() -> Result<(), Box<dyn Error>> {
+    let query = file_content("graphql/hero.graphql");
+    let (_m, bridge) = create_gql_bridge(
+        200,
+        query.as_str(),
+        file_content("graphql/response.json").as_str(),
+    );
+    let variables: Option<String> = None;
+    let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
+        .send()
+        .await?;
+
+    dbg!(response.get_graphql_response::<GqlResponse>());
+
+    assert!(false);
+
+    Ok(())
+}
+
 fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Bridge) {
     let mock = mock("POST", "/")
         .match_header("content-type", "application/json")
@@ -75,4 +114,15 @@ fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Brid
     let bridge = Bridge::new(url);
 
     (mock, bridge)
+}
+
+fn file_content(path_relative_to_recourses: &str) -> String {
+    let mut base_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    base_dir.push("tests/resources");
+    fs::read_to_string(format!(
+        "{}/{}",
+        base_dir.to_str().unwrap(),
+        path_relative_to_recourses
+    ))
+    .unwrap()
 }
