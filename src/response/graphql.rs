@@ -1,29 +1,54 @@
 use crate::errors::PrimaBridgeError;
-use crate::Response;
 use serde::Deserialize;
+use serde_json::Value;
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use std::fmt::Debug;
 
-#[derive(Deserialize)]
-pub struct GraphQlResponse<T> {
+pub enum ParsedGraphqlResponse<T> {
+    Ok(T),
+    Err(PossiblyParsedData<T>),
+}
+
+#[derive(Deserialize, Debug)]
+struct GraphQlResponse<T> {
     data: Option<T>,
     errors: Option<Vec<Error>>,
 }
 
-impl<T> TryFrom<&Response> for GraphQlResponse<T>
+impl<T> From<GraphQlResponse<T>> for ParsedGraphqlResponse<T> {
+    fn from(gql_response: GraphQlResponse<T>) -> Self {
+        match (gql_response.data, gql_response.errors) {
+            (Some(t), None) => Self::Ok(t),
+            (Some(t), Some(errors)) => Self::Err(PossiblyParsedData::ParsedData(t, errors)),
+            (None, Some(errors)) => Self::Err(PossiblyParsedData::EmptyData(errors)),
+            // this should not happen!
+            _ => Self::Err(PossiblyParsedData::EmptyData(vec![])),
+        }
+    }
+}
+
+impl<T> TryFrom<&str> for ParsedGraphqlResponse<T>
 where
     for<'de> T: Deserialize<'de>,
 {
     type Error = PrimaBridgeError;
 
-    fn try_from(response: &Response) -> Result<Self, Self::Error> {
-        Ok(serde_json::from_str(std::str::from_utf8(
-            response.raw_body(),
-        )?)?)
+    fn try_from(body_as_str: &str) -> Result<Self, Self::Error> {
+        let result: serde_json::Result<GraphQlResponse<T>> = serde_json::from_str(body_as_str);
+        match result {
+            Ok(t) => Ok(t.into()),
+            Err(_) => {
+                let value: Value = serde_json::from_str(body_as_str)?;
+                Ok(ParsedGraphqlResponse::Err(
+                    PossiblyParsedData::UnparsedData(value, vec![]),
+                ))
+            }
+        }
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Error {
     message: String,
     locations: Option<Vec<Location>>,
@@ -31,14 +56,20 @@ pub struct Error {
     extensions: Option<HashMap<String, String>>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct Location {
     line: u32,
     column: u32,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub enum PathSegment {
     String(String),
     Num(u32),
+}
+
+pub enum PossiblyParsedData<T> {
+    ParsedData(T, Vec<Error>),
+    UnparsedData(Value, Vec<Error>),
+    EmptyData(Vec<Error>),
 }

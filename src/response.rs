@@ -2,7 +2,6 @@ pub mod graphql;
 
 use std::fmt::Debug;
 
-use graphql::GraphQlResponse;
 use reqwest::{header::HeaderMap, StatusCode, Url};
 use serde::Deserialize;
 use serde_json::Value;
@@ -10,6 +9,7 @@ use std::convert::TryInto;
 use uuid::Uuid;
 
 use crate::prelude::*;
+use crate::response::graphql::ParsedGraphqlResponse;
 
 #[derive(Debug, PartialEq)]
 enum RequestType {
@@ -94,11 +94,13 @@ impl Response {
         extract_inner_json(self.url, selectors, json_value)
     }
 
-    pub fn get_graphql_response<T>(&self) -> PrimaBridgeResult<GraphQlResponse<T>>
+    pub fn get_graphql_response<T>(&self) -> PrimaBridgeResult<ParsedGraphqlResponse<T>>
     where
         for<'de> T: Deserialize<'de>,
     {
-        Ok(self.try_into()?)
+        let body_as_str =
+            std::str::from_utf8(self.raw_body()).map_err(PrimaBridgeError::utf8_error)?;
+        Ok(body_as_str.try_into()?)
     }
 
     pub fn raw_body(&self) -> &Vec<u8> {
