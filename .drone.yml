@@ -120,6 +120,13 @@ steps:
   - cargo-lint
   - cargo-test
 
+- name: cargo-cleanup
+  image: prima/bridge.rs-ci:${DRONE_COMMIT}
+  commands:
+    - cargo sweep -t 10
+  depends_on:
+    - cache-cleanup
+
 - name: cache-save
   image: public.ecr.aws/prima/drone-tools:1.20.1
   commands:
