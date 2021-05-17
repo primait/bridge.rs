@@ -1,3 +1,4 @@
+/// graphql response types and parsers
 use crate::errors::PrimaBridgeError;
 use serde::Deserialize;
 use serde_json::Value;
@@ -5,10 +6,37 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt::Debug;
 
+/// A type returned from [get_graphql_response](struct.Response.html#method.get_graphql_response) function that could be either
 #[derive(Debug)]
 pub enum ParsedGraphqlResponse<T> {
+    /// `T` is the deserialized data
     Ok(T),
     Err(PossiblyParsedData<T>),
+}
+
+impl<T> ParsedGraphqlResponse<T> {
+    pub fn is_ok(&self) -> bool {
+        matches!(self, ParsedGraphqlResponse::Ok(_))
+    }
+
+    pub fn get_errors(&self) -> Vec<Error> {
+        match self {
+            ParsedGraphqlResponse::Ok(_) => vec![],
+            ParsedGraphqlResponse::Err(possibly_parsed_data) => match possibly_parsed_data {
+                PossiblyParsedData::ParsedData(_, errors) => errors.to_vec(),
+                PossiblyParsedData::UnparsedData(_, errors) => errors.to_vec(),
+                PossiblyParsedData::EmptyData(errors) => errors.to_vec(),
+            },
+        }
+    }
+
+    pub fn has_parsed_data(&self) -> bool {
+        matches!(
+            self,
+            ParsedGraphqlResponse::Ok(_)
+                | ParsedGraphqlResponse::Err(PossiblyParsedData::ParsedData(..))
+        )
+    }
 }
 
 #[derive(Deserialize, Debug)]
@@ -50,7 +78,9 @@ where
     }
 }
 
-#[derive(Deserialize, Debug)]
+/// a struct representing a graphql error
+/// see: https://spec.graphql.org/June2018/#sec-Errors
+#[derive(Deserialize, Debug, Clone)]
 pub struct Error {
     message: String,
     locations: Option<Vec<Location>>,
@@ -58,22 +88,26 @@ pub struct Error {
     extensions: Option<HashMap<String, String>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Location {
     line: u32,
     column: u32,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum PathSegment {
     String(String),
     Num(u32),
 }
 
+/// an error type to represent all possible outcome for a graphql response deserialization
 #[derive(Debug)]
 pub enum PossiblyParsedData<T> {
+    /// a tuple type with the converted `T` type and a vector of [Error]. This could happens thanks to the fact that graphql can return null for a nullable type, even if there was an error while resolving the data.
     ParsedData(T, Vec<Error>),
+    /// a tuple with the [serde_json::Value] of the Response, and a vector of [Error]
     UnparsedData(Value, Vec<Error>),
+    /// a vector of [Error]. This means that the response contained just the "error" part, without the data.
     EmptyData(Vec<Error>),
 }

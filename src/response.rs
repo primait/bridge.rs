@@ -94,6 +94,8 @@ impl Response {
         extract_inner_json(self.url, selectors, json_value)
     }
 
+    /// This functions return a Result with a [ParsedGraphqlResponse]
+    /// Look at the type documentation for more specifications
     pub fn get_graphql_response<T>(&self) -> PrimaBridgeResult<ParsedGraphqlResponse<T>>
     where
         for<'de> T: Deserialize<'de>,

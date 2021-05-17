@@ -73,7 +73,7 @@ struct GqlResponse {
 struct Hero {
     name: String,
     #[serde(rename = "heroFriends")]
-    friends: Vec<Friend>,
+    friends: Vec<Option<Friend>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -88,16 +88,59 @@ async fn error_response_parser() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_gql_bridge(
         200,
         query.as_str(),
-        file_content("graphql/response.json").as_str(),
+        file_content("graphql/error_with_data.json").as_str(),
     );
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
         .await?;
+    let parsed_response = response.get_graphql_response::<GqlResponse>()?;
 
-    dbg!(response.get_graphql_response::<GqlResponse>());
+    assert!(!parsed_response.is_ok());
+    assert!(parsed_response.has_parsed_data());
+    assert_eq!(1, parsed_response.get_errors().len());
 
-    assert!(false);
+    Ok(())
+}
+
+#[tokio::test]
+async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Error>> {
+    let query = file_content("graphql/hero.graphql");
+    let (_m, bridge) = create_gql_bridge(
+        200,
+        query.as_str(),
+        file_content("graphql/error_non_null_response.json").as_str(),
+    );
+    let variables: Option<String> = None;
+    let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
+        .send()
+        .await?;
+    let parsed_response = response.get_graphql_response::<GqlResponse>()?;
+
+    assert!(!parsed_response.is_ok());
+    assert!(parsed_response.has_parsed_data());
+    assert_eq!(1, parsed_response.get_errors().len());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
+    let query = file_content("graphql/hero.graphql");
+    let (_m, bridge) = create_gql_bridge(
+        200,
+        query.as_str(),
+        file_content("graphql/error.json").as_str(),
+    );
+    let variables: Option<String> = None;
+    let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
+        .send()
+        .await?;
+    let parsed_response = response.get_graphql_response::<GqlResponse>()?;
+
+    assert!(!parsed_response.is_ok());
+    assert!(!parsed_response.has_parsed_data());
+    assert_eq!(1, parsed_response.get_errors().len());
 
     Ok(())
 }
