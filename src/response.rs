@@ -100,9 +100,9 @@ impl Response {
     where
         for<'de> T: Deserialize<'de>,
     {
-        let body_as_str =
-            std::str::from_utf8(self.raw_body()).map_err(PrimaBridgeError::utf8_error)?;
-        Ok(body_as_str.try_into()?)
+        std::str::from_utf8(self.raw_body())
+            .map_err(PrimaBridgeError::utf8_error)?
+            .try_into()
     }
 
     pub fn raw_body(&self) -> &Vec<u8> {
