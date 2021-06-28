@@ -2,6 +2,8 @@ use std::convert::Infallible;
 
 use reqwest::{StatusCode, Url};
 use serde_json::Value;
+use std::fmt::Debug;
+use std::str::Utf8Error;
 use thiserror::Error;
 
 pub type PrimaBridgeResult<T> = Result<T, PrimaBridgeError>;
@@ -23,6 +25,14 @@ pub enum PrimaBridgeError {
     },
     #[error("empty body")]
     EmptyBody,
+    #[error("the response body id not valid utf-8. error: {source}")]
+    Utf8Error { source: Utf8Error },
+}
+
+impl PrimaBridgeError {
+    pub fn utf8_error(source: Utf8Error) -> Self {
+        Self::Utf8Error { source }
+    }
 }
 
 impl From<Infallible> for PrimaBridgeError {
