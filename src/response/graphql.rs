@@ -67,7 +67,7 @@ where
         let result: serde_json::Result<GraphQlResponse<T>> = serde_json::from_str(body_as_str);
         match result {
             Ok(t) => Ok(t.into()),
-            Err(e) => {
+            Err(_e) => {
                 let value: Value = serde_json::from_str(body_as_str)?;
                 Ok(ParsedGraphqlResponse::Err(
                     PossiblyParsedData::UnparsedData(value, vec![]),
