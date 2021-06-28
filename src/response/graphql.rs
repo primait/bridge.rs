@@ -68,7 +68,6 @@ where
         match result {
             Ok(t) => Ok(t.into()),
             Err(e) => {
-                dbg!(e);
                 let value: Value = serde_json::from_str(body_as_str)?;
                 Ok(ParsedGraphqlResponse::Err(
                     PossiblyParsedData::UnparsedData(value, vec![]),
