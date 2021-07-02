@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
@@ -11,7 +12,6 @@ pub use request_type::{GraphQLRequest, Request, RestRequest};
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
-use std::time::Duration;
 
 mod body;
 mod request_type;

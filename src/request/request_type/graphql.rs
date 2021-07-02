@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::time::Duration;
 
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
@@ -9,7 +10,6 @@ use uuid::Uuid;
 use crate::errors::PrimaBridgeResult;
 use crate::request::{Body, DeliverableRequest, GraphQLBody, RequestType};
 use crate::Bridge;
-use std::time::Duration;
 
 /// The GraphQLRequest is a struct that represent a GraphQL request to be done with the [Bridge](./../struct.Bridge.html)
 #[allow(clippy::upper_case_acronyms)]
