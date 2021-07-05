@@ -19,6 +19,7 @@ use reqwest::Url;
 
 pub use self::{
     request::{GraphQLRequest, Request},
+    response::graphql::{Error, ParsedGraphqlResponse, PossiblyParsedData},
     response::Response,
 };
 

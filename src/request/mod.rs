@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{Method, Url};
@@ -39,6 +41,15 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// This is useful when you are dealing with an api that return errors with a not 2XX status codes.
     fn ignore_status_code(self) -> Self;
 
+    /// set request timeout
+    fn set_timeout(self, timeout: Duration) -> Self;
+
+    /// get request timeout
+    fn get_timeout(&self) -> Duration;
+
+    /// adds a new set of headers to the request. Any header already present gets merged.
+    fn set_custom_headers(self, headers: HeaderMap) -> Self;
+
     /// adds a new set of headers to the request. Any header already present gets merged.
     fn add_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         let mut custom_headers = HeaderMap::new();
@@ -46,9 +57,6 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         custom_headers.extend(headers);
         self.set_custom_headers(custom_headers)
     }
-
-    /// adds a new set of headers to the request. Any header already present gets merged.
-    fn set_custom_headers(self, headers: HeaderMap) -> Self;
 
     /// adds a new set of headers to the request. Any header already present gets removed.
     fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self;
@@ -120,6 +128,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .get_bridge()
             .client
             .request(self.get_method(), url.as_str())
+            .timeout(self.get_timeout())
             .header(
                 HeaderName::from_static("x-request-id"),
                 &self.get_id().to_string(),
@@ -173,6 +182,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .get_bridge()
             .client
             .request(self.get_method(), url.as_str())
+            .timeout(self.get_timeout())
             .header(
                 HeaderName::from_static("x-request-id"),
                 &request_id.to_string(),

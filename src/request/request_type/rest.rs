@@ -1,4 +1,5 @@
 use std::convert::TryInto;
+use std::time::Duration;
 
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
@@ -17,6 +18,7 @@ pub struct RestRequest<'a> {
     bridge: &'a Bridge,
     body: Option<Body>,
     method: Method,
+    timeout: Duration,
     path: Option<&'a str>,
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
@@ -32,6 +34,7 @@ impl<'a> RestRequest<'a> {
             body: Default::default(),
             method: Default::default(), // GET
             path: Default::default(),
+            timeout: Duration::from_secs(60),
             query_pairs: Default::default(),
             ignore_status_code: Default::default(),
             custom_headers: Default::default(),
@@ -74,6 +77,14 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
             ignore_status_code: true,
             ..self
         }
+    }
+
+    fn set_timeout(self, timeout: Duration) -> Self {
+        Self { timeout, ..self }
+    }
+
+    fn get_timeout(&self) -> Duration {
+        self.timeout
     }
 
     fn set_custom_headers(self, headers: HeaderMap) -> Self {

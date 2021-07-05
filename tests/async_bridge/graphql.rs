@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::fs;
 
 use mockito::{mock, Matcher, Mock};
 use reqwest::header::{HeaderName, HeaderValue};
@@ -6,9 +7,10 @@ use reqwest::Url;
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::Generator;
 use prima_bridge::prelude::*;
 use prima_bridge::Request;
+
+use crate::Generator;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 struct Person {
@@ -64,6 +66,90 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[derive(Deserialize, Debug)]
+struct GqlResponse {
+    hero: Hero,
+}
+
+#[derive(Deserialize, Debug)]
+struct Hero {
+    name: String,
+    #[serde(rename = "heroFriends")]
+    friends: Vec<Option<Friend>>,
+}
+
+#[derive(Deserialize, Debug)]
+struct Friend {
+    id: String,
+    name: Option<String>,
+}
+
+#[tokio::test]
+async fn error_response_parser() -> Result<(), Box<dyn Error>> {
+    let query = file_content("graphql/hero.graphql");
+    let (_m, url) = create_gql_mock(
+        200,
+        query.as_str(),
+        file_content("graphql/error_with_data.json").as_str(),
+    );
+    let variables: Option<String> = None;
+    let bridge: Bridge = Generator::bridge(url).await;
+    let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
+        .send()
+        .await?;
+    let parsed_response = response.get_graphql_response::<GqlResponse>()?;
+
+    assert!(!parsed_response.is_ok());
+    assert!(parsed_response.has_parsed_data());
+    assert_eq!(1, parsed_response.get_errors().len());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Error>> {
+    let query = file_content("graphql/hero.graphql");
+    let (_m, url) = create_gql_mock(
+        200,
+        query.as_str(),
+        file_content("graphql/error_non_null_response.json").as_str(),
+    );
+    let variables: Option<String> = None;
+    let bridge: Bridge = Generator::bridge(url).await;
+    let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
+        .send()
+        .await?;
+    let parsed_response = response.get_graphql_response::<GqlResponse>()?;
+
+    assert!(!parsed_response.is_ok());
+    assert!(parsed_response.has_parsed_data());
+    assert_eq!(1, parsed_response.get_errors().len());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
+    let query = file_content("graphql/hero.graphql");
+    let (_m, url) = create_gql_mock(
+        200,
+        query.as_str(),
+        file_content("graphql/error.json").as_str(),
+    );
+    let variables: Option<String> = None;
+    let bridge: Bridge = Generator::bridge(url).await;
+    let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
+        .send()
+        .await?;
+    let parsed_response = response.get_graphql_response::<GqlResponse>()?;
+
+    assert!(!parsed_response.is_ok());
+    assert!(!parsed_response.has_parsed_data());
+    assert_eq!(1, parsed_response.get_errors().len());
+
+    Ok(())
+}
+
 fn create_gql_mock(status_code: usize, query: &str, body: &str) -> (Mock, Url) {
     let mock = mock("POST", "/")
         .match_header("content-type", "application/json")
@@ -73,4 +159,15 @@ fn create_gql_mock(status_code: usize, query: &str, body: &str) -> (Mock, Url) {
         .create();
 
     (mock, Url::parse(mockito::server_url().as_str()).unwrap())
+}
+
+fn file_content(path_relative_to_recourses: &str) -> String {
+    let mut base_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    base_dir.push("tests/resources");
+    fs::read_to_string(format!(
+        "{}/{}",
+        base_dir.to_str().unwrap(),
+        path_relative_to_recourses
+    ))
+    .unwrap()
 }
