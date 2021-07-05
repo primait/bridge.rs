@@ -23,10 +23,31 @@ pub use self::{
     response::Response,
 };
 
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
+pub mod auth0_config;
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
+pub mod cache;
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
+mod token_dispenser;
+
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
+use crate::cache::{Cache, CacheImpl};
+
 mod errors;
 pub mod prelude;
 mod request;
 mod response;
+
+#[cfg(all(feature = "blocking", feature = "auth0"))]
+compile_error!("feature \"blocking\" and feature \"auth0\" cannot be enabled at the same time, the auth0 feature is supported only if async is enabled");
+
+#[cfg(all(feature = "blocking", feature = "async"))]
+compile_error!("feature \"blocking\" and feature \"async\" cannot be enabled at the same time");
+
+#[cfg(all(feature = "auth0", not(feature = "blocking")))]
+static INTERVAL_CHECK: std::time::Duration = std::time::Duration::from_secs(1);
+#[cfg(all(feature = "auth0", not(feature = "blocking")))]
+static INTERVAL_JWKS_CHECK: std::time::Duration = std::time::Duration::from_secs(60);
 
 /// The bridge instance to issue external requests.
 #[derive(Debug)]
@@ -37,32 +58,140 @@ pub struct Bridge {
     client: reqwest::Client,
     /// the url this bridge should call to
     endpoint: Url,
+    /// the auth0 token process. Covertly refresh token and expose get token api.
+    #[cfg(all(feature = "auth0", not(feature = "blocking")))]
+    token_dispenser_handle: token_dispenser::TokenDispenserHandle,
 }
 
+#[cfg(feature = "blocking")]
 impl Bridge {
     pub fn new(endpoint: Url) -> Self {
         Self {
-            #[cfg(feature = "blocking")]
             client: reqwest::blocking::Client::new(),
-            #[cfg(not(feature = "blocking"))]
-            client: reqwest::Client::new(),
             endpoint,
         }
     }
 
     pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
         Self {
-            #[cfg(feature = "blocking")]
             client: reqwest::blocking::Client::builder()
                 .user_agent(user_agent)
                 .build()
                 .expect("Bridge::with_user_agent()"),
-            #[cfg(not(feature = "blocking"))]
+            endpoint,
+        }
+    }
+
+    pub fn get_headers(&self) -> reqwest::header::HeaderMap {
+        reqwest::header::HeaderMap::new()
+    }
+}
+
+#[cfg(not(feature = "blocking"))]
+impl Bridge {
+    #[cfg(not(feature = "auth0"))]
+    pub fn new(endpoint: Url) -> Self {
+        Self {
+            client: reqwest::Client::new(),
+            endpoint,
+        }
+    }
+
+    #[cfg(feature = "auth0")]
+    pub async fn new(
+        endpoint: Url,
+        auth0_config: auth0_config::Auth0Config,
+    ) -> errors::PrimaBridgeResult<Self> {
+        let http_client: reqwest::Client = reqwest::Client::new();
+        let cache = CacheImpl::new(&auth0_config)?;
+
+        Ok(Self {
+            client: http_client.clone(),
+            endpoint,
+            token_dispenser_handle: Self::new_token_dispenser_handler(
+                &http_client,
+                &cache,
+                &auth0_config,
+            )
+            .await?,
+        })
+    }
+
+    #[cfg(not(feature = "auth0"))]
+    pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
+        Self {
             client: reqwest::Client::builder()
                 .user_agent(user_agent)
                 .build()
                 .expect("Bridge::with_user_agent()"),
             endpoint,
         }
+    }
+
+    #[cfg(feature = "auth0")]
+    pub async fn with_user_agent(
+        endpoint: Url,
+        user_agent: &str,
+        auth0_config: auth0_config::Auth0Config,
+    ) -> errors::PrimaBridgeResult<Self> {
+        let http_client: reqwest::Client = reqwest::Client::builder()
+            .user_agent(user_agent)
+            .build()
+            .expect("Bridge::with_user_agent()");
+
+        let cache = CacheImpl::new(&auth0_config)?;
+
+        Ok(Self {
+            token_dispenser_handle: Self::new_token_dispenser_handler(
+                &http_client,
+                &cache,
+                &auth0_config,
+            )
+            .await?,
+            client: http_client,
+            endpoint,
+        })
+    }
+
+    #[cfg(feature = "auth0")]
+    pub async fn get_headers(&self) -> reqwest::header::HeaderMap {
+        use reqwest::header::{HeaderMap, HeaderValue};
+        let mut headers = HeaderMap::new();
+        self.token_dispenser_handle.get_token().await.map(|t| {
+            headers.append(
+                reqwest::header::AUTHORIZATION,
+                HeaderValue::from_str(&format!("Bearer {}", t)).unwrap(),
+            );
+        });
+        headers
+    }
+
+    #[cfg(not(feature = "auth0"))]
+    pub async fn get_headers(&self) -> reqwest::header::HeaderMap {
+        reqwest::header::HeaderMap::new()
+    }
+
+    #[cfg(feature = "auth0")]
+    async fn new_token_dispenser_handler(
+        http_client: &reqwest::Client,
+        cache: &CacheImpl,
+        auth0_config: &auth0_config::Auth0Config,
+    ) -> errors::PrimaBridgeResult<token_dispenser::TokenDispenserHandle> {
+        let token_dispenser_handle: token_dispenser::TokenDispenserHandle =
+            token_dispenser::TokenDispenserHandle::run(http_client, cache, auth0_config)?;
+        token_dispenser_handle.fetch_jwks().await;
+        token_dispenser_handle
+            .periodic_jwks_check(INTERVAL_JWKS_CHECK)
+            .await;
+        token_dispenser_handle.check_refresh().await;
+        token_dispenser_handle.periodic_check(INTERVAL_CHECK).await;
+        Ok(token_dispenser_handle)
+    }
+
+    /// this function trigger a reload from auth0 of the JWT token.
+    /// Normally you should not call this function, as the library take care of keeping the token updated for you
+    #[cfg(all(feature = "auth0"))]
+    pub async fn force_auth0_token_reload(&self) {
+        self.token_dispenser_handle.force_refresh().await
     }
 }

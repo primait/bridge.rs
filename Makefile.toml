@@ -13,17 +13,42 @@ args = [
 ]
 
 [tasks.test]
-dependencies = ["test-blocking", "test-async"]
+dependencies = [
+    "test-blocking",
+    "test-async",
+    "test-async-auth0"
+]
 
 [tasks.test-blocking]
 command = "cargo"
-args = ["test", "--features", "blocking"]
+args = ["test", "--no-default-features", "--features", "blocking"]
 dependencies = ["build"]
 
 [tasks.test-async]
 command = "cargo"
 args = ["test", "--features", "gzip"]
 dependencies = ["build"]
+
+[tasks.test-async-auth0]
+command = "cargo"
+args = ["test", "--features=auth0 inmemory"]
+dependencies = ["build"]
+
+[tasks.lint]
+dependencies = [
+    "lint-blocking",
+    "lint-async"
+]
+
+[tasks.lint-blocking]
+description = "Run lint"
+command = "cargo"
+args = ["clippy", "--all-targets", "--no-default-features", "--features", "blocking"]
+
+[tasks.lint-async]
+description = "Run lint"
+command = "cargo"
+args = ["clippy", "--all-targets", "--no-default-features", "--features", "async"]
 
 ### with cargo-limit installed
 [tasks.lbuild]
@@ -42,12 +67,12 @@ dependencies = ["ltest-blocking", "ltest-async"]
 
 [tasks.ltest-blocking]
 command = "cargo"
-args = ["ltest", "--features", "blocking"]
+args = ["ltest", "--no-default-features", "--features", "blocking"]
 dependencies = ["lbuild"]
 
 [tasks.ltest-async]
 command = "cargo"
-args = ["ltest"]
+args = ["ltest", "--no-default-features", "--features", "async"]
 dependencies = ["lbuild"]
 
 [tasks.clean]
@@ -66,7 +91,7 @@ args = ["clippy", "--", "-D", "warnings"]
 [tasks.build-ci]
 description = "Build inside CI."
 command = "cargo"
-args = ["build", "-j", "2", "--all-features"]
+args = ["build", "-j", "2"]
 
 [tasks.cache-cleanup]
 description = "Clean CI cache"

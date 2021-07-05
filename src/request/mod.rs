@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::time::Duration;
 
 use async_trait::async_trait;
@@ -190,6 +189,18 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             )
             .headers(self.get_all_headers());
 
+        let auth0_headers = self.get_bridge().get_headers().await;
+        let request_builder = auth0_headers
+            .iter()
+            .fold(request_builder, |rb, (header_name, header_value)| {
+                rb.header(header_name, header_value)
+            });
+
+        let request_builder = self
+            .get_all_headers()
+            .iter()
+            .fold(request_builder, |rb, (name, value)| rb.header(name, value));
+
         let response = request_builder
             .body(self.get_body())
             .send()
@@ -264,6 +275,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[cfg(feature = "tracing_opentelemetry")]
     fn tracing_headers(&self) -> HeaderMap {
         use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
+        use std::collections::HashMap;
         use tracing_opentelemetry::OpenTelemetrySpanExt;
 
         let context = tracing::Span::current().context();

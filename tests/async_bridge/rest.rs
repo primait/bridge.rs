@@ -1,9 +1,15 @@
-use crate::common::*;
-use prima_bridge::prelude::*;
+use std::error::Error;
+
 use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::error::Error;
+
+use prima_bridge::prelude::*;
+
+use crate::common::*;
+use crate::Generator;
+#[cfg(feature = "auth0")]
+use prima_bridge::auth0_config::StalenessCheckPercentage;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
@@ -12,7 +18,8 @@ struct Data {
 
 #[tokio::test]
 async fn simple_request() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let (_m, url) = get_mock(200, "{\"hello\": \"world!\"}");
+    let bridge: Bridge = Generator::bridge(url).await;
     let result: String = RestRequest::new(&bridge)
         .send()
         .await?
@@ -25,8 +32,8 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn unserializable_response() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
-
+    let (_m, url) = get_mock(200, "{\"hello\": \"world!\"}");
+    let bridge: Bridge = Generator::bridge(url).await;
     let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send().await;
     assert!(result.is_ok());
     let result: PrimaBridgeResult<Data> = result?.get_data(&["some_strange_selector"]);
@@ -39,8 +46,8 @@ async fn unserializable_response() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn simple_request_with_custom_path_and_base_path() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) =
-        create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path");
+    let (_m, url) = mock_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path");
+    let bridge: Bridge = Generator::bridge(url).await;
     let result: String = RestRequest::new(&bridge)
         .to("test_path")
         .send()
@@ -57,8 +64,8 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let header = ("header", "custom");
     let path = "/test_path/simple_request_with_custom_headers";
 
-    let (_m, bridge) =
-        create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
+    let (_m, url) = mock_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
+    let bridge: Bridge = Generator::bridge(url).await;
     let response = RestRequest::new(&bridge).to(path).send().await?;
 
     let custom = response
@@ -78,7 +85,8 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(403, "{\"hello\": \"world!\"}");
+    let (_m, url) = get_mock(403, "{\"hello\": \"world!\"}");
+    let bridge: Bridge = Generator::bridge(url).await;
     let result: String = RestRequest::new(&bridge)
         .ignore_status_code()
         .send()
@@ -92,8 +100,8 @@ async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde");
-
+    let (_m, url) = mock_with_raw_body_matcher("abcde");
+    let bridge: Bridge = Generator::bridge(url).await;
     let result = RestRequest::new(&bridge).raw_body("abcde").send().await;
     assert!(result.is_ok());
     Ok(())
@@ -101,7 +109,8 @@ async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+    let (_m, url) = mock_with_json_body_matcher(json!({"hello": "world"}));
+    let bridge: Bridge = Generator::bridge(url).await;
     let data = Data {
         hello: "world".to_string(),
     };
@@ -112,8 +121,8 @@ async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_header_matcher(("x-prima", "test-value"));
-
+    let (_m, url) = mock_with_header_matcher(("x-prima", "test-value"));
+    let bridge: Bridge = Generator::bridge(url).await;
     let result = RestRequest::new(&bridge)
         .with_custom_headers(vec![(
             HeaderName::from_static("x-prima"),
@@ -127,8 +136,8 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_user_agent("test");
-
+    let (_m, url) = mock_with_user_agent("test");
+    let bridge: Bridge = Generator::bridge_with_user_agent(url, "test").await;
     let result = RestRequest::new(&bridge).send().await;
     assert!(result.is_ok());
     Ok(())
@@ -138,8 +147,8 @@ async fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
 async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
     let body = b"abcde";
 
-    let (_m, bridge) = create_bridge_with_binary_body_matcher(body);
-
+    let (_m, url) = mock_with_binary_body_matcher(body);
+    let bridge: Bridge = Generator::bridge(url).await;
     let result = RestRequest::new(&bridge)
         .raw_body(body.to_vec())
         .send()
@@ -152,7 +161,8 @@ async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let (_m, url) = get_mock(200, "{\"hello\": \"world!\"}");
+    let bridge: Bridge = Generator::bridge(url).await;
     let req = RestRequest::new(&bridge).with_custom_headers(vec![
         (
             HeaderName::from_static("x-test"),
@@ -194,6 +204,74 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
         .await?
         .get_data(&["hello"])?;
     assert_eq!(result, "world!");
+
+    Ok(())
+}
+
+#[cfg(feature = "auth0")]
+#[tokio::test]
+async fn request_with_auth0() -> Result<(), Box<dyn Error>> {
+    let body = b"abcde";
+    let (_m, url) = mock_with_binary_body_matcher(body);
+    let _auth0 = create_auth0_mock();
+
+    let config = prima_bridge::auth0_config::Auth0Config::new(
+        reqwest::Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap(),
+        reqwest::Url::parse(&format!("{}/{}", mockito::server_url().as_str(), "jwks")).unwrap(),
+        "caller".to_string(),
+        "audience".to_string(),
+        "none".to_string(),
+        "32char_long_token_encryption_key".to_string(),
+        std::time::Duration::from_secs(10),
+        StalenessCheckPercentage::new(0.01, 0.6),
+        "client_id".to_string(),
+        "client_secret".to_string(),
+    );
+
+    let bridge: Bridge = Generator::bridge_with_auth0_config(url, config).await;
+
+    let req = RestRequest::new(&bridge);
+    let mut h = reqwest::header::HeaderMap::new();
+    h.insert(
+        reqwest::header::AUTHORIZATION,
+        HeaderValue::from_static("Bearer valid_access_token"),
+    );
+    assert_eq!(h, req.get_bridge().get_headers().await);
+
+    Ok(())
+}
+
+#[cfg(feature = "auth0")]
+#[tokio::test]
+async fn full_auth0_cycle() -> Result<(), Box<dyn Error>> {
+    use crate::common::auth0_context::Auth0Context;
+    let mut auth0_context = Auth0Context::new("valid_access_token");
+
+    let url = reqwest::Url::parse(&format!("{}/api", mockito::server_url())).unwrap();
+    let bridge: Bridge =
+        Generator::bridge_with_auth0_config(url, auth0_context.default_config()).await;
+
+    let req = RestRequest::new(&bridge);
+    let res = req.send().await;
+    assert!(res.is_ok());
+
+    // the service now want "another_token"
+    auth0_context.change_token_on_service("another_token");
+
+    // ...so the request fails
+    let res = req.send().await;
+    assert!(res.is_err());
+
+    // now the auth0 server send "another_token"
+    auth0_context.change_token_on_auth0("another_token");
+
+    // ...I wait for the bridge to fetch the new token for 2 seconds (this should be more then the bridge interval)
+    bridge.force_auth0_token_reload().await;
+    //tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+
+    // now the request is fine
+    let res = req.send().await;
+    assert!(res.is_ok());
 
     Ok(())
 }

@@ -1,17 +1,19 @@
 use mockito::{mock, BinaryBody, Matcher, Mock};
-use prima_bridge::prelude::*;
 use reqwest::Url;
 
-pub fn create_bridge(status_code: usize, body: &str) -> (Mock, Bridge) {
-    create_bridge_with_path(status_code, body, "/")
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
+pub mod auth0_context;
+
+pub fn get_mock(status_code: usize, body: &str) -> (Mock, Url) {
+    mock_with_path(status_code, body, "/")
 }
 
-pub fn create_bridge_with_base_and_path(
+pub fn mock_with_base_and_path(
     status_code: usize,
     body: &str,
     base: &str,
     path: &str,
-) -> (Mock, Bridge) {
+) -> (Mock, Url) {
     let mock = mock("GET", format!("/{}/{}", base, path).as_str())
         .match_header(
             "x-request-id",
@@ -24,14 +26,10 @@ pub fn create_bridge_with_base_and_path(
         .create();
 
     let base_url = format!("{}/{}", mockito::server_url(), base);
-
-    let url = Url::parse(base_url.as_str()).unwrap();
-    let bridge = Bridge::new(url);
-
-    (mock, bridge)
+    (mock, Url::parse(base_url.as_str()).unwrap())
 }
 
-pub fn create_bridge_with_path(status_code: usize, body: &str, path: &str) -> (Mock, Bridge) {
+pub fn mock_with_path(status_code: usize, body: &str, path: &str) -> (Mock, Url) {
     let mock = mock("GET", path)
         .match_header(
             "x-request-id",
@@ -43,18 +41,15 @@ pub fn create_bridge_with_path(status_code: usize, body: &str, path: &str) -> (M
         .with_body(body)
         .create();
 
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
-
-    (mock, bridge)
+    (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
-pub fn create_bridge_with_path_and_header(
+pub fn mock_with_path_and_header(
     status_code: usize,
     body: &str,
     path: &str,
     header: (&str, &str),
-) -> (Mock, Bridge) {
+) -> (Mock, Url) {
     let mock = mock("GET", path)
         .match_header(
             "x-request-id",
@@ -67,13 +62,10 @@ pub fn create_bridge_with_path_and_header(
         .with_body(body)
         .create();
 
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
-
-    (mock, bridge)
+    (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
-pub fn create_bridge_with_raw_body_matcher(body: &str) -> (Mock, Bridge) {
+pub fn mock_with_raw_body_matcher(body: &str) -> (Mock, Url) {
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
@@ -84,14 +76,10 @@ pub fn create_bridge_with_raw_body_matcher(body: &str) -> (Mock, Bridge) {
         .match_body(Matcher::Exact(body.to_owned()))
         .with_status(200)
         .create();
-
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
-
-    (mock, bridge)
+    (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
-pub fn create_bridge_with_header_matcher((name, value): (&str, &str)) -> (Mock, Bridge) {
+pub fn mock_with_header_matcher((name, value): (&str, &str)) -> (Mock, Url) {
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
@@ -103,13 +91,10 @@ pub fn create_bridge_with_header_matcher((name, value): (&str, &str)) -> (Mock, 
         .with_status(200)
         .create();
 
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
-
-    (mock, bridge)
+    (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
-pub fn create_bridge_with_user_agent(user_agent: &str) -> (Mock, Bridge) {
+pub fn mock_with_user_agent(user_agent: &str) -> (Mock, Url) {
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
@@ -121,13 +106,10 @@ pub fn create_bridge_with_user_agent(user_agent: &str) -> (Mock, Bridge) {
         .with_status(200)
         .create();
 
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::with_user_agent(url, user_agent);
-
-    (mock, bridge)
+    (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
-pub fn create_bridge_with_json_body_matcher(json: serde_json::Value) -> (Mock, Bridge) {
+pub fn mock_with_json_body_matcher(json: serde_json::Value) -> (Mock, Url) {
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
@@ -139,13 +121,10 @@ pub fn create_bridge_with_json_body_matcher(json: serde_json::Value) -> (Mock, B
         .with_status(200)
         .create();
 
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
-
-    (mock, bridge)
+    (mock, Url::parse(mockito::server_url().as_str()).unwrap())
 }
 
-pub fn create_bridge_with_binary_body_matcher(body: &[u8]) -> (Mock, Bridge) {
+pub fn mock_with_binary_body_matcher(body: &[u8]) -> (Mock, Url) {
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
@@ -158,8 +137,19 @@ pub fn create_bridge_with_binary_body_matcher(body: &[u8]) -> (Mock, Bridge) {
         .with_body(body)
         .create();
 
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
+    (mock, Url::parse(mockito::server_url().as_str()).unwrap())
+}
 
-    (mock, bridge)
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
+pub fn create_auth0_mock() -> Mock {
+    let token_response = auth0_context::TokenResponse {
+        access_token: "valid_access_token".to_string(),
+        scope: "test".to_string(),
+        expires_in: 5,
+        token_type: "test".to_string(),
+    };
+    mock("POST", "/token")
+        .with_status(200)
+        .with_body(serde_json::to_string(&token_response).unwrap())
+        .create()
 }
