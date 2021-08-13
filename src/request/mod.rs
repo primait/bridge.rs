@@ -12,6 +12,7 @@ pub use request_type::{GraphQLRequest, Request, RestRequest};
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
+use recloser::Error;
 
 mod body;
 mod request_type;
@@ -161,14 +162,18 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             )
             .headers(self.get_all_headers());
 
-        let response = request_builder
-            .body(self.get_body())
-            .send()
-            .map_err(|e| PrimaBridgeError::HttpError {
-                url: url.clone(),
-                source: e,
-            })
-            .await?;
+        let response = self
+            .get_bridge()
+            .circuit_breaker
+            .call(request_builder.body(self.get_body()).send())
+            .await
+            .map_err(|err| match err {
+                Error::Inner(reqwest_error) => PrimaBridgeError::HttpError {
+                    url: url.clone(),
+                    source: reqwest_error,
+                },
+                Error::Rejected => PrimaBridgeError::CircuitBreakerOpen,
+            })?;
 
         let status_code = response.status();
         if !self.get_ignore_status_code() && !status_code.is_success() {

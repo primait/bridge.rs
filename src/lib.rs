@@ -27,6 +27,9 @@ pub use self::{
     },
     response::Response,
 };
+#[cfg(feature = "circuit_breaker")]
+use recloser::{AsyncRecloser, Recloser};
+use std::fmt::{Debug, Formatter};
 
 mod builder;
 mod errors;
@@ -38,13 +41,14 @@ mod response;
 pub mod auth0;
 
 /// The bridge instance to issue external requests.
-#[derive(Debug)]
 pub struct Bridge {
     client: reqwest::Client,
     /// the url this bridge should call to
     endpoint: Url,
     #[cfg(feature = "auth0")]
     auth0_opt: Option<auth0::Auth0>,
+    #[cfg(all(feature = "circuit_breaker", not(feature = "blocking")))]
+    circuit_breaker: AsyncRecloser,
 }
 
 impl Bridge {
@@ -57,5 +61,14 @@ impl Bridge {
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
     pub fn token(&self) -> Option<crate::auth0::Token> {
         self.auth0_opt.as_ref().map(|auth0| auth0.token())
+    }
+}
+
+impl Debug for Bridge {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Bridge")
+            .field("client", &self.client)
+            .field("endpoint", &self.endpoint)
+            .finish()
     }
 }

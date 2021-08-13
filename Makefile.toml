@@ -17,7 +17,7 @@ dependencies = ["test-base", "test-auth0"]
 
 [tasks.test-base]
 command = "cargo"
-args = ["test", "--features", "gzip"]
+args = ["test", "--features", "gzip, circuit_breaker"]
 dependencies = ["build"]
 
 [tasks.test-auth0]
