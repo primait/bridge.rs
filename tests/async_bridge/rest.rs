@@ -203,7 +203,7 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
 
 #[cfg(feature = "circuit_breaker")]
 #[tokio::test]
-async fn failsafe_circuit_breaker() -> Result<(), Box<dyn Error>> {
+async fn circuit_breaker_breaks_after_x_tries() -> Result<(), Box<dyn Error>> {
     let url = reqwest::Url::parse("http://non-existent-url").unwrap();
     let bridge = Bridge::new(url);
     let result = RestRequest::new(&bridge).send().await;
