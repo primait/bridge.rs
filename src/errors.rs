@@ -4,6 +4,8 @@ use reqwest::{StatusCode, Url};
 use serde_json::Value;
 use std::fmt::Debug;
 use std::str::Utf8Error;
+#[cfg(feature = "auth0")]
+use std::string::FromUtf8Error;
 use thiserror::Error;
 
 pub type PrimaBridgeResult<T> = Result<T, PrimaBridgeError>;
@@ -42,6 +44,9 @@ pub enum PrimaBridgeError {
     #[cfg(feature = "auth0")]
     #[error("the encryption key should have 32 chars. given key: {0}")]
     WrongEncryptionKey(String),
+    #[cfg(feature = "auth0")]
+    #[error(transparent)]
+    EncryptionKeyNotUtf8(#[from] FromUtf8Error),
 }
 
 impl PrimaBridgeError {

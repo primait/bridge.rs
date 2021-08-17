@@ -9,7 +9,6 @@ use serde_json::json;
 use crate::Generator;
 use prima_bridge::prelude::*;
 use prima_bridge::Request;
-use reqwest::header::{HeaderName, HeaderValue};
 use std::fs;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
@@ -87,11 +86,12 @@ struct Friend {
 #[tokio::test]
 async fn error_response_parser() -> Result<(), Box<dyn Error>> {
     let query = file_content("graphql/hero.graphql");
-    let (_m, bridge) = create_gql_bridge(
+    let (_m, url) = create_gql_mock(
         200,
         query.as_str(),
         file_content("graphql/error_with_data.json").as_str(),
     );
+    let bridge: Bridge = Generator::bridge(url).await;
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
@@ -108,11 +108,12 @@ async fn error_response_parser() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Error>> {
     let query = file_content("graphql/hero.graphql");
-    let (_m, bridge) = create_gql_bridge(
+    let (_m, url) = create_gql_mock(
         200,
         query.as_str(),
         file_content("graphql/error_non_null_response.json").as_str(),
     );
+    let bridge: Bridge = Generator::bridge(url).await;
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
@@ -129,11 +130,12 @@ async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Err
 #[tokio::test]
 async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
     let query = file_content("graphql/hero.graphql");
-    let (_m, bridge) = create_gql_bridge(
+    let (_m, url) = create_gql_mock(
         200,
         query.as_str(),
         file_content("graphql/error.json").as_str(),
     );
+    let bridge: Bridge = Generator::bridge(url).await;
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
