@@ -27,17 +27,18 @@ pub enum PrimaBridgeError {
     },
     #[error("empty body")]
     EmptyBody,
+    #[cfg(feature = "auth0")]
     #[error("http error while fetching auth0 token, error: {0}")]
     Auth0TokenFetchError(#[from] reqwest::Error),
     #[cfg(feature = "auth0")]
     #[error(transparent)]
     Auth0CacheError(#[from] redis::RedisError),
+    #[cfg(feature = "auth0")]
     #[error("http error while fetching jwks from auth0, url: {0}, error: {1}")]
     Auth0JwksFetchError(Url, reqwest::Error),
+    #[cfg(feature = "auth0")]
     #[error("invalid json received while fetching jwks from auth0, url: {0}, error: {1}")]
     Auth0JwksFetchInvalidJsonError(Url, reqwest::Error),
-    #[error("the response body id not valid utf-8. error: {source}")]
-    Utf8Error { source: Utf8Error },
     #[cfg(feature = "auth0")]
     #[error(transparent)]
     DecryptInputError(#[from] block_modes::BlockModeError),
@@ -47,6 +48,8 @@ pub enum PrimaBridgeError {
     #[cfg(feature = "auth0")]
     #[error(transparent)]
     EncryptionKeyNotUtf8(#[from] FromUtf8Error),
+    #[error("the response body id not valid utf-8. error: {source}")]
+    Utf8Error { source: Utf8Error },
 }
 
 impl PrimaBridgeError {
