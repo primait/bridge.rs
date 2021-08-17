@@ -1,6 +1,9 @@
 # Changelog
 
 ### Next
+- opentelemetry updated to version 0.16. **Careful!!!** The opentelemetry version in your project should match the one in this library
+- several dependencies updated
+- docker file based on Rust 1.54
 
 ### 0.7.2
 #### features
