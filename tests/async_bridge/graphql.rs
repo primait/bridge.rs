@@ -7,7 +7,7 @@ use serde::Deserialize;
 use serde_json::json;
 
 use prima_bridge::prelude::*;
-use prima_bridge::Request;
+use prima_bridge::{BridgeBuilder, Request};
 use reqwest::header::{HeaderName, HeaderValue};
 use std::fs;
 
@@ -154,7 +154,7 @@ fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Brid
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
+    let bridge = BridgeBuilder::create(url).build();
 
     (mock, bridge)
 }
