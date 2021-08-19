@@ -100,6 +100,7 @@ dependencies = ["cargo-prune", "sweep", "delete-artifacts"]
 [tasks.sweep]
 description = "Clean cargo cache with sweep"
 command = "cargo sweep -t 10"
+ignore_errors = true
 
 [tasks.cargo-prune]
 description = "Run cargo prune"
