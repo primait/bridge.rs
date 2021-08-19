@@ -1,6 +1,5 @@
 use crate::common::*;
 use prima_bridge::prelude::*;
-use prima_bridge::BridgeBuilder;
 use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -188,7 +187,7 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
         .with_body(body)
         .create();
 
-    let bridge = BridgeBuilder::create(mockito::server_url().parse().unwrap()).build();
+    let bridge = Bridge::builder(mockito::server_url().parse().unwrap()).build();
 
     let result: String = RestRequest::new(&bridge)
         .send()

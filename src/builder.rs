@@ -9,7 +9,7 @@ pub struct BridgeBuilder {
 
 #[cfg(feature = "blocking")]
 impl BridgeBuilder {
-    pub fn create(endpoint: Url) -> Self {
+    pub(crate) fn create(endpoint: Url) -> Self {
         Self {
             endpoint,
             client_builder: reqwest::blocking::ClientBuilder::new(),
@@ -42,7 +42,7 @@ pub struct BridgeBuilder {
 
 #[cfg(not(feature = "blocking"))]
 impl BridgeBuilder {
-    pub fn create(endpoint: Url) -> Self {
+    pub(crate) fn create(endpoint: Url) -> Self {
         Self {
             endpoint,
             client_builder: reqwest::ClientBuilder::new(),

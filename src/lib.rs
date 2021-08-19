@@ -42,6 +42,11 @@ pub struct Bridge {
 }
 
 impl Bridge {
+    /// create an instance of [BridgeBuilder]
+    pub fn builder(endpoint: Url) -> BridgeBuilder {
+        BridgeBuilder::create(endpoint)
+    }
+
     #[deprecated(
         since = "0.8.0",
         note = "please use the .create() and .build() methods on the BridgeBuilder"

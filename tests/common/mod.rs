@@ -1,6 +1,5 @@
 use mockito::{mock, BinaryBody, Matcher, Mock};
 use prima_bridge::prelude::*;
-use prima_bridge::BridgeBuilder;
 use reqwest::Url;
 
 pub fn create_bridge(status_code: usize, body: &str) -> (Mock, Bridge) {
@@ -27,7 +26,7 @@ pub fn create_bridge_with_base_and_path(
     let base_url = format!("{}/{}", mockito::server_url(), base);
 
     let url = Url::parse(base_url.as_str()).unwrap();
-    let bridge = BridgeBuilder::create(url).build();
+    let bridge = Bridge::builder(url).build();
 
     (mock, bridge)
 }
@@ -45,7 +44,7 @@ pub fn create_bridge_with_path(status_code: usize, body: &str, path: &str) -> (M
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = BridgeBuilder::create(url).build();
+    let bridge = Bridge::builder(url).build();
 
     (mock, bridge)
 }
@@ -69,7 +68,7 @@ pub fn create_bridge_with_path_and_header(
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = BridgeBuilder::create(url).build();
+    let bridge = Bridge::builder(url).build();
 
     (mock, bridge)
 }
@@ -87,7 +86,7 @@ pub fn create_bridge_with_raw_body_matcher(body: &str) -> (Mock, Bridge) {
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = BridgeBuilder::create(url).build();
+    let bridge = Bridge::builder(url).build();
 
     (mock, bridge)
 }
@@ -105,7 +104,7 @@ pub fn create_bridge_with_header_matcher((name, value): (&str, &str)) -> (Mock, 
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = BridgeBuilder::create(url).build();
+    let bridge = Bridge::builder(url).build();
 
     (mock, bridge)
 }
@@ -123,9 +122,7 @@ pub fn create_bridge_with_user_agent(user_agent: &str) -> (Mock, Bridge) {
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = BridgeBuilder::create(url)
-        .with_user_agent(user_agent)
-        .build();
+    let bridge = Bridge::builder(url).with_user_agent(user_agent).build();
 
     (mock, bridge)
 }
@@ -143,7 +140,7 @@ pub fn create_bridge_with_json_body_matcher(json: serde_json::Value) -> (Mock, B
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = BridgeBuilder::create(url).build();
+    let bridge = Bridge::builder(url).build();
 
     (mock, bridge)
 }
@@ -162,7 +159,7 @@ pub fn create_bridge_with_binary_body_matcher(body: &[u8]) -> (Mock, Bridge) {
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = BridgeBuilder::create(url).build();
+    let bridge = Bridge::builder(url).build();
 
     (mock, bridge)
 }
