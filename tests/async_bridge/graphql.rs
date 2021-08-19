@@ -7,7 +7,6 @@ use serde::Deserialize;
 use serde_json::json;
 
 use prima_bridge::prelude::*;
-//use prima_bridge::Request;
 use reqwest::header::{HeaderName, HeaderValue};
 use std::fs;
 
