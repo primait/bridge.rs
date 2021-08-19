@@ -43,8 +43,8 @@ pub struct Bridge {
 
 impl Bridge {
     /// create an instance of [BridgeBuilder]
-    pub fn builder(endpoint: Url) -> BridgeBuilder {
-        BridgeBuilder::create(endpoint)
+    pub fn builder() -> BridgeBuilder {
+        BridgeBuilder::create()
     }
 
     #[deprecated(

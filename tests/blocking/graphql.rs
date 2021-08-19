@@ -102,12 +102,12 @@ fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Brid
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::builder(url).build();
+    let bridge = Bridge::builder().build(url);
 
     (mock, bridge)
 }
 
 fn mock_bridge() -> Bridge {
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    Bridge::builder(url).build()
+    Bridge::builder().build(url)
 }
