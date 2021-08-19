@@ -187,7 +187,7 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
         .with_body(body)
         .create();
 
-    let bridge = Bridge::new(mockito::server_url().parse().unwrap());
+    let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
 
     let result: String = RestRequest::new(&bridge)
         .send()

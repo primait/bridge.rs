@@ -18,11 +18,13 @@
 use reqwest::Url;
 
 pub use self::{
+    builder::BridgeBuilder,
     request::{GraphQLRequest, Request},
     response::graphql::{Error, ParsedGraphqlResponse, PossiblyParsedData},
     response::Response,
 };
 
+mod builder;
 mod errors;
 pub mod prelude;
 mod request;
@@ -40,6 +42,15 @@ pub struct Bridge {
 }
 
 impl Bridge {
+    /// create an instance of [BridgeBuilder]
+    pub fn builder() -> BridgeBuilder {
+        BridgeBuilder::create()
+    }
+
+    #[deprecated(
+        since = "0.8.0",
+        note = "please use the .create() and .build() methods on the BridgeBuilder"
+    )]
     pub fn new(endpoint: Url) -> Self {
         Self {
             #[cfg(feature = "blocking")]
@@ -50,6 +61,10 @@ impl Bridge {
         }
     }
 
+    #[deprecated(
+        since = "0.8.0",
+        note = "please use the .create() and .build() methods on the BridgeBuilder"
+    )]
     pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
         Self {
             #[cfg(feature = "blocking")]

@@ -205,7 +205,7 @@ fn request_post_with_custom_raw_body() -> Result<(), Box<dyn Error>> {
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
+    let bridge = Bridge::builder().build(url);
 
     let result = Request::post(&bridge).raw_body(body).send();
     assert!(result.is_ok());
@@ -264,7 +264,7 @@ fn request_with_query_string() -> Result<(), Box<dyn Error>> {
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
+    let bridge = Bridge::builder().build(url);
 
     let result = Request::get(&bridge)
         .with_query_pair("hello", "world!")
@@ -285,7 +285,7 @@ fn request_with_query_string_by_calling_once() -> Result<(), Box<dyn Error>> {
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::new(url);
+    let bridge = Bridge::builder().build(url);
 
     let result = Request::get(&bridge)
         .with_query_pairs(vec![("hello", "world!"), ("prima", "bridge")])

@@ -1,6 +1,7 @@
 # Changelog
 
 ### Next
+- deprecated the `new` and `with_user_agent` methods in favor of a builder
 - opentelemetry updated to version 0.16. **Careful!!!** The opentelemetry version in your project should match the one in this library
 - several dependencies updated
 - docker file based on Rust 1.54
