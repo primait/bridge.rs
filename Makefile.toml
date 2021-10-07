@@ -25,6 +25,10 @@ command = "cargo"
 args = ["test", "--features", "gzip"]
 dependencies = ["build"]
 
+[tasks.auth0-example]
+command = "cargo"
+args = ["run", "--example", "auth0", "--features", "auth0"]
+
 ### with cargo-limit installed
 [tasks.lbuild]
 description = "Runs the rust compiler."

@@ -30,6 +30,9 @@ pub mod prelude;
 mod request;
 mod response;
 
+#[cfg(feature = "auth0")]
+pub mod auth0;
+
 /// The bridge instance to issue external requests.
 #[derive(Debug)]
 pub struct Bridge {
