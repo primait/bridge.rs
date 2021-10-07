@@ -16,11 +16,6 @@ use std::time::Duration;
 
 use prima_bridge::auth0::{Auth0, Auth0Error};
 
-const TOKEN_URL: &str = "https://dev-8aes9g04.eu.auth0.com/oauth/token";
-const JWKS_URL: &str = "https://dev-8aes9g04.eu.auth0.com/.well-known/jwks.json";
-const CLIENT_ID: &str = "odkbxqRCErbD6MBOupQxI4WhLGUtZTMB";
-const CLIENT_SECRET: &str = "wF8uSnhaulkVUSwBFY3NpSF5xNrEy2SBVp2KMDaDLC-Z5gEa2yWwvAlfhm7ZuAC6";
-
 const ENCRYPTION_KEY: &str = "32char_long_token_encryption_key";
 
 #[cfg(feature = "auth0")]
@@ -48,11 +43,6 @@ mod auth0 {
     pub fn config() -> Config {
         use reqwest::Url;
         use std::str::FromStr;
-
-        std::env::set_var("TOKEN_URL", TOKEN_URL);
-        std::env::set_var("JWKS_URL", JWKS_URL);
-        std::env::set_var("CLIENT_ID", CLIENT_ID);
-        std::env::set_var("CLIENT_SECRET", CLIENT_SECRET);
 
         let token_url: String = std::env::var("TOKEN_URL").unwrap();
         let jwks_url: String = std::env::var("JWKS_URL").unwrap();
