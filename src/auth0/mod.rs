@@ -6,18 +6,20 @@ use tokio::time::Interval;
 
 pub use config::{Config, StalenessCheckPercentage};
 pub use errors::Auth0Error;
+use util::ResultExt;
 
 use crate::auth0::cache::{Cache, CacheImpl};
 use crate::auth0::keyset::JsonWebKeySet;
-use crate::auth0::token::Token;
+pub use crate::auth0::token::Token;
 
 mod cache;
 mod config;
 mod errors;
 mod keyset;
 mod token;
+mod util;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Auth0 {
     cache: CacheImpl,
     jwks_lock: Arc<RwLock<JsonWebKeySet>>,
@@ -26,7 +28,7 @@ pub struct Auth0 {
 
 impl Auth0 {
     pub async fn new(client_ref: &Client, config: Config) -> Result<Self, Auth0Error> {
-        let mut cache: CacheImpl = CacheImpl::new(&config)?;
+        let mut cache: CacheImpl = CacheImpl::new(&config).await?;
 
         let jwks: JsonWebKeySet = get_jwks(client_ref, &mut cache, &config).await?;
         let token: Token = get_token(client_ref, &mut cache, &config).await?;
@@ -34,7 +36,7 @@ impl Auth0 {
         let jwks_lock: Arc<RwLock<JsonWebKeySet>> = Arc::new(RwLock::new(jwks));
         let token_lock: Arc<RwLock<Token>> = Arc::new(RwLock::new(token));
 
-        let _: JoinHandle<()> = spawn(
+        let _: JoinHandle<()> = start(
             jwks_lock.clone(),
             token_lock.clone(),
             client_ref.clone(),
@@ -55,7 +57,7 @@ impl Auth0 {
     }
 }
 
-async fn spawn(
+async fn start(
     jwks_lock: Arc<RwLock<JsonWebKeySet>>,
     token_lock: Arc<RwLock<Token>>,
     client: Client,
@@ -63,27 +65,39 @@ async fn spawn(
     config: Config,
 ) -> JoinHandle<()> {
     tokio::spawn(async move {
-        let mut ticker: Interval = tokio::time::interval(config.check_interval().clone());
+        let mut ticker: Interval = tokio::time::interval(*config.check_interval());
 
         loop {
             ticker.tick().await;
             let token: Token = read(&token_lock);
 
             if token.needs_refresh(&config) {
-                match JsonWebKeySet::fetch(&client, &config).await {
+                log::info!("Refreshing JWT and JWKS");
+
+                let jwks_opt = match JsonWebKeySet::fetch(&client, &config).await {
                     Ok(jwks) => {
-                        let _ = cache.set_jwks(&jwks);
-                        write(&jwks_lock, jwks);
+                        let _ = cache
+                            .set_jwks(&jwks, None)
+                            .await
+                            .log_err("Error caching JWKS");
+                        write(&jwks_lock, jwks.clone());
+                        Some(jwks)
                     }
-                    Err(error) => println!("{:?}", error), // log here or whatever is not a println
-                }
+                    Err(error) => {
+                        log::error!("Failed to fetch JWKS. Reason: {:?}", error);
+                        None
+                    }
+                };
 
                 match Token::fetch(&client, &config).await {
                     Ok(token) => {
-                        let _ = cache.set_token(&token);
+                        let is_signed: Option<bool> = jwks_opt.map(|j| j.is_signed(&token));
+                        log::info!("is signed: {}", is_signed.unwrap_or_default());
+
+                        let _ = cache.set_token(&token).await.log_err("Error caching JWT");
                         write(&token_lock, token);
                     }
-                    Err(error) => println!("{:?}", error), // log here or whatever is not a println
+                    Err(error) => log::error!("Failed to fetch JWT. Reason: {:?}", error),
                 }
             }
         }
@@ -96,12 +110,12 @@ async fn get_jwks(
     cache_ref: &mut CacheImpl,
     config_ref: &Config,
 ) -> Result<JsonWebKeySet, Auth0Error> {
-    match cache_ref.get_jwks()? {
+    match cache_ref.get_jwks().await? {
         Some(jwks) => Ok(jwks),
         None => {
             let jwks: JsonWebKeySet = JsonWebKeySet::fetch(client_ref, config_ref).await?;
             // NOTE: should we care if this fails? IMO no.
-            let _ = cache_ref.set_jwks(&jwks);
+            let _ = cache_ref.set_jwks(&jwks, None).await;
             Ok(jwks)
         }
     }
@@ -113,12 +127,12 @@ async fn get_token(
     cache_ref: &mut CacheImpl,
     config_ref: &Config,
 ) -> Result<Token, Auth0Error> {
-    match cache_ref.get_token()? {
+    match cache_ref.get_token().await? {
         Some(token) => Ok(token),
         None => {
             let token: Token = Token::fetch(client_ref, config_ref).await?;
             // NOTE: should we care if this fails? IMO no.
-            let _ = cache_ref.set_token(&token);
+            let _ = cache_ref.set_token(&token).await;
             Ok(token)
         }
     }

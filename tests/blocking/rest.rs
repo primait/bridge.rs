@@ -1,15 +1,15 @@
 use std::error::Error;
 
 use mockito::*;
+use reqwest::header::{HeaderName, HeaderValue, CONTENT_TYPE};
+use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 use prima_bridge::prelude::*;
+use prima_bridge::Request;
 
 use crate::common::*;
-use prima_bridge::Request;
-use reqwest::header::{HeaderName, HeaderValue, CONTENT_TYPE};
-use reqwest::Url;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {

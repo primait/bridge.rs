@@ -25,6 +25,14 @@ impl BridgeBuilder {
         }
     }
 
+    #[cfg(not(feature = "auth0"))]
+    pub fn with_user_agent(self, user_agent: impl Into<String>) -> Self {
+        Self {
+            client_builder: self.client_builder.user_agent(user_agent.into().as_str()),
+        }
+    }
+
+    #[cfg(feature = "auth0")]
     pub fn with_user_agent(self, user_agent: impl Into<String>) -> Self {
         Self {
             client_builder: self.client_builder.user_agent(user_agent.into().as_str()),
@@ -32,13 +40,18 @@ impl BridgeBuilder {
         }
     }
 
-    // #[cfg(feature = "auth0")]
-    // pub async fn with_auth0(self, config: auth0::Config) -> Self {
-    //     Self {
-    //         auth0: Some(auth0::Auth0::new(config).await),
-    //         ..self
-    //     }
-    // }
+    #[cfg(feature = "auth0")]
+    pub async fn with_auth0(self, config: auth0::Config) -> Self {
+        let client: reqwest::Client = reqwest::Client::new();
+        Self {
+            auth0: Some(
+                auth0::Auth0::new(&client, config)
+                    .await
+                    .expect("Failed to create auth0 bridge"),
+            ),
+            ..self
+        }
+    }
 
     pub fn build(self, endpoint: Url) -> Bridge {
         Bridge {
@@ -47,6 +60,8 @@ impl BridgeBuilder {
                 .build()
                 .expect("Unable to create Bridge"),
             endpoint,
+            #[cfg(feature = "auth0")]
+            auth0_opt: self.auth0,
         }
     }
 }

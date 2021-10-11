@@ -133,6 +133,11 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         self.custom_headers.clone()
     }
 
+    #[cfg(feature = "auth0")]
+    fn get_auth0(&self) -> &Option<crate::auth0::Auth0> {
+        &self.bridge.auth0_opt
+    }
+
     fn get_body(&self) -> Vec<u8> {
         self.body.clone().map(Into::into).unwrap_or_default()
     }

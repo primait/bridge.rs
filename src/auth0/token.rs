@@ -29,7 +29,11 @@ impl Token {
             .send()
             .await
             .map_err(|e| {
-                Auth0Error::JwtFetchError(config_ref.token_url().as_str().to_string(), e)
+                Auth0Error::JwtFetchError(
+                    e.status().map(|v| v.as_u16()).unwrap_or_default(),
+                    config_ref.token_url().as_str().to_string(),
+                    e,
+                )
             })?;
 
         let status_code: u16 = response.status().as_u16();
@@ -72,11 +76,11 @@ impl Token {
 
     // Return the percentage of the remaining life
     pub fn remaining_life_percentage(&self) -> f64 {
-        if *&self.expire_date.timestamp_millis() - Utc::now().timestamp_millis() <= 0 {
+        if self.expire_date.timestamp_millis() - Utc::now().timestamp_millis() <= 0 {
             0.0
         } else {
-            let expire_millis: i64 = *&self.expire_date.timestamp_millis();
-            let issue_millis: i64 = *&self.issue_date.timestamp_millis();
+            let expire_millis: i64 = self.expire_date.timestamp_millis();
+            let issue_millis: i64 = self.issue_date.timestamp_millis();
             let remaining: f64 = (expire_millis - Utc::now().timestamp_millis()) as f64;
             let total: f64 = (expire_millis - issue_millis) as f64;
             remaining / total * 100.0
@@ -94,6 +98,10 @@ impl Token {
             < config_ref
                 .staleness_check_percentage()
                 .random_value_between()
+    }
+
+    pub fn to_bearer(&self) -> String {
+        format!("Bearer {}", self.token.as_str())
     }
 }
 

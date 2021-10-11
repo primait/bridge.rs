@@ -1,4 +1,5 @@
-use redis::Commands;
+use redis::AsyncCommands;
+use serde::de::DeserializeOwned;
 
 use crate::auth0::cache::{self, crypto, Cache};
 use crate::auth0::errors::Auth0Error;
@@ -14,13 +15,13 @@ pub struct RedisCache {
     audience: String,
 }
 
-impl Cache for RedisCache {
-    fn new(config_ref: &Config) -> Result<Self, Auth0Error> {
+impl RedisCache {
+    pub async fn new(config_ref: &Config) -> Result<Self, Auth0Error> {
         let client: redis::Client = redis::Client::open(config_ref.redis_connection_uri())?;
         // Ensure connection is fine. Should fail otherwise
-        let _: redis::Connection = client.get_connection()?;
+        let _ = client.get_async_connection().await?;
 
-        Ok(Self {
+        Ok(RedisCache {
             client,
             encryption_key: config_ref.token_encryption_key().to_string(),
             caller: config_ref.caller().to_string(),
@@ -28,40 +29,87 @@ impl Cache for RedisCache {
         })
     }
 
-    fn get_token(&self) -> Result<Option<Token>, Auth0Error> {
-        let key: &str = &cache::token_key(&self.caller, &self.audience);
+    async fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, Auth0Error> {
         self.client
-            .get_connection()?
-            .get::<_, Option<Vec<u8>>>(key)?
+            .get_async_connection()
+            .await?
+            .get::<_, Option<Vec<u8>>>(key)
+            .await?
             .map(|value| crypto::decrypt(self.encryption_key.as_str(), value))
             .transpose()
     }
+}
 
-    fn set_token(&mut self, value_ref: &Token) -> Result<(), Auth0Error> {
+#[async_trait::async_trait]
+impl Cache for RedisCache {
+    async fn get_token(&self) -> Result<Option<Token>, Auth0Error> {
         let key: &str = &cache::token_key(&self.caller, &self.audience);
-        let mut connection: redis::Connection = self.client.get_connection()?;
+        self.get(key).await
+    }
+
+    async fn set_token(&mut self, value_ref: &Token) -> Result<(), Auth0Error> {
+        let key: &str = &cache::token_key(&self.caller, &self.audience);
+        let mut connection = self.client.get_async_connection().await?;
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
         let expiration: usize = value_ref.lifetime_in_seconds();
-        connection.set_ex(key, encrypted_value, expiration)?;
+        connection.set_ex(key, encrypted_value, expiration).await?;
         Ok(())
     }
 
-    fn get_jwks(&self) -> Result<Option<JsonWebKeySet>, Auth0Error> {
+    async fn get_jwks(&self) -> Result<Option<JsonWebKeySet>, Auth0Error> {
         let key: &str = &cache::jwks_key(&self.caller, &self.audience);
-        self.client
-            .get_connection()?
-            .get::<_, Option<Vec<u8>>>(key)?
-            .map(|value| crypto::decrypt(self.encryption_key.as_str(), value))
-            .transpose()
+        self.get(key).await
     }
 
-    fn set_jwks(&mut self, value_ref: &JsonWebKeySet) -> Result<(), Auth0Error> {
+    async fn set_jwks(
+        &mut self,
+        value_ref: &JsonWebKeySet,
+        expiration: Option<usize>,
+    ) -> Result<(), Auth0Error> {
         let key: &str = &cache::jwks_key(&self.caller, &self.audience);
-        let mut connection: redis::Connection = self.client.get_connection()?;
+        let mut connection = self.client.get_async_connection().await?;
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
-        // FIXME: take expiration from http headers of jwks call
-        let expiration: usize = 84000;
-        connection.set_ex(key, encrypted_value, expiration)?;
+        let expiration: usize = expiration.unwrap_or(86400);
+        connection.set_ex(key, encrypted_value, expiration).await?;
         Ok(())
     }
 }
+
+// To run this test (it works):
+// `docker run -p 6379:6379 --name bridge_redis -d redis`
+//
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+//     use chrono::Utc;
+//
+//     #[tokio::test]
+//     async fn redis_cache_get_set_values() {
+//         let mut cache = RedisCache::new(&Config::test_config()).await.unwrap();
+//
+//         let result: Option<Token> = cache.get_token().await.unwrap();
+//         assert!(result.is_none());
+//
+//         let result: Option<JsonWebKeySet> = cache.get_jwks().await.unwrap();
+//         assert!(result.is_none());
+//
+//         let token_str: &str = "token";
+//         let token: Token = Token::new(
+//             token_str.to_string(),
+//             Utc::now(),
+//             Utc::now() + chrono::Duration::seconds(1000),
+//         );
+//         let () = cache.set_token(&token).await.unwrap();
+//
+//         let result: Option<Token> = cache.get_token().await.unwrap();
+//         assert!(result.is_some());
+//         assert_eq!(result.unwrap().as_str(), token_str);
+//
+//         let string: &str = "{\"keys\": []}";
+//         let jwks: JsonWebKeySet = serde_json::from_str(string).unwrap();
+//         let () = cache.set_jwks(&jwks, None).await.unwrap();
+//
+//         let result: Option<JsonWebKeySet> = cache.get_jwks().await.unwrap();
+//         assert!(result.is_some());
+//     }
+// }

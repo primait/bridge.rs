@@ -1,0 +1,12 @@
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "n": "3T_P7WHmPnGIzp4l7N9Hao-BDTfH9zBOxm8KkAJkRwLqg2fYLcybewOs8JOSG2EYYF8N8I0zOXB1qrDZepGqQ6ALcBYNNAkdV9_HbOBI07Chbma3oQ4mQr-0LUngMxolDb-CGwosEx8F6edSt9_6sx0cgolbLWk3dOty_xIU9wHU4Z36JFE77p58aMKUt3zc-ekgvwHkoxksInpvDya8Ytgy7F554EttQ1hcfTBVRBa5_5r4oqEKm4VWo2zjFZeM7t3vxpftc6SLXvcik15fktcQZ4HeaxChmLBsfMc-PmTvHCEQt_n2b1zlizjs_eYr4MHNlMUKD1N20SgkrniaZw",
+      "e": "AQAB",
+      "alg": "RS256",
+      "kid": "prima.it",
+      "use": "enc"
+    }
+  ]
+}

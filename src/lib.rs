@@ -42,6 +42,8 @@ pub struct Bridge {
     client: reqwest::Client,
     /// the url this bridge should call to
     endpoint: Url,
+    #[cfg(feature = "auth0")]
+    auth0_opt: Option<auth0::Auth0>,
 }
 
 impl Bridge {
@@ -50,6 +52,12 @@ impl Bridge {
         BridgeBuilder::create()
     }
 
+    #[cfg(feature = "auth0")]
+    pub fn token(&self) -> Option<crate::auth0::Token> {
+        self.auth0_opt.as_ref().map(|auth0| auth0.token())
+    }
+
+    #[cfg(not(feature = "auth0"))]
     #[deprecated(
         since = "0.8.0",
         note = "please use the .create() and .build() methods on the BridgeBuilder"
@@ -64,6 +72,7 @@ impl Bridge {
         }
     }
 
+    #[cfg(not(feature = "auth0"))]
     #[deprecated(
         since = "0.8.0",
         note = "please use the .create() and .build() methods on the BridgeBuilder"
