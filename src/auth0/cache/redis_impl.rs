@@ -2,10 +2,9 @@ use redis::AsyncCommands;
 use serde::de::DeserializeOwned;
 
 use crate::auth0::cache::{self, crypto, Cache};
-use crate::auth0::errors::Auth0Error;
 use crate::auth0::keyset::JsonWebKeySet;
 use crate::auth0::token::Token;
-use crate::auth0::Config;
+use crate::auth0::{Auth0Error, Config};
 
 #[derive(Clone, Debug)]
 pub struct RedisCache {
@@ -17,7 +16,8 @@ pub struct RedisCache {
 
 impl RedisCache {
     pub async fn new(config_ref: &Config) -> Result<Self, Auth0Error> {
-        let client: redis::Client = redis::Client::open(config_ref.redis_connection_uri())?;
+        let client: redis::Client =
+            redis::Client::open(config_ref.cache_type().redis_connection_url())?;
         // Ensure connection is fine. Should fail otherwise
         let _ = client.get_async_connection().await?;
 

@@ -46,7 +46,7 @@ async fn main() {
 mod auth0 {
     use std::time::Duration;
 
-    use prima_bridge::auth0::{Config, StalenessCheckPercentage};
+    use prima_bridge::auth0::{CacheType, Config, StalenessCheckPercentage};
 
     pub fn config() -> Config {
         use reqwest::Url;
@@ -63,7 +63,7 @@ mod auth0 {
             jwks_url: Url::from_str(jwks_url.as_str()).unwrap(),
             caller: "paperboy".to_string(),
             audience,
-            cache_connection_uri: "redis://localhost/".to_string(),
+            cache_type: CacheType::Inmemory,
             token_encryption_key: "32char_long_token_encryption_key".to_string(),
             check_interval: Duration::from_secs(2),
             staleness_check_percentage: StalenessCheckPercentage::new(0.1, 0.5),

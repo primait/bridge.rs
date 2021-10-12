@@ -8,7 +8,6 @@ mod redis_impl;
 
 const TOKEN_PREFIX: &str = "auth0rs_tokens";
 const JWKS_PREFIX: &str = "auth0rs_jwks";
-const INMEMORY: &str = "inmemory";
 
 #[async_trait::async_trait]
 pub trait Cache: Send + Sync + std::fmt::Debug {
@@ -34,7 +33,7 @@ pub struct CacheImpl {
 
 impl CacheImpl {
     pub async fn new(config_ref: &Config) -> Result<Self, Auth0Error> {
-        if config_ref.redis_connection_uri().to_lowercase() == INMEMORY {
+        if config_ref.is_inmemory_cache() {
             Ok(Self {
                 inmemory: true,
                 redis_cache: None,

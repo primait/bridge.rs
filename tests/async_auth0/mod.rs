@@ -5,7 +5,7 @@ use jsonwebtoken::Algorithm;
 use mockito::{mock, Mock};
 use reqwest::Url;
 
-use prima_bridge::auth0::{Config, StalenessCheckPercentage};
+use prima_bridge::auth0::{CacheType, Config, StalenessCheckPercentage};
 
 mod builder;
 mod graphql;
@@ -18,7 +18,7 @@ fn config() -> Config {
         jwks_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "jwks")).unwrap(),
         caller: "caller".to_string(),
         audience: "audience".to_string(),
-        cache_connection_uri: "inmemory".to_string(),
+        cache_type: CacheType::Inmemory,
         token_encryption_key: "32char_long_token_encryption_key".to_string(),
         check_interval: Duration::from_secs(10),
         staleness_check_percentage: StalenessCheckPercentage::default(),

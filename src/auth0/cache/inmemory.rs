@@ -28,14 +28,10 @@ impl InMemoryCache {
 #[async_trait::async_trait]
 impl Cache for InMemoryCache {
     async fn get_token(&self) -> Result<Option<Token>, Auth0Error> {
-        let key: &str = &cache::token_key(&self.caller, &self.audience);
-        Ok(match self.key_value.get(key) {
-            Some(value) => Some(crypto::decrypt(
-                self.encryption_key.as_str(),
-                value.to_owned(),
-            )?),
-            None => None,
-        })
+        self.key_value
+            .get(&cache::token_key(&self.caller, &self.audience))
+            .map(|value| crypto::decrypt(self.encryption_key.as_str(), value.to_owned()))
+            .transpose()
     }
 
     async fn set_token(&mut self, value_ref: &Token) -> Result<(), Auth0Error> {
@@ -46,14 +42,10 @@ impl Cache for InMemoryCache {
     }
 
     async fn get_jwks(&self) -> Result<Option<JsonWebKeySet>, Auth0Error> {
-        let key: &str = &cache::jwks_key(&self.caller, &self.audience);
-        Ok(match self.key_value.get(key) {
-            Some(value) => Some(crypto::decrypt(
-                self.encryption_key.as_str(),
-                value.to_owned(),
-            )?),
-            None => None,
-        })
+        self.key_value
+            .get(&cache::jwks_key(&self.caller, &self.audience))
+            .map(|value| crypto::decrypt(self.encryption_key.as_str(), value.to_owned()))
+            .transpose()
     }
 
     async fn set_jwks(

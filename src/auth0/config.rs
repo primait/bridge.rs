@@ -10,11 +10,11 @@ pub struct Config {
     pub token_url: Url,
     /// The microservice implementing this Bridge
     pub caller: String,
-    /// The microservice I want to connect to. Eg. crash, squillo etc.
+    /// The microservice I want to connect to.
     /// This should match the string defined in auth0 as "audience"
     pub audience: String,
-    /// Redis connection string. Eg. `redis://{host}:{port}?{ParamKey1}={ParamKey2}` or `inmemory` for inmemory cache
-    pub cache_connection_uri: String,
+    /// Cache configuration. Could be a redis connection string or inmemory cache
+    pub cache_type: CacheType,
     /// The key to use in order to encrypt `CachedToken` in redis
     pub token_encryption_key: String,
     /// Every {check_interval} the `TokenDispenser` actor checks if token needs to be refreshed
@@ -45,8 +45,8 @@ impl Config {
         &self.audience
     }
 
-    pub fn redis_connection_uri(&self) -> &str {
-        &self.cache_connection_uri
+    pub fn cache_type(&self) -> &CacheType {
+        &self.cache_type
     }
 
     pub fn token_encryption_key(&self) -> &str {
@@ -73,6 +73,10 @@ impl Config {
         &self.staleness_check_percentage
     }
 
+    pub fn is_inmemory_cache(&self) -> bool {
+        self.cache_type == CacheType::Inmemory
+    }
+
     #[cfg(test)]
     pub fn test_config() -> Config {
         use std::str::FromStr;
@@ -83,12 +87,30 @@ impl Config {
                 .unwrap(),
             caller: "caller".to_string(),
             audience: "audience".to_string(),
-            cache_connection_uri: "redis://localhost/".to_string(),
+            cache_type: CacheType::Inmemory,
             token_encryption_key: "32char_long_token_encryption_key".to_string(),
             check_interval: Duration::from_secs(10),
             staleness_check_percentage: StalenessCheckPercentage::default(),
             client_id: "client_id".to_string(),
             client_secret: "client_secret".to_string(),
+        }
+    }
+}
+
+// Eg. `Redis("redis://{host}:{port}?{ParamKey1}={ParamKey2}")` or `Inmemory` for inmemory cache
+#[derive(Clone, PartialEq)]
+pub enum CacheType {
+    Redis(String),
+    Inmemory,
+}
+
+impl CacheType {
+    pub fn redis_connection_url(&self) -> &str {
+        match &self {
+            CacheType::Redis(url) => url,
+            CacheType::Inmemory => {
+                panic!("Something went wrong getting Redis connection string")
+            }
         }
     }
 }

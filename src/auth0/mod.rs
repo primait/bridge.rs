@@ -4,7 +4,7 @@ use reqwest::Client;
 use tokio::task::JoinHandle;
 use tokio::time::Interval;
 
-pub use config::{Config, StalenessCheckPercentage};
+pub use config::{CacheType, Config, StalenessCheckPercentage};
 pub use errors::Auth0Error;
 use util::ResultExt;
 
