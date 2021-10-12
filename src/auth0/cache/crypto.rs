@@ -24,12 +24,12 @@ pub fn encrypt<T: Serialize>(
 
 pub fn decrypt<T: DeserializeOwned>(
     token_encryption_key_str: &str,
-    encrypted: Vec<u8>,
+    encrypted: &[u8],
 ) -> Result<T, Auth0Error> {
     // `unwrap` here is fine because `IV` is set here and the only error returned is: `InvalidKeyIvLength`
     // and this must never happen
     let cipher: Aes256 =
         Aes256::new_var(token_encryption_key_str.as_bytes(), IV.as_bytes()).unwrap();
-    let decrypted: Vec<u8> = cipher.decrypt_vec(encrypted.as_slice())?;
+    let decrypted: Vec<u8> = cipher.decrypt_vec(encrypted)?;
     Ok(serde_json::from_slice(decrypted.as_slice())?)
 }

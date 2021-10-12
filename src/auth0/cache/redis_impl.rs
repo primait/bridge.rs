@@ -35,7 +35,7 @@ impl RedisCache {
             .await?
             .get::<_, Option<Vec<u8>>>(key)
             .await?
-            .map(|value| crypto::decrypt(self.encryption_key.as_str(), value))
+            .map(|value| crypto::decrypt(self.encryption_key.as_str(), value.as_slice()))
             .transpose()
     }
 }
@@ -47,7 +47,7 @@ impl Cache for RedisCache {
         self.get(key).await
     }
 
-    async fn set_token(&mut self, value_ref: &Token) -> Result<(), Auth0Error> {
+    async fn put_token(&self, value_ref: &Token) -> Result<(), Auth0Error> {
         let key: &str = &cache::token_key(&self.caller, &self.audience);
         let mut connection = self.client.get_async_connection().await?;
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
@@ -61,8 +61,8 @@ impl Cache for RedisCache {
         self.get(key).await
     }
 
-    async fn set_jwks(
-        &mut self,
+    async fn put_jwks(
+        &self,
         value_ref: &JsonWebKeySet,
         expiration: Option<usize>,
     ) -> Result<(), Auth0Error> {
