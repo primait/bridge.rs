@@ -105,16 +105,6 @@ impl Token {
     }
 }
 
-impl Default for Token {
-    fn default() -> Self {
-        Self {
-            token: "".to_string(),
-            issue_date: Utc::now(),
-            expire_date: Utc::now(),
-        }
-    }
-}
-
 #[derive(Deserialize, Serialize, Debug)]
 struct FetchTokenResponse {
     access_token: String,
