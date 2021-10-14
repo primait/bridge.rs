@@ -47,10 +47,7 @@ impl Bridge {
         BridgeBuilder::create()
     }
 
-    #[deprecated(
-        since = "0.8.0",
-        note = "please use the .create() and .build() methods on the BridgeBuilder"
-    )]
+    #[deprecated(since = "0.8.0", note = "please use Bridge::builder().build(...)")]
     pub fn new(endpoint: Url) -> Self {
         Self {
             #[cfg(feature = "blocking")]
@@ -61,10 +58,7 @@ impl Bridge {
         }
     }
 
-    #[deprecated(
-        since = "0.8.0",
-        note = "please use the .create() and .build() methods on the BridgeBuilder"
-    )]
+    #[deprecated(since = "0.8.0", note = "please use Bridge::builder().build(...)")]
     pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
         Self {
             #[cfg(feature = "blocking")]
