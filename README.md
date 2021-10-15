@@ -21,7 +21,7 @@ pub struct MyCustomData {
 // using OnceCell we make sure that `Bridge` gets instantiated only once
 fn bridge() -> &'static Bridge {
     static BRIDGE: OnceCell<Bridge> = OnceCell::new();
-    BRIDGE.get_or_init(|| Bridge::new("https://swapi.dev/api".parse().unwrap()))
+    BRIDGE.get_or_init(|| Bridge::builder().build("https://swapi.dev/api".parse().unwrap()))
 }
 
 
