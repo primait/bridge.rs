@@ -74,7 +74,7 @@ impl Token {
         &self.expire_date
     }
 
-    // Return the percentage of the remaining life
+    // Return the percentage of the remaining life (from 0 to 1)
     pub fn remaining_life_percentage(&self) -> f64 {
         if self.expire_date.timestamp_millis() - Utc::now().timestamp_millis() <= 0 {
             0.0
@@ -83,7 +83,7 @@ impl Token {
             let issue_millis: i64 = self.issue_date.timestamp_millis();
             let remaining: f64 = (expire_millis - Utc::now().timestamp_millis()) as f64;
             let total: f64 = (expire_millis - issue_millis) as f64;
-            remaining / total * 100.0
+            remaining / total
         }
     }
 
