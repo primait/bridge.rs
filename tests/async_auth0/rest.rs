@@ -6,7 +6,7 @@ use serde_json::json;
 
 use prima_bridge::prelude::*;
 
-use crate::common::*;
+use crate::async_auth0::builder::*;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
@@ -15,7 +15,7 @@ struct Data {
 
 #[tokio::test]
 async fn simple_request() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}").await;
     let result: String = RestRequest::new(&bridge)
         .send()
         .await?
@@ -28,7 +28,7 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn unserializable_response() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}").await;
 
     let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send().await;
     assert!(result.is_ok());
@@ -43,7 +43,7 @@ async fn unserializable_response() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn simple_request_with_custom_path_and_base_path() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) =
-        create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path");
+        create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path").await;
     let result: String = RestRequest::new(&bridge)
         .to("test_path")
         .send()
@@ -61,7 +61,7 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let path = "/test_path/simple_request_with_custom_headers";
 
     let (_m, bridge) =
-        create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
+        create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header).await;
     let response = RestRequest::new(&bridge).to(path).send().await?;
 
     let custom = response
@@ -81,7 +81,7 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(403, "{\"hello\": \"world!\"}");
+    let (_m, bridge) = create_bridge(403, "{\"hello\": \"world!\"}").await;
     let result: String = RestRequest::new(&bridge)
         .ignore_status_code()
         .send()
@@ -95,7 +95,7 @@ async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde");
+    let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde").await;
 
     let result = RestRequest::new(&bridge).raw_body("abcde").send().await;
     assert!(result.is_ok());
@@ -104,7 +104,7 @@ async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"})).await;
     let data = Data {
         hello: "world".to_string(),
     };
@@ -115,7 +115,7 @@ async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_header_matcher(("x-prima", "test-value"));
+    let (_m, bridge) = create_bridge_with_header_matcher(("x-prima", "test-value")).await;
 
     let result = RestRequest::new(&bridge)
         .with_custom_headers(vec![(
@@ -130,7 +130,7 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_user_agent("test");
+    let (_m, bridge) = create_bridge_with_user_agent("test").await;
 
     let result = RestRequest::new(&bridge).send().await;
     assert!(result.is_ok());
@@ -141,7 +141,7 @@ async fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
 async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
     let body = b"abcde";
 
-    let (_m, bridge) = create_bridge_with_binary_body_matcher(body);
+    let (_m, bridge) = create_bridge_with_binary_body_matcher(body).await;
 
     let result = RestRequest::new(&bridge)
         .raw_body(body.to_vec())
@@ -155,7 +155,7 @@ async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}").await;
     let req = RestRequest::new(&bridge).with_custom_headers(vec![
         (
             HeaderName::from_static("x-test"),
@@ -190,13 +190,18 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
         .with_body(body)
         .create();
 
-    let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
+    let _mocks: crate::async_auth0::Auth0Mocks = crate::async_auth0::Auth0Mocks::new();
+
+    let bridge = Bridge::builder()
+        .with_auth0(crate::async_auth0::config())
+        .await
+        .build(mockito::server_url().parse().unwrap());
 
     let result: String = RestRequest::new(&bridge)
         .send()
         .await?
         .get_data(&["hello"])?;
-    assert_eq!(result, "world!");
 
+    assert_eq!(result, "world!");
     Ok(())
 }

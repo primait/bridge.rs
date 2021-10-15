@@ -1,9 +1,9 @@
 use std::convert::Infallible;
+use std::fmt::Debug;
+use std::str::Utf8Error;
 
 use reqwest::{StatusCode, Url};
 use serde_json::Value;
-use std::fmt::Debug;
-use std::str::Utf8Error;
 use thiserror::Error;
 
 pub type PrimaBridgeResult<T> = Result<T, PrimaBridgeError>;

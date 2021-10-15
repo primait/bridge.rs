@@ -1,6 +1,9 @@
+#[cfg(not(feature = "auth0"))]
 mod common;
 
-#[cfg(not(feature = "blocking"))]
+#[cfg(all(not(feature = "blocking"), feature = "auth0"))]
+mod async_auth0;
+#[cfg(all(not(feature = "blocking"), not(feature = "auth0")))]
 mod async_bridge;
-#[cfg(feature = "blocking")]
+#[cfg(all(feature = "blocking", not(feature = "auth0")))]
 mod blocking;

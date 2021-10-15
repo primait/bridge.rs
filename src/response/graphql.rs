@@ -1,10 +1,12 @@
-/// graphql response types and parsers
-use crate::errors::PrimaBridgeError;
-use serde::Deserialize;
-use serde_json::Value;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::fmt::Debug;
+
+use serde::Deserialize;
+use serde_json::Value;
+
+/// graphql response types and parsers
+use crate::errors::PrimaBridgeError;
 
 /// A type returned from [get_graphql_response](struct.Response.html#method.get_graphql_response) function that could be either
 #[derive(Debug)]

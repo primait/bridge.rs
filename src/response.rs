@@ -1,15 +1,15 @@
-pub mod graphql;
-
+use std::convert::TryInto;
 use std::fmt::Debug;
 
 use reqwest::{header::HeaderMap, StatusCode, Url};
 use serde::Deserialize;
 use serde_json::Value;
-use std::convert::TryInto;
 use uuid::Uuid;
 
 use crate::prelude::*;
 use crate::response::graphql::ParsedGraphqlResponse;
+
+pub mod graphql;
 
 #[derive(Debug, PartialEq)]
 enum RequestType {

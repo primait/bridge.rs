@@ -30,6 +30,9 @@ pub mod prelude;
 mod request;
 mod response;
 
+#[cfg(feature = "auth0")]
+pub mod auth0;
+
 /// The bridge instance to issue external requests.
 #[derive(Debug)]
 pub struct Bridge {
@@ -39,6 +42,8 @@ pub struct Bridge {
     client: reqwest::Client,
     /// the url this bridge should call to
     endpoint: Url,
+    #[cfg(feature = "auth0")]
+    auth0_opt: Option<auth0::Auth0>,
 }
 
 impl Bridge {
@@ -47,6 +52,12 @@ impl Bridge {
         BridgeBuilder::create()
     }
 
+    #[cfg(feature = "auth0")]
+    pub fn token(&self) -> Option<crate::auth0::Token> {
+        self.auth0_opt.as_ref().map(|auth0| auth0.token())
+    }
+
+    #[cfg(not(feature = "auth0"))]
     #[deprecated(since = "0.8.0", note = "please use Bridge::builder().build(...)")]
     pub fn new(endpoint: Url) -> Self {
         Self {
@@ -58,6 +69,7 @@ impl Bridge {
         }
     }
 
+    #[cfg(not(feature = "auth0"))]
     #[deprecated(since = "0.8.0", note = "please use Bridge::builder().build(...)")]
     pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
         Self {

@@ -13,7 +13,7 @@ args = [
 ]
 
 [tasks.test]
-dependencies = ["test-blocking", "test-async"]
+dependencies = ["test-blocking", "test-async", "test-async-auth0"]
 
 [tasks.test-blocking]
 command = "cargo"
@@ -24,6 +24,30 @@ dependencies = ["build"]
 command = "cargo"
 args = ["test", "--features", "gzip"]
 dependencies = ["build"]
+
+[tasks.test-async-auth0]
+command = "cargo"
+args = ["test", "--features=auth0,gzip"]
+dependencies = ["build"]
+
+[tasks.auth0-example]
+command = "cargo"
+args = ["run", "--example", "auth0", "--features", "auth0"]
+
+[tasks.clippy]
+dependencies = ["clippy-blocking", "clippy-async", "clippy-async-auth0"]
+
+[tasks.clippy-blocking]
+command = "cargo"
+args = ["clippy", "--features", "blocking", "--", "-D", "warnings"]
+
+[tasks.clippy-async]
+command = "cargo"
+args = ["clippy", "--features", "gzip", "--", "-D", "warnings"]
+
+[tasks.clippy-async-auth0]
+command = "cargo"
+args = ["clippy", "--features=auth0,gzip", "--", "-D", "warnings"]
 
 ### with cargo-limit installed
 [tasks.lbuild]
@@ -85,14 +109,14 @@ args = ["prune"]
 [tasks.delete-artifacts]
 description = "Remove non cachable artifacts"
 script = [
-'''
-#!/bin/bash
-set -e
-set -x
-find ./target/debug -type f -maxdepth 1 -delete || true
-rm -rfv ./target/{debug,release}/deps/{*prima_bridge*,*decode_key*,*gen_public_key*,*intermediari_importer*,*migrate*,*rabbit_worker*,*seed*}
-rm -rfv ./target/{debug,release}/.fingerprint/*prima_bridge*
-'''
+    '''
+    #!/bin/bash
+    set -e
+    set -x
+    find ./target/debug -type f -maxdepth 1 -delete || true
+    rm -rfv ./target/{debug,release}/deps/{*prima_bridge*,*decode_key*,*gen_public_key*,*intermediari_importer*,*migrate*,*rabbit_worker*,*seed*}
+    rm -rfv ./target/{debug,release}/.fingerprint/*prima_bridge*
+    '''
 ]
 
 [tasks.sweep-start]

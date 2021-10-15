@@ -1,6 +1,7 @@
 use mockito::{mock, BinaryBody, Matcher, Mock};
-use prima_bridge::prelude::*;
 use reqwest::Url;
+
+use prima_bridge::prelude::*;
 
 pub fn create_bridge(status_code: usize, body: &str) -> (Mock, Bridge) {
     create_bridge_with_path(status_code, body, "/")

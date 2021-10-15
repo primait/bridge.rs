@@ -109,10 +109,33 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[doc(hidden)]
     fn get_custom_headers(&self) -> HeaderMap;
 
+    #[cfg(feature = "auth0")]
+    #[doc(hidden)]
+    fn get_auth0(&self) -> &Option<crate::auth0::Auth0>;
+
+    #[cfg(feature = "auth0")]
+    #[doc(hidden)]
+    fn get_auth0_headers(&self) -> HeaderMap {
+        match self.get_auth0().as_ref().map(|auth0| auth0.token()) {
+            None => HeaderMap::new(),
+            Some(token) => {
+                let mut header_map: HeaderMap = HeaderMap::new();
+                let header_value: HeaderValue = HeaderValue::from_str(token.to_bearer().as_str())
+                    // This shouldn't happen. Token must be writeable and shouldn't contain invalid characters (eg. \n)
+                    .expect("Failed to create bearer header");
+
+                header_map.append(reqwest::header::AUTHORIZATION, header_value);
+                header_map
+            }
+        }
+    }
+
     fn get_all_headers(&self) -> HeaderMap {
         let mut additional_headers = HeaderMap::new();
         additional_headers.extend(self.get_custom_headers());
         additional_headers.extend(self.tracing_headers());
+        #[cfg(feature = "auth0")]
+        additional_headers.extend(self.get_auth0_headers());
         additional_headers
     }
 
