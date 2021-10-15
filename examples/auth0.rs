@@ -20,14 +20,8 @@
 //! ```shell
 //! cargo make auth0-example
 //! ```
-
-#[cfg(feature = "auth0")]
 use prima_bridge::auth0::{Auth0, Auth0Error};
 
-#[cfg(not(feature = "auth0"))]
-fn main() {}
-
-#[cfg(feature = "auth0")]
 #[tokio::main]
 async fn main() {
     use std::time::Duration;
@@ -42,7 +36,6 @@ async fn main() {
     }
 }
 
-#[cfg(feature = "auth0")]
 mod auth0 {
     use std::time::Duration;
 
