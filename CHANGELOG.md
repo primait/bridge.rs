@@ -1,5 +1,10 @@
 # Changelog
 
+### next
+- Rust 1.56 & Edition 2021
+- Update tracing-opentelemetry to 0.16
+- Other deps updated
+
 ### 0.8.0
 - added new function `with_auth0` in bridge builder. This enables jwt authentication to called endpoint.
 
