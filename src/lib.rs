@@ -1,6 +1,8 @@
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 //! This crate gives an high level api to execute external request.
 //!
-//! It is supposed to give the basics building blocks for building bridges to the external world
+//! It is supposed to give the basics building blocks for building bridges to other services
 //! while abstracting the low level stuffs like adding custom headers and request tracing.
 //!
 //! Right now it supports Rest and GraphQL requests.
@@ -53,12 +55,13 @@ impl Bridge {
     }
 
     #[cfg(feature = "auth0")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
     pub fn token(&self) -> Option<crate::auth0::Token> {
         self.auth0_opt.as_ref().map(|auth0| auth0.token())
     }
 
     #[cfg(not(feature = "auth0"))]
-    #[deprecated(since = "0.8.0", note = "please use Bridge::builder().build(...)")]
+    #[deprecated(since = "0.8.0", note = "use Bridge::builder()")]
     pub fn new(endpoint: Url) -> Self {
         Self {
             #[cfg(feature = "blocking")]
@@ -70,7 +73,7 @@ impl Bridge {
     }
 
     #[cfg(not(feature = "auth0"))]
-    #[deprecated(since = "0.8.0", note = "please use Bridge::builder().build(...)")]
+    #[deprecated(since = "0.8.0", note = "use Bridge::builder()")]
     pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
         Self {
             #[cfg(feature = "blocking")]

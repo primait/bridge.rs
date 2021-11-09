@@ -1,3 +1,5 @@
+//! Errors
+
 use std::convert::Infallible;
 use std::fmt::Debug;
 use std::str::Utf8Error;

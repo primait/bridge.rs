@@ -8,7 +8,7 @@ use serde_json::Value;
 /// graphql response types and parsers
 use crate::errors::PrimaBridgeError;
 
-/// A type returned from [get_graphql_response](struct.Response.html#method.get_graphql_response) function that could be either
+/// A type returned from [get_graphql_response](struct.Response.html#method.get_graphql_response) function useful for getting full control of a GraphQL response
 #[derive(Debug)]
 pub enum ParsedGraphqlResponse<T> {
     /// `T` is the deserialized data
@@ -79,8 +79,8 @@ where
     }
 }
 
-/// a struct representing a graphql error
-/// see: https://spec.graphql.org/June2018/#sec-Errors
+/// A struct representing a graphql error
+/// see: <https://spec.graphql.org/June2018/#sec-Errors>
 #[derive(Deserialize, Debug, Clone)]
 pub struct Error {
     message: String,
@@ -102,7 +102,7 @@ pub enum PathSegment {
     Num(u32),
 }
 
-/// an error type to represent all possible outcome for a graphql response deserialization
+/// An error type to represent all possible outcome for a graphql response deserialization
 #[derive(Debug)]
 pub enum PossiblyParsedData<T> {
     /// a tuple type with the converted `T` type and a vector of [Error]. This could happens thanks to the fact that graphql can return null for a nullable type, even if there was an error while resolving the data.

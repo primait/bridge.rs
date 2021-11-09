@@ -1,3 +1,5 @@
+//! Stuff related to auth0
+
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use reqwest::Client;

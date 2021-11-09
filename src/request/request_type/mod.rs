@@ -13,6 +13,7 @@ use super::DeliverableRequest;
 mod graphql;
 mod rest;
 
+/// A server request
 pub struct Request;
 
 /// Useful type to construct new requests

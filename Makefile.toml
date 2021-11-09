@@ -133,3 +133,10 @@ args = ["sweep", "-f"]
 description = "Print cache size"
 command = "du"
 args = ["-sh", "target", ".cargo"]
+
+[tasks.docsrs]
+description = "Build docs as they are rendered on docs.rs"
+env = { "RUSTDOCFLAGS" = "--cfg docsrs" }
+command = "cargo"
+toolchain = "nightly"
+args = ["doc", "--all-features"]

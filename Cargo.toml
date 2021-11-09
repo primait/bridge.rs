@@ -53,3 +53,9 @@ codegen-units = 1
 name = "auth0"
 path = "examples/auth0.rs"
 required-features = ["auth0"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+
