@@ -1,5 +1,8 @@
 # Changelog
 
+### 0.9.2
+- test fix
+
 ### 0.9.1
 - lint fix
 

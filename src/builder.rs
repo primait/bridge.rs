@@ -28,9 +28,18 @@ impl BridgeBuilder {
     }
 
     pub fn with_user_agent(self, user_agent: impl Into<String>) -> Self {
-        Self {
+        #[cfg(not(feature = "auth0"))]
+        let builder = Self {
             client_builder: self.client_builder.user_agent(user_agent.into().as_str()),
-        }
+        };
+
+        #[cfg(feature = "auth0")]
+        let builder = Self {
+            client_builder: self.client_builder.user_agent(user_agent.into().as_str()),
+            ..self
+        };
+
+        builder
     }
 
     // add auth0 capabilities to this bridge
