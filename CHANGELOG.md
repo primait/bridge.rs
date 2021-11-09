@@ -1,5 +1,8 @@
 # Changelog
 
+### 0.9.1
+- lint fix
+
 ### 0.9.0
 - Rust 1.56 & Edition 2021
 - Update tracing-opentelemetry to 0.16
