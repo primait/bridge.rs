@@ -1,5 +1,8 @@
 # Changelog
 
+### Next
+- dashmap dependency updated (https://github.com/primait/bridge.rs/pull/64)
+
 ### 0.9.2
 - test fix
 
