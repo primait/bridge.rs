@@ -40,9 +40,6 @@ pub mod auth0;
 /// The bridge instance to issue external requests.
 #[derive(Debug)]
 pub struct Bridge {
-    #[cfg(feature = "blocking")]
-    client: reqwest::blocking::Client,
-    #[cfg(not(feature = "blocking"))]
     client: reqwest::Client,
     /// the url this bridge should call to
     endpoint: Url,
@@ -60,35 +57,5 @@ impl Bridge {
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
     pub fn token(&self) -> Option<crate::auth0::Token> {
         self.auth0_opt.as_ref().map(|auth0| auth0.token())
-    }
-
-    #[cfg(not(feature = "auth0"))]
-    #[deprecated(since = "0.8.0", note = "use Bridge::builder()")]
-    pub fn new(endpoint: Url) -> Self {
-        Self {
-            #[cfg(feature = "blocking")]
-            client: reqwest::blocking::Client::new(),
-            #[cfg(not(feature = "blocking"))]
-            client: reqwest::Client::new(),
-            endpoint,
-        }
-    }
-
-    #[cfg(not(feature = "auth0"))]
-    #[deprecated(since = "0.8.0", note = "use Bridge::builder()")]
-    pub fn with_user_agent(endpoint: Url, user_agent: &str) -> Self {
-        Self {
-            #[cfg(feature = "blocking")]
-            client: reqwest::blocking::Client::builder()
-                .user_agent(user_agent)
-                .build()
-                .expect("Bridge::with_user_agent()"),
-            #[cfg(not(feature = "blocking"))]
-            client: reqwest::Client::builder()
-                .user_agent(user_agent)
-                .build()
-                .expect("Bridge::with_user_agent()"),
-            endpoint,
-        }
     }
 }

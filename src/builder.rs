@@ -7,9 +7,6 @@ use crate::Bridge;
 
 /// A builder for creating Bridge instances
 pub struct BridgeBuilder {
-    #[cfg(feature = "blocking")]
-    client_builder: reqwest::blocking::ClientBuilder,
-    #[cfg(not(feature = "blocking"))]
     client_builder: reqwest::ClientBuilder,
     #[cfg(feature = "auth0")]
     auth0: Option<auth0::Auth0>,
@@ -18,9 +15,6 @@ pub struct BridgeBuilder {
 impl BridgeBuilder {
     pub(crate) fn create() -> Self {
         Self {
-            #[cfg(feature = "blocking")]
-            client_builder: reqwest::blocking::ClientBuilder::new(),
-            #[cfg(not(feature = "blocking"))]
             client_builder: reqwest::ClientBuilder::new(),
             #[cfg(feature = "auth0")]
             auth0: None,

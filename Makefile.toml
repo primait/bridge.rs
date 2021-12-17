@@ -13,19 +13,14 @@ args = [
 ]
 
 [tasks.test]
-dependencies = ["test-blocking", "test-async", "test-async-auth0"]
+dependencies = ["test-base", "test-auth0"]
 
-[tasks.test-blocking]
-command = "cargo"
-args = ["test", "--features", "blocking"]
-dependencies = ["build"]
-
-[tasks.test-async]
+[tasks.test-base]
 command = "cargo"
 args = ["test", "--features", "gzip"]
 dependencies = ["build"]
 
-[tasks.test-async-auth0]
+[tasks.test-auth0]
 command = "cargo"
 args = ["test", "--features=auth0,gzip"]
 dependencies = ["build"]
@@ -51,12 +46,7 @@ args = [
 ]
 
 [tasks.ltest]
-dependencies = ["ltest-blocking", "ltest-async"]
-
-[tasks.ltest-blocking]
-command = "cargo"
-args = ["ltest", "--features", "blocking"]
-dependencies = ["lbuild"]
+dependencies = ["ltest-async"]
 
 [tasks.ltest-async]
 command = "cargo"
