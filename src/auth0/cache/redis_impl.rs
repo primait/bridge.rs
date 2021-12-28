@@ -1,5 +1,5 @@
 use redis::AsyncCommands;
-use serde::de::DeserializeOwned;
+use serde::Deserialize;
 
 use crate::auth0::cache::{self, crypto, Cache};
 use crate::auth0::keyset::JsonWebKeySet;
@@ -29,7 +29,10 @@ impl RedisCache {
         })
     }
 
-    async fn get<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, Auth0Error> {
+    async fn get<T>(&self, key: &str) -> Result<Option<T>, Auth0Error>
+    where
+        for<'de> T: Deserialize<'de>,
+    {
         self.client
             .get_async_connection()
             .await?

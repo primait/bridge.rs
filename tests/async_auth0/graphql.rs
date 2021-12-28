@@ -8,6 +8,7 @@ use serde::Deserialize;
 use serde_json::json;
 
 use prima_bridge::prelude::*;
+use prima_bridge::ParsedGraphqlResponseExt;
 
 use crate::async_auth0::{config, Auth0Mocks};
 
@@ -102,7 +103,7 @@ async fn error_response_parser() -> Result<(), Box<dyn Error>> {
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
         .await?;
-    let parsed_response = response.get_graphql_response::<GqlResponse>()?;
+    let parsed_response = response.parse_graphql_response::<GqlResponse>()?;
 
     assert!(!parsed_response.is_ok());
     assert!(parsed_response.has_parsed_data());
@@ -124,7 +125,7 @@ async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Err
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
         .await?;
-    let parsed_response = response.get_graphql_response::<GqlResponse>()?;
+    let parsed_response = response.parse_graphql_response::<GqlResponse>()?;
 
     assert!(!parsed_response.is_ok());
     assert!(parsed_response.has_parsed_data());
@@ -146,7 +147,7 @@ async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
         .await?;
-    let parsed_response = response.get_graphql_response::<GqlResponse>()?;
+    let parsed_response = response.parse_graphql_response::<GqlResponse>()?;
 
     assert!(!parsed_response.is_ok());
     assert!(!parsed_response.has_parsed_data());
