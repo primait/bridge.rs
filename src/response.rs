@@ -1,4 +1,3 @@
-use std::convert::TryInto;
 use std::fmt::Debug;
 
 use reqwest::{header::HeaderMap, StatusCode, Url};
@@ -7,7 +6,7 @@ use serde_json::Value;
 use uuid::Uuid;
 
 use crate::prelude::*;
-use crate::response::graphql::ParsedGraphqlResponse;
+use crate::response::graphql::{ParsedGraphqlResponse, ParsedGraphqlResponseExt};
 
 pub mod graphql;
 
@@ -96,13 +95,13 @@ impl Response {
 
     /// This functions return a Result with a [ParsedGraphqlResponse]
     /// Look at the type documentation for more specifications
-    pub fn get_graphql_response<T>(&self) -> PrimaBridgeResult<ParsedGraphqlResponse<T>>
+    pub fn parse<T>(&self) -> PrimaBridgeResult<ParsedGraphqlResponse<T>>
     where
         for<'de> T: Deserialize<'de>,
     {
-        std::str::from_utf8(self.raw_body())
-            .map_err(PrimaBridgeError::utf8_error)?
-            .try_into()
+        ParsedGraphqlResponse::from_str(
+            std::str::from_utf8(self.raw_body()).map_err(PrimaBridgeError::utf8_error)?,
+        )
     }
 
     pub fn raw_body(&self) -> &Vec<u8> {

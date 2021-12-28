@@ -1,5 +1,5 @@
+use serde::de::DeserializeOwned;
 use std::collections::HashMap;
-use std::convert::TryFrom;
 use std::fmt::Debug;
 
 use serde::Deserialize;
@@ -8,65 +8,21 @@ use serde_json::Value;
 /// graphql response types and parsers
 use crate::errors::PrimaBridgeError;
 
-/// A type returned from [get_graphql_response](struct.Response.html#method.get_graphql_response) function useful for getting full control of a GraphQL response
-#[derive(Debug)]
-pub enum ParsedGraphqlResponse<T> {
-    /// `T` is the deserialized data
-    Ok(T),
-    Err(PossiblyParsedData<T>),
+/// A type returned from [parse](struct.Response.html#method.parse) function useful for getting full control of a GraphQL response
+pub type ParsedGraphqlResponse<T> = Result<T, PossiblyParsedData<T>>;
+
+pub trait ParsedGraphqlResponseExt<T: DeserializeOwned> {
+    fn from_str(body_as_str: &str) -> Result<Self, PrimaBridgeError>
+    where
+        Self: Sized;
+
+    fn get_errors(&self) -> Vec<Error>;
+    fn has_parsed_data(&self) -> bool;
 }
 
-impl<T> ParsedGraphqlResponse<T> {
-    pub fn is_ok(&self) -> bool {
-        matches!(self, ParsedGraphqlResponse::Ok(_))
-    }
-
-    pub fn get_errors(&self) -> Vec<Error> {
-        match self {
-            ParsedGraphqlResponse::Ok(_) => vec![],
-            ParsedGraphqlResponse::Err(possibly_parsed_data) => match possibly_parsed_data {
-                PossiblyParsedData::ParsedData(_, errors) => errors.to_vec(),
-                PossiblyParsedData::UnparsedData(_, errors) => errors.to_vec(),
-                PossiblyParsedData::EmptyData(errors) => errors.to_vec(),
-            },
-        }
-    }
-
-    pub fn has_parsed_data(&self) -> bool {
-        matches!(
-            self,
-            ParsedGraphqlResponse::Ok(_)
-                | ParsedGraphqlResponse::Err(PossiblyParsedData::ParsedData(..))
-        )
-    }
-}
-
-#[derive(Deserialize, Debug)]
-struct GraphQlResponse<T> {
-    data: Option<T>,
-    errors: Option<Vec<Error>>,
-}
-
-impl<T> From<GraphQlResponse<T>> for ParsedGraphqlResponse<T> {
-    fn from(gql_response: GraphQlResponse<T>) -> Self {
-        match (gql_response.data, gql_response.errors) {
-            (Some(t), None) => Self::Ok(t),
-            (Some(t), Some(errors)) => Self::Err(PossiblyParsedData::ParsedData(t, errors)),
-            (None, Some(errors)) => Self::Err(PossiblyParsedData::EmptyData(errors)),
-            // this should not happen!
-            _ => Self::Err(PossiblyParsedData::EmptyData(vec![])),
-        }
-    }
-}
-
-impl<T> TryFrom<&str> for ParsedGraphqlResponse<T>
-where
-    for<'de> T: Deserialize<'de>,
-{
-    type Error = PrimaBridgeError;
-
-    fn try_from(body_as_str: &str) -> Result<Self, Self::Error> {
-        let result: serde_json::Result<GraphQlResponse<T>> = serde_json::from_str(body_as_str);
+impl<T: DeserializeOwned> ParsedGraphqlResponseExt<T> for ParsedGraphqlResponse<T> {
+    fn from_str(body_as_str: &str) -> Result<Self, PrimaBridgeError> {
+        let result: serde_json::Result<GraphqlResponse<T>> = serde_json::from_str(body_as_str);
         match result {
             Ok(t) => Ok(t.into()),
             Err(_e) => {
@@ -77,22 +33,59 @@ where
             }
         }
     }
+
+    fn get_errors(&self) -> Vec<Error> {
+        match self {
+            ParsedGraphqlResponse::Ok(_) => vec![],
+            ParsedGraphqlResponse::Err(possibly_parsed_data) => match possibly_parsed_data {
+                PossiblyParsedData::ParsedData(_, errors) => errors.to_vec(),
+                PossiblyParsedData::UnparsedData(_, errors) => errors.to_vec(),
+                PossiblyParsedData::EmptyData(errors) => errors.to_vec(),
+            },
+        }
+    }
+
+    fn has_parsed_data(&self) -> bool {
+        matches!(
+            self,
+            ParsedGraphqlResponse::Ok(_)
+                | ParsedGraphqlResponse::Err(PossiblyParsedData::ParsedData(..))
+        )
+    }
+}
+
+#[derive(Deserialize, Debug)]
+struct GraphqlResponse<T> {
+    pub data: Option<T>,
+    pub errors: Option<Vec<Error>>,
+}
+
+impl<T> From<GraphqlResponse<T>> for ParsedGraphqlResponse<T> {
+    fn from(gql_response: GraphqlResponse<T>) -> Self {
+        match (gql_response.data, gql_response.errors) {
+            (Some(t), None) => Self::Ok(t),
+            (Some(t), Some(errors)) => Self::Err(PossiblyParsedData::ParsedData(t, errors)),
+            (None, Some(errors)) => Self::Err(PossiblyParsedData::EmptyData(errors)),
+            // this should not happen!
+            _ => Self::Err(PossiblyParsedData::EmptyData(vec![])),
+        }
+    }
 }
 
 /// A struct representing a graphql error
 /// see: <https://spec.graphql.org/June2018/#sec-Errors>
 #[derive(Deserialize, Debug, Clone)]
 pub struct Error {
-    message: String,
-    locations: Option<Vec<Location>>,
-    path: Option<Vec<PathSegment>>,
-    extensions: Option<HashMap<String, String>>,
+    pub message: String,
+    pub locations: Option<Vec<Location>>,
+    pub path: Option<Vec<PathSegment>>,
+    pub extensions: Option<HashMap<String, String>>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Location {
-    line: u32,
-    column: u32,
+    pub line: u32,
+    pub column: u32,
 }
 
 #[derive(Deserialize, Debug, Clone)]
