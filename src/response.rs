@@ -95,7 +95,7 @@ impl Response {
 
     /// This functions return a Result with a [ParsedGraphqlResponse]
     /// Look at the type documentation for more specifications
-    pub fn parse<T>(&self) -> PrimaBridgeResult<ParsedGraphqlResponse<T>>
+    pub fn parse_graphql_response<T>(&self) -> PrimaBridgeResult<ParsedGraphqlResponse<T>>
     where
         for<'de> T: Deserialize<'de>,
     {

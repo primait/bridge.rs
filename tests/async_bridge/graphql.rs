@@ -94,7 +94,7 @@ async fn error_response_parser() -> Result<(), Box<dyn Error>> {
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
         .await?;
-    let parsed_response = response.parse::<GqlResponse>()?;
+    let parsed_response = response.parse_graphql_response::<GqlResponse>()?;
 
     assert!(!parsed_response.is_ok());
     assert!(parsed_response.has_parsed_data());
@@ -115,7 +115,7 @@ async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Err
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
         .await?;
-    let parsed_response = response.parse::<GqlResponse>()?;
+    let parsed_response = response.parse_graphql_response::<GqlResponse>()?;
 
     assert!(!parsed_response.is_ok());
     assert!(parsed_response.has_parsed_data());
@@ -136,7 +136,7 @@ async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
         .await?;
-    let parsed_response = response.parse::<GqlResponse>()?;
+    let parsed_response = response.parse_graphql_response::<GqlResponse>()?;
 
     assert!(!parsed_response.is_ok());
     assert!(!parsed_response.has_parsed_data());

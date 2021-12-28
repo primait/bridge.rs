@@ -8,7 +8,7 @@ use serde_json::Value;
 /// graphql response types and parsers
 use crate::errors::PrimaBridgeError;
 
-/// A type returned from [parse](struct.Response.html#method.parse) function useful for getting full control of a GraphQL response
+/// A type returned from [parse_graphql_response](struct.Response.html#method.parse_graphql_response) function useful for getting full control of a GraphQL response
 pub type ParsedGraphqlResponse<T> = Result<T, PossiblyParsedData<T>>;
 
 pub trait ParsedGraphqlResponseExt<T: DeserializeOwned> {
