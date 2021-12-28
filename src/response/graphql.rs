@@ -1,4 +1,3 @@
-use serde::de::DeserializeOwned;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
@@ -11,7 +10,10 @@ use crate::errors::PrimaBridgeError;
 /// A type returned from [parse_graphql_response](struct.Response.html#method.parse_graphql_response) function useful for getting full control of a GraphQL response
 pub type ParsedGraphqlResponse<T> = Result<T, PossiblyParsedData<T>>;
 
-pub trait ParsedGraphqlResponseExt<T: DeserializeOwned> {
+pub trait ParsedGraphqlResponseExt<T>
+where
+    for<'de> T: Deserialize<'de>,
+{
     fn from_str(body_as_str: &str) -> Result<Self, PrimaBridgeError>
     where
         Self: Sized;
@@ -20,7 +22,10 @@ pub trait ParsedGraphqlResponseExt<T: DeserializeOwned> {
     fn has_parsed_data(&self) -> bool;
 }
 
-impl<T: DeserializeOwned> ParsedGraphqlResponseExt<T> for ParsedGraphqlResponse<T> {
+impl<T> ParsedGraphqlResponseExt<T> for ParsedGraphqlResponse<T>
+where
+    for<'de> T: Deserialize<'de>,
+{
     fn from_str(body_as_str: &str) -> Result<Self, PrimaBridgeError> {
         let result: serde_json::Result<GraphqlResponse<T>> = serde_json::from_str(body_as_str);
         match result {
