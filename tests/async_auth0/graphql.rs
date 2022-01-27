@@ -72,11 +72,13 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct GqlResponse {
     hero: Hero,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct Hero {
     name: String,
@@ -84,6 +86,7 @@ struct Hero {
     friends: Vec<Option<Friend>>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct Friend {
     id: String,
