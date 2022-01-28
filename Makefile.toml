@@ -35,19 +35,8 @@ command = "cargo"
 args = ["run", "--example", "auth0", "--features", "auth0"]
 
 [tasks.clippy]
-dependencies = ["clippy-blocking", "clippy-async", "clippy-async-auth0"]
-
-[tasks.clippy-blocking]
 command = "cargo"
-args = ["clippy", "--features", "blocking", "--", "-D", "warnings"]
-
-[tasks.clippy-async]
-command = "cargo"
-args = ["clippy", "--features", "gzip", "--", "-D", "warnings"]
-
-[tasks.clippy-async-auth0]
-command = "cargo"
-args = ["clippy", "--features=auth0,gzip", "--", "-D", "warnings"]
+args = ["clippy", "--all-features", "--", "-D", "warnings"]
 
 ### with cargo-limit installed
 [tasks.lbuild]
