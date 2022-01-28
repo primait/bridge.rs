@@ -112,6 +112,10 @@ impl Response {
     pub fn is_ok(&self) -> bool {
         self.status_code.is_success()
     }
+
+    pub fn request_id(&self) -> Uuid {
+        self.request_id
+    }
 }
 
 fn extract_inner_json<T>(url: Url, selectors: Vec<&str>, json_value: Value) -> PrimaBridgeResult<T>

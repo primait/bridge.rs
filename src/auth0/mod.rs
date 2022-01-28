@@ -23,8 +23,6 @@ mod util;
 
 #[derive(Clone, Debug)]
 pub struct Auth0 {
-    cache: Arc<dyn Cache>,
-    jwks_lock: Arc<RwLock<JsonWebKeySet>>,
     token_lock: Arc<RwLock<Token>>,
 }
 
@@ -51,11 +49,7 @@ impl Auth0 {
         )
         .await;
 
-        Ok(Self {
-            cache,
-            jwks_lock,
-            token_lock,
-        })
+        Ok(Self { token_lock })
     }
 
     pub fn token(&self) -> Token {

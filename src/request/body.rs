@@ -5,12 +5,6 @@ pub struct Body {
     inner: Vec<u8>,
 }
 
-impl Default for Body {
-    fn default() -> Self {
-        Self { inner: vec![] }
-    }
-}
-
 impl From<String> for Body {
     fn from(val: String) -> Self {
         Self {
