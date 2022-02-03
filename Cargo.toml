@@ -29,7 +29,7 @@ opentelemetry = { version = ">=0.16.0, <0.17.0", optional = true }
 tracing = { version = "0.1.29", optional = true }
 tracing-opentelemetry = { version = "0.16.0", optional = true }
 async-trait = "0.1.51"
-jsonwebtoken = { version = "7.2.0", optional = true }
+jsonwebtoken = { version = "8.0.0", optional = true }
 redis = { version = "0.21.3", features = ["tokio-comp"], optional = true }
 rand = { version = "0.8.4", optional = true }
 chrono = { version = "^0.4", features = ["serde"], optional = true }
