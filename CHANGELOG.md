@@ -3,6 +3,7 @@
 ### 0.11.0
 - opentelemetry updated to version 0.17. **Careful!!!** The opentelemetry version in your project should match the one in this library
 - various dependency updates
+- removed log dependency, use tracing everywhere
 
 ### 0.10.0
 - dashmap dependency updated (https://github.com/primait/bridge.rs/pull/64)
