@@ -72,7 +72,7 @@ async fn start(
             let token: Token = read(&token_lock);
 
             if token.needs_refresh(&config) {
-                log::info!("Refreshing JWT and JWKS");
+                tracing::info!("Refreshing JWT and JWKS");
 
                 let jwks_opt = match JsonWebKeySet::fetch(&client, &config).await {
                     Ok(jwks) => {
@@ -84,7 +84,7 @@ async fn start(
                         Some(jwks)
                     }
                     Err(error) => {
-                        log::error!("Failed to fetch JWKS. Reason: {:?}", error);
+                        tracing::error!("Failed to fetch JWKS. Reason: {:?}", error);
                         None
                     }
                 };
@@ -92,12 +92,12 @@ async fn start(
                 match Token::fetch(&client, &config).await {
                     Ok(token) => {
                         let is_signed: Option<bool> = jwks_opt.map(|j| j.is_signed(&token));
-                        log::info!("is signed: {}", is_signed.unwrap_or_default());
+                        tracing::info!("is signed: {}", is_signed.unwrap_or_default());
 
                         let _ = cache.put_token(&token).await.log_err("Error caching JWT");
                         write(&token_lock, token);
                     }
-                    Err(error) => log::error!("Failed to fetch JWT. Reason: {:?}", error),
+                    Err(error) => tracing::error!("Failed to fetch JWT. Reason: {:?}", error),
                 }
             }
         }
