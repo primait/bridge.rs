@@ -7,7 +7,7 @@ impl<V, E: ToString> ResultExt<V, E> for Result<V, E> {
         match self {
             Ok(t) => Ok(t),
             Err(e) => {
-                log::error!("{}: {}", label, e.to_string());
+                tracing::error!("{}: {}", label, e.to_string());
                 Err(e)
             }
         }
