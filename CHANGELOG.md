@@ -1,7 +1,11 @@
 # Changelog
 
+### Next
+- removes `blocking` feature. The library is now async only. (*breaking change*)
+- removes the old `new` and `with_user_agent` functions deprecated in 0.7.3
+
 ### 0.11.0
-- opentelemetry updated to version 0.17. **Careful!!!** The opentelemetry version in your project should match the one in this library
+- opentelemetry updated to version 0.17. **Careful!!!** The opentelemetry version in your project should match the one in this library (*breaking change*)
 - various dependency updates
 - removed log dependency, use tracing everywhere
 
@@ -16,7 +20,7 @@
 
 ### 0.9.0
 - Rust 1.56 & Edition 2021
-- Update tracing-opentelemetry to 0.16
+- Update tracing-opentelemetry to 0.16 
 - Other deps updated
 - Documentation now shows required features
 
@@ -24,7 +28,7 @@
 - added new function `with_auth0` in bridge builder. This enables jwt authentication to called endpoint.
 
 ### 0.7.3
-- deprecated the `new` and `with_user_agent` methods in favor of a builder
+- deprecated the `new` and `with_user_agent` functions in favor of a builder
 - opentelemetry updated to version 0.16. **Careful!!!** The opentelemetry version in your project should match the one in this library
 - several dependencies updated
 - docker file based on Rust 1.54
