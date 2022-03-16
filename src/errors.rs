@@ -29,6 +29,7 @@ pub enum PrimaBridgeError {
     EmptyBody,
     #[error("the response body id not valid utf-8. error: {source}")]
     Utf8Error { source: Utf8Error },
+    #[cfg(feature = "circuit_breaker")]
     #[error("the circuit breaker has blocked this request. Too many failed attempts. Retry in a few seconds")]
     CircuitBreakerOpen,
 }

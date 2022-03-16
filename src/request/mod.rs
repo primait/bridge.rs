@@ -146,8 +146,42 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[doc(hidden)]
     fn get_request_type(&self) -> RequestType;
 
+    async fn do_send<T>(
+        bridge: &Bridge,
+        request_builder: reqwest::RequestBuilder,
+        url: &Url,
+        body: T,
+    ) -> PrimaBridgeResult<reqwest::Response>
+    where
+        T: Into<reqwest::Body> + Send,
+    {
+        match &bridge.circuit_breaker {
+            None => {
+                request_builder
+                    .body(body)
+                    .send()
+                    .await
+                    .map_err(|e| PrimaBridgeError::HttpError {
+                        url: url.clone(),
+                        source: e,
+                    })
+            }
+            Some(circuit_breaker) => circuit_breaker
+                .call(request_builder.body(body).send())
+                .await
+                .map_err(|e| match e {
+                    Error::Inner(inner) => PrimaBridgeError::HttpError {
+                        url: url.clone(),
+                        source: inner,
+                    },
+                    Error::Rejected => PrimaBridgeError::CircuitBreakerOpen,
+                }),
+        }
+    }
+
     async fn send(&'a self) -> PrimaBridgeResult<Response> {
-        use futures_util::future::TryFutureExt;
+        use futures_util::TryFutureExt;
+
         let request_id = self.get_id();
         let url = self.get_url();
 
@@ -162,18 +196,8 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             )
             .headers(self.get_all_headers());
 
-        let response = self
-            .get_bridge()
-            .circuit_breaker
-            .call(request_builder.body(self.get_body()).send())
-            .await
-            .map_err(|err| match err {
-                Error::Inner(reqwest_error) => PrimaBridgeError::HttpError {
-                    url: url.clone(),
-                    source: reqwest_error,
-                },
-                Error::Rejected => PrimaBridgeError::CircuitBreakerOpen,
-            })?;
+        let response =
+            Self::do_send(self.get_bridge(), request_builder, &url, self.get_body()).await?;
 
         let status_code = response.status();
         if !self.get_ignore_status_code() && !status_code.is_success() {

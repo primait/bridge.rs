@@ -28,7 +28,7 @@ pub use self::{
     response::Response,
 };
 #[cfg(feature = "circuit_breaker")]
-use recloser::{AsyncRecloser, Recloser};
+use recloser::AsyncRecloser;
 use std::fmt::{Debug, Formatter};
 
 mod builder;
@@ -48,7 +48,7 @@ pub struct Bridge {
     #[cfg(feature = "auth0")]
     auth0_opt: Option<auth0::Auth0>,
     #[cfg(all(feature = "circuit_breaker", not(feature = "blocking")))]
-    circuit_breaker: AsyncRecloser,
+    circuit_breaker: Option<AsyncRecloser>,
 }
 
 impl Bridge {

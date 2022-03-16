@@ -4,12 +4,16 @@ use reqwest::Url;
 #[cfg(feature = "auth0")]
 use crate::auth0;
 use crate::Bridge;
+use recloser::AsyncRecloser;
+
+pub use recloser::Recloser;
 
 /// A builder for creating Bridge instances
 pub struct BridgeBuilder {
     client_builder: reqwest::ClientBuilder,
     #[cfg(feature = "auth0")]
     auth0: Option<auth0::Auth0>,
+    circuit_breaker: Option<Recloser>,
 }
 
 impl BridgeBuilder {
@@ -18,6 +22,7 @@ impl BridgeBuilder {
             client_builder: reqwest::ClientBuilder::new(),
             #[cfg(feature = "auth0")]
             auth0: None,
+            circuit_breaker: None,
         }
     }
 
@@ -51,6 +56,13 @@ impl BridgeBuilder {
         }
     }
 
+    pub fn with_circuit_breaker(self, recloser: Recloser) -> Self {
+        Self {
+            circuit_breaker: Some(recloser),
+            ..self
+        }
+    }
+
     pub fn build(self, endpoint: Url) -> Bridge {
         Bridge {
             client: self
@@ -60,6 +72,9 @@ impl BridgeBuilder {
             endpoint,
             #[cfg(feature = "auth0")]
             auth0_opt: self.auth0,
+            circuit_breaker: self
+                .circuit_breaker
+                .map(|recloser| AsyncRecloser::from(recloser)),
         }
     }
 }
