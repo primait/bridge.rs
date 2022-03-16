@@ -10,18 +10,17 @@ readme = "README.md"
 
 [features]
 default = ["async", "tracing_opentelemetry"]
-blocking = ["reqwest/blocking"]
 async = ["reqwest", "futures", "futures-util"]
 tracing_opentelemetry = ["opentelemetry", "tracing", "tracing-opentelemetry"]
 gzip = ["reqwest/gzip"]
 auth0 = ["tokio", "rand", "redis", "jsonwebtoken", "chrono", "chrono-tz", "aes", "block-modes", "dashmap", "tracing"]
 
 [dependencies]
-reqwest = { version = "0.11.9", features = ["json", "blocking"], optional = true }
+reqwest = { version = "0.11.9", features = ["json"], optional = true }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.78"
 thiserror = "1.0.30"
-tokio = { version = "1.16.1", features = ["macros"], optional = true }
+tokio = { version = "1.16.1", features = ["macros", "rt-multi-thread"], optional = true }
 uuid = { version = ">=0.7.0, <0.9.0", features = ["serde", "v4"] }
 futures = { version = "0.3.21", optional = true }
 futures-util = { version = "0.3.21", optional = true }

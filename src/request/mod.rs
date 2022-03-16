@@ -145,58 +145,6 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[doc(hidden)]
     fn get_request_type(&self) -> RequestType;
 
-    #[cfg(feature = "blocking")]
-    fn send(&'a self) -> PrimaBridgeResult<Response> {
-        let url = self.get_url();
-        let request_builder = self
-            .get_bridge()
-            .client
-            .request(self.get_method(), url.as_str())
-            .timeout(self.get_timeout())
-            .header(
-                HeaderName::from_static("x-request-id"),
-                &self.get_id().to_string(),
-            )
-            .headers(self.get_all_headers());
-
-        let response = request_builder.body(self.get_body()).send().map_err(|e| {
-            PrimaBridgeError::HttpError {
-                url: url.clone(),
-                source: e,
-            }
-        })?;
-        let status_code = response.status();
-        if !self.get_ignore_status_code() && !status_code.is_success() {
-            return Err(PrimaBridgeError::WrongStatusCode(url, status_code));
-        }
-        let response_headers = response.headers().clone();
-        let response_body = response
-            .bytes()
-            .map_err(|e| PrimaBridgeError::HttpError {
-                source: e,
-                url: url.clone(),
-            })?
-            .to_vec();
-
-        match self.get_request_type() {
-            RequestType::Rest => Ok(Response::rest(
-                url,
-                response_body,
-                status_code,
-                response_headers,
-                self.get_id(),
-            )),
-            RequestType::GraphQL => Ok(Response::graphql(
-                url,
-                response_body,
-                status_code,
-                response_headers,
-                self.get_id(),
-            )),
-        }
-    }
-
-    #[cfg(not(feature = "blocking"))]
     async fn send(&'a self) -> PrimaBridgeResult<Response> {
         use futures_util::future::TryFutureExt;
         let request_id = self.get_id();
