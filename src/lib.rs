@@ -37,6 +37,8 @@ pub mod prelude;
 mod request;
 mod response;
 
+pub use recloser::Recloser;
+
 #[cfg(feature = "auth0")]
 pub mod auth0;
 

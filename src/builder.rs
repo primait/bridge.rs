@@ -5,8 +5,7 @@ use reqwest::Url;
 use crate::auth0;
 use crate::Bridge;
 use recloser::AsyncRecloser;
-
-pub use recloser::Recloser;
+use recloser::Recloser;
 
 /// A builder for creating Bridge instances
 pub struct BridgeBuilder {
@@ -27,12 +26,6 @@ impl BridgeBuilder {
     }
 
     pub fn with_user_agent(self, user_agent: impl Into<String>) -> Self {
-        #[cfg(not(feature = "auth0"))]
-        let builder = Self {
-            client_builder: self.client_builder.user_agent(user_agent.into().as_str()),
-        };
-
-        #[cfg(feature = "auth0")]
         let builder = Self {
             client_builder: self.client_builder.user_agent(user_agent.into().as_str()),
             ..self

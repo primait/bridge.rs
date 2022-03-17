@@ -12,7 +12,7 @@ pub use request_type::{GraphQLRequest, Request, RestRequest};
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
-use recloser::Error;
+use recloser::{Error, ErrorPredicate};
 
 mod body;
 mod request_type;
@@ -21,6 +21,16 @@ pub enum RequestType {
     Rest,
     #[allow(clippy::upper_case_acronyms)]
     GraphQL,
+}
+
+struct ErrorMatcher;
+
+impl ErrorPredicate<reqwest::Error> for ErrorMatcher {
+    fn is_err(&self, err: &reqwest::Error) -> bool {
+        err.status()
+            .map(|status_code| status_code.is_server_error())
+            .unwrap_or(true)
+    }
 }
 
 /// Represent a request that is ready to be delivered to the server
@@ -167,7 +177,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
                     })
             }
             Some(circuit_breaker) => circuit_breaker
-                .call(request_builder.body(body).send())
+                .call_with(ErrorMatcher, request_builder.body(body).send())
                 .await
                 .map_err(|e| match e {
                     Error::Inner(inner) => PrimaBridgeError::HttpError {

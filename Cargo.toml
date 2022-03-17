@@ -9,7 +9,7 @@ repository = "https://github.com/primait/bridge.rs"
 readme = "README.md"
 
 [features]
-default = ["async", "tracing_opentelemetry"]
+default = ["async", "tracing_opentelemetry", "circuit_breaker"]
 async = ["reqwest", "futures", "futures-util"]
 tracing_opentelemetry = ["opentelemetry", "tracing", "tracing-opentelemetry"]
 gzip = ["reqwest/gzip"]

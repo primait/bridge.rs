@@ -7,6 +7,7 @@ use serde_json::json;
 use prima_bridge::prelude::*;
 
 use crate::common::*;
+use prima_bridge::Recloser;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
@@ -203,15 +204,26 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
 
 #[cfg(feature = "circuit_breaker")]
 #[tokio::test]
-async fn circuit_breaker_breaks_after_x_tries() -> Result<(), Box<dyn Error>> {
+async fn circuit_breaker_breaks_after_3_tries() -> Result<(), Box<dyn Error>> {
     let url = reqwest::Url::parse("http://non-existent-url").unwrap();
-    let bridge = Bridge::new(url);
+    let bridge = Bridge::builder()
+        .with_circuit_breaker(
+            Recloser::custom()
+                .error_rate(1.0)
+                .closed_len(1)
+                .half_open_len(1)
+                .open_wait(std::time::Duration::from_secs(1))
+                .build(),
+        )
+        .build(url);
+
     let result = RestRequest::new(&bridge).send().await;
     let result2 = RestRequest::new(&bridge).send().await;
     let result3 = RestRequest::new(&bridge).send().await;
-    dbg!(result, result2, result3);
 
-    assert!(false);
+    assert!(matches!(result, Err(PrimaBridgeError::HttpError { .. })));
+    assert!(matches!(result2, Err(PrimaBridgeError::HttpError { .. })));
+    assert!(matches!(result3, Err(PrimaBridgeError::CircuitBreakerOpen)));
 
     Ok(())
 }

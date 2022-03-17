@@ -1,2 +1,0 @@
-mod graphql;
-mod rest;
