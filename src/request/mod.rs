@@ -25,11 +25,21 @@ pub enum RequestType {
 
 struct ErrorMatcher;
 
-impl ErrorPredicate<reqwest::Error> for ErrorMatcher {
-    fn is_err(&self, err: &reqwest::Error) -> bool {
-        err.status()
-            .map(|status_code| status_code.is_server_error())
-            .unwrap_or(true)
+impl ErrorPredicate<PrimaBridgeError> for ErrorMatcher {
+    fn is_err(&self, err: &PrimaBridgeError) -> bool {
+        match err {
+            PrimaBridgeError::HttpError { source, .. } => source
+                .status()
+                .map(|status_code| status_code.is_server_error())
+                .unwrap_or(true),
+            PrimaBridgeError::SerializationError(_) => false,
+            PrimaBridgeError::SelectorNotFound(_, _, _) => false,
+            PrimaBridgeError::WrongStatusCode(_, status_code) => status_code.is_server_error(),
+            PrimaBridgeError::ResponseBodyNotDeserializable { .. } => false,
+            PrimaBridgeError::EmptyBody => false,
+            PrimaBridgeError::Utf8Error { .. } => false,
+            PrimaBridgeError::CircuitBreakerOpen => true,
+        }
     }
 }
 
@@ -156,40 +166,20 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[doc(hidden)]
     fn get_request_type(&self) -> RequestType;
 
-    async fn do_send<T>(
-        bridge: &Bridge,
-        request_builder: reqwest::RequestBuilder,
-        url: &Url,
-        body: T,
-    ) -> PrimaBridgeResult<reqwest::Response>
-    where
-        T: Into<reqwest::Body> + Send,
-    {
-        match &bridge.circuit_breaker {
-            None => {
-                request_builder
-                    .body(body)
-                    .send()
-                    .await
-                    .map_err(|e| PrimaBridgeError::HttpError {
-                        url: url.clone(),
-                        source: e,
-                    })
-            }
+    async fn send(&'a self) -> PrimaBridgeResult<Response> {
+        match &self.get_bridge().circuit_breaker {
+            None => self.do_send().await,
             Some(circuit_breaker) => circuit_breaker
-                .call_with(ErrorMatcher, request_builder.body(body).send())
+                .call_with(ErrorMatcher, self.do_send())
                 .await
                 .map_err(|e| match e {
-                    Error::Inner(inner) => PrimaBridgeError::HttpError {
-                        url: url.clone(),
-                        source: inner,
-                    },
+                    Error::Inner(inner) => inner,
                     Error::Rejected => PrimaBridgeError::CircuitBreakerOpen,
                 }),
         }
     }
 
-    async fn send(&'a self) -> PrimaBridgeResult<Response> {
+    async fn do_send(&'a self) -> PrimaBridgeResult<Response> {
         use futures_util::TryFutureExt;
 
         let request_id = self.get_id();
@@ -206,8 +196,14 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             )
             .headers(self.get_all_headers());
 
-        let response =
-            Self::do_send(self.get_bridge(), request_builder, &url, self.get_body()).await?;
+        let response = request_builder
+            .body(self.get_body())
+            .send()
+            .map_err(|e| PrimaBridgeError::HttpError {
+                url: url.clone(),
+                source: e,
+            })
+            .await?;
 
         let status_code = response.status();
         if !self.get_ignore_status_code() && !status_code.is_success() {

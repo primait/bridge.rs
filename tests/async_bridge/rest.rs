@@ -204,8 +204,9 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
 
 #[cfg(feature = "circuit_breaker")]
 #[tokio::test]
-async fn circuit_breaker_breaks_after_3_tries() -> Result<(), Box<dyn Error>> {
-    let url = reqwest::Url::parse("http://non-existent-url").unwrap();
+async fn circuit_breaker_breaks_after_a_failed_attempt_for_a_non_existent_endpoint(
+) -> Result<(), Box<dyn Error>> {
+    let mock = mockito::mock("GET", "/").with_status(200).create();
     let bridge = Bridge::builder()
         .with_circuit_breaker(
             Recloser::custom()
@@ -215,15 +216,61 @@ async fn circuit_breaker_breaks_after_3_tries() -> Result<(), Box<dyn Error>> {
                 .open_wait(std::time::Duration::from_secs(1))
                 .build(),
         )
-        .build(url);
+        .build(mockito::server_url().parse().unwrap());
 
-    let result = RestRequest::new(&bridge).send().await;
-    let result2 = RestRequest::new(&bridge).send().await;
-    let result3 = RestRequest::new(&bridge).send().await;
+    let first_call = RestRequest::new(&bridge).send().await;
+    assert!(first_call.is_ok());
 
-    assert!(matches!(result, Err(PrimaBridgeError::HttpError { .. })));
-    assert!(matches!(result2, Err(PrimaBridgeError::HttpError { .. })));
-    assert!(matches!(result3, Err(PrimaBridgeError::CircuitBreakerOpen)));
+    std::mem::drop(mock);
+
+    let second_call = RestRequest::new(&bridge).send().await;
+    assert!(matches!(
+        second_call,
+        Err(PrimaBridgeError::WrongStatusCode { .. })
+    ));
+
+    let third_call = RestRequest::new(&bridge).send().await;
+    assert!(matches!(
+        third_call,
+        Err(PrimaBridgeError::CircuitBreakerOpen)
+    ));
+
+    Ok(())
+}
+
+#[cfg(feature = "circuit_breaker")]
+#[tokio::test]
+async fn circuit_breaker_breaks_after_a_failed_attempt_for_a_server_error(
+) -> Result<(), Box<dyn Error>> {
+    let _mock = mockito::mock("GET", "/").with_status(500).create();
+    let bridge = Bridge::builder()
+        .with_circuit_breaker(
+            Recloser::custom()
+                .error_rate(1.0)
+                .closed_len(1)
+                .half_open_len(1)
+                .open_wait(std::time::Duration::from_secs(1))
+                .build(),
+        )
+        .build(mockito::server_url().parse().unwrap());
+
+    let first_call = RestRequest::new(&bridge).send().await;
+    assert!(matches!(
+        first_call,
+        Err(PrimaBridgeError::WrongStatusCode { .. })
+    ));
+
+    let second_call = RestRequest::new(&bridge).send().await;
+    assert!(matches!(
+        second_call,
+        Err(PrimaBridgeError::WrongStatusCode { .. })
+    ));
+
+    let third_call = RestRequest::new(&bridge).send().await;
+    assert!(matches!(
+        third_call,
+        Err(PrimaBridgeError::CircuitBreakerOpen)
+    ));
 
     Ok(())
 }
