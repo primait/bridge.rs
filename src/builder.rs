@@ -65,9 +65,7 @@ impl BridgeBuilder {
             endpoint,
             #[cfg(feature = "auth0")]
             auth0_opt: self.auth0,
-            circuit_breaker: self
-                .circuit_breaker
-                .map(|recloser| AsyncRecloser::from(recloser)),
+            circuit_breaker: self.circuit_breaker.map(AsyncRecloser::from),
         }
     }
 }
