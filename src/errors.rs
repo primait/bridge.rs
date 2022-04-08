@@ -25,8 +25,6 @@ pub enum PrimaBridgeError {
         status_code: StatusCode,
         source: serde_json::error::Error,
     },
-    #[error("empty body")]
-    EmptyBody,
     #[error("the response body id not valid utf-8. error: {source}")]
     Utf8Error { source: Utf8Error },
     #[cfg(feature = "circuit_breaker")]

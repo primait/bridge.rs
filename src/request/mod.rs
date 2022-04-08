@@ -36,7 +36,6 @@ impl ErrorPredicate<PrimaBridgeError> for ErrorMatcher {
             PrimaBridgeError::SelectorNotFound(_, _, _) => false,
             PrimaBridgeError::WrongStatusCode(_, status_code) => status_code.is_server_error(),
             PrimaBridgeError::ResponseBodyNotDeserializable { .. } => false,
-            PrimaBridgeError::EmptyBody => false,
             PrimaBridgeError::Utf8Error { .. } => false,
             PrimaBridgeError::CircuitBreakerOpen => true,
         }

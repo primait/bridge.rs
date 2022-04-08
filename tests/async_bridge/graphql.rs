@@ -3,6 +3,7 @@ use std::fs;
 
 use mockito;
 use mockito::{mock, Matcher, Mock};
+use recloser::Recloser;
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::Deserialize;
@@ -171,4 +172,94 @@ fn file_content(path_relative_to_recourses: &str) -> String {
         path_relative_to_recourses
     ))
     .unwrap()
+}
+
+#[cfg(feature = "circuit_breaker")]
+#[tokio::test]
+async fn circuit_breaker_breaks_after_a_failed_attempt_for_a_non_existent_endpoint(
+) -> Result<(), Box<dyn Error>> {
+    let query = file_content("graphql/hero.graphql");
+    let (mock, _) = create_gql_bridge(
+        200,
+        query.as_str(),
+        file_content("graphql/error.json").as_str(),
+    );
+    let bridge = Bridge::builder()
+        .with_circuit_breaker(
+            Recloser::custom()
+                .error_rate(1.0)
+                .closed_len(1)
+                .half_open_len(1)
+                .open_wait(std::time::Duration::from_secs(1))
+                .build(),
+        )
+        .build(mockito::server_url().parse().unwrap());
+
+    let variables: Option<String> = None;
+    let first_call = GraphQLRequest::new(&bridge, (query.as_str(), variables.clone()))?
+        .send()
+        .await;
+    assert!(first_call.is_ok());
+
+    std::mem::drop(mock);
+
+    let second_call = GraphQLRequest::new(&bridge, (query.as_str(), variables.clone()))?
+        .send()
+        .await;
+    assert!(matches!(
+        second_call,
+        Err(PrimaBridgeError::WrongStatusCode { .. })
+    ));
+
+    let third_call = GraphQLRequest::new(&bridge, (query.as_str(), variables.clone()))?
+        .send()
+        .await;
+    assert!(matches!(
+        third_call,
+        Err(PrimaBridgeError::CircuitBreakerOpen)
+    ));
+
+    Ok(())
+}
+
+#[cfg(feature = "circuit_breaker")]
+#[tokio::test]
+async fn circuit_breaker_breaks_after_a_failed_attempt_for_a_server_error(
+) -> Result<(), Box<dyn Error>> {
+    let query = file_content("graphql/hero.graphql");
+    let (_mock, _) = create_gql_bridge(
+        500,
+        query.as_str(),
+        file_content("graphql/error.json").as_str(),
+    );
+    let bridge = Bridge::builder()
+        .with_circuit_breaker(
+            Recloser::custom()
+                .error_rate(1.0)
+                .closed_len(1)
+                .half_open_len(1)
+                .open_wait(std::time::Duration::from_secs(1))
+                .build(),
+        )
+        .build(mockito::server_url().parse().unwrap());
+
+    let first_call = RestRequest::new(&bridge).send().await;
+    assert!(matches!(
+        first_call,
+        Err(PrimaBridgeError::WrongStatusCode { .. })
+    ));
+
+    let second_call = RestRequest::new(&bridge).send().await;
+    assert!(matches!(
+        second_call,
+        Err(PrimaBridgeError::WrongStatusCode { .. })
+    ));
+
+    let third_call = RestRequest::new(&bridge).send().await;
+    assert!(matches!(
+        third_call,
+        Err(PrimaBridgeError::CircuitBreakerOpen)
+    ));
+
+    Ok(())
 }
