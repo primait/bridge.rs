@@ -155,10 +155,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .client
             .request(self.get_method(), url.as_str())
             .timeout(self.get_timeout())
-            .header(
-                HeaderName::from_static("x-request-id"),
-                &request_id.to_string(),
-            )
+            .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
             .headers(self.get_all_headers());
 
         let response = request_builder
@@ -224,12 +221,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             _ => final_endpoint,
         };
 
-        self.get_query_pairs()
-            .iter()
-            .fold(endpoint, |mut url, (name, value)| {
-                url.query_pairs_mut().append_pair(name, value);
-                url
-            })
+        self.get_query_pairs().iter().fold(endpoint, |mut url, (name, value)| {
+            url.query_pairs_mut().append_pair(name, value);
+            url
+        })
     }
 
     #[cfg(feature = "tracing_opentelemetry")]
