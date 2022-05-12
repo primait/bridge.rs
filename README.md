@@ -1,12 +1,12 @@
 [![Build Status](https://drone-1.prima.it/api/badges/primait/bridge.rs/status.svg)](https://drone-1.prima.it/primait/bridge.rs)
 
 # bridge.rs
+
 Prima bridge pattern implementation for rust
 
 [Api documentation](https://docs.rs/prima_bridge)
 
-### Example
-
+## Example
 
 ```rust
 use serde::Deserialize;
@@ -39,5 +39,6 @@ fn main() {
 ```
 
 To understand this example you should know:
- - [once_cell](https://crates.io/crates/once_cell) library providing the cell type
- - Rust error handling to use ? and convert it to a custom error type. See for example [thiserror](https://crates.io/crates/thiserror)
+
+- [once_cell](https://crates.io/crates/once_cell) library providing the cell type
+- Rust error handling to use ? and convert it to a custom error type. See for example [thiserror](https://crates.io/crates/thiserror)
