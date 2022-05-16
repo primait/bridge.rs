@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::time::Duration;
 
@@ -23,6 +24,7 @@ pub struct GraphQLRequest<'a> {
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
     custom_headers: HeaderMap,
+    uploads: HashMap<String, Vec<u8>>,
 }
 
 impl<'a> GraphQLRequest<'a> {
@@ -43,6 +45,28 @@ impl<'a> GraphQLRequest<'a> {
             query_pairs: Default::default(),
             ignore_status_code: Default::default(),
             custom_headers,
+            uploads: HashMap::new(),
+        })
+    }
+
+    pub fn new_with_uploads<S: Serialize>(
+        bridge: &'a Bridge,
+        graphql_body: impl Into<GraphQLBody<S>>,
+        uploads: HashMap<String, Vec<u8>>,
+    ) -> PrimaBridgeResult<Self> {
+        let mut custom_headers = HeaderMap::default();
+        custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+        Ok(Self {
+            id: Uuid::new_v4(),
+            bridge,
+            body: Some(serde_json::to_string(&graphql_body.into())?.try_into()?),
+            method: Method::POST,
+            path: Default::default(),
+            timeout: Duration::from_secs(60),
+            query_pairs: Default::default(),
+            ignore_status_code: Default::default(),
+            custom_headers,
+            uploads,
         })
     }
 }
@@ -146,5 +170,23 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 
     fn get_request_type(&self) -> RequestType {
         RequestType::GraphQL
+    }
+
+    fn get_form(&self) -> Option<reqwest::multipart::Form> {
+        if self.uploads.is_empty() {
+            None
+        } else {
+            let mut form = reqwest::multipart::Form::new();
+            form = form.text("operations", String::from(self.body.as_ref().unwrap()));
+
+            let mut map = HashMap::<String, Vec<String>>::new();
+            for (index, (path, file)) in self.uploads.iter().enumerate() {
+                map.insert(format!("{index}"), vec![path.clone()]);
+                form = form.part(format!("{index}"), reqwest::multipart::Part::bytes(file.to_vec()));
+            }
+            form = form.text("map", serde_json::to_string(&map).unwrap());
+
+            Some(form)
+        }
     }
 }

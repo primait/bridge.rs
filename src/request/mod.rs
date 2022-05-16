@@ -51,6 +51,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// adds a new set of headers to the request. Any header already present gets merged.
     fn set_custom_headers(self, headers: HeaderMap) -> Self;
 
+    fn get_form(&self) -> Option<reqwest::multipart::Form> {
+        None
+    }
+
     /// adds a new set of headers to the request. Any header already present gets merged.
     fn add_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         let mut custom_headers = HeaderMap::new();
@@ -161,8 +165,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             )
             .headers(self.get_all_headers());
 
-        let response = request_builder
-            .body(self.get_body())
+        let response = match self.get_form() {
+            Some(form) => request_builder.multipart(form),
+            None => request_builder.body(self.get_body()),
+        }
             .send()
             .map_err(|e| PrimaBridgeError::HttpError {
                 url: url.clone(),

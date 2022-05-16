@@ -21,6 +21,12 @@ impl From<&str> for Body {
     }
 }
 
+impl From<&Body> for String {
+    fn from(body: &Body) -> Self {
+        String::from_utf8_lossy(&body.inner).to_string()
+    }
+}
+
 impl From<Vec<u8>> for Body {
     fn from(value: Vec<u8>) -> Self {
         Self { inner: value }
