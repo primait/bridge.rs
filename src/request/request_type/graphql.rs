@@ -54,8 +54,6 @@ impl<'a> GraphQLRequest<'a> {
         graphql_body: impl Into<GraphQLBody<S>>,
         uploads: HashMap<String, Vec<u8>>,
     ) -> PrimaBridgeResult<Self> {
-        let mut custom_headers = HeaderMap::default();
-        custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
@@ -181,8 +179,12 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 
             let mut map = HashMap::<String, Vec<String>>::new();
             for (index, (path, file)) in self.uploads.iter().enumerate() {
-                map.insert(format!("{index}"), vec![path.clone()]);
-                form = form.part(format!("{index}"), reqwest::multipart::Part::bytes(file.to_vec()));
+                map.insert(index.to_string(), vec![path.clone()]);
+
+                form = form.part(
+                    index.to_string(),
+                    reqwest::multipart::Part::bytes(file.to_vec()),
+                );
             }
             form = form.text("map", serde_json::to_string(&map).unwrap());
 
