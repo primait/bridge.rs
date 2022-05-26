@@ -18,8 +18,8 @@ pub enum PrimaBridgeError {
     SerializationError(#[from] serde_json::error::Error),
     #[error("selector not found while calling {0}. the data for key `{1}` cannot be found in payload: {2}")]
     SelectorNotFound(Url, String, Value),
-    #[error("wrong response status code while calling {0}: {1}")]
-    WrongStatusCode(Url, StatusCode),
+    #[error("wrong response status code while calling {0}: {1}: {2}")]
+    WrongStatusCode(Url, StatusCode, String),
     #[error("unserializable body. response status code: {status_code}, error: {source}")]
     ResponseBodyNotDeserializable {
         status_code: StatusCode,
