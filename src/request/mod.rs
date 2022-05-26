@@ -169,12 +169,12 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             Some(form) => request_builder.multipart(form),
             None => request_builder.body(self.get_body()),
         }
-            .send()
-            .map_err(|e| PrimaBridgeError::HttpError {
-                url: url.clone(),
-                source: e,
-            })
-            .await?;
+        .send()
+        .map_err(|e| PrimaBridgeError::HttpError {
+            url: url.clone(),
+            source: e,
+        })
+        .await?;
 
         let status_code = response.status();
         if !self.get_ignore_status_code() && !status_code.is_success() {

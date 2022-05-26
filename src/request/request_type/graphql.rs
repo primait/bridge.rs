@@ -181,8 +181,11 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 
             let mut map = HashMap::<String, Vec<String>>::new();
             for (index, (path, file)) in self.uploads.iter().enumerate() {
-                map.insert(format!("{index}"), vec![path.clone()]);
-                form = form.part(format!("{index}"), reqwest::multipart::Part::bytes(file.to_vec()));
+                map.insert(index.to_string(), vec![path.clone()]);
+                form = form.part(
+                    index.to_string(),
+                    reqwest::multipart::Part::bytes(file.to_vec()),
+                );
             }
             form = form.text("map", serde_json::to_string(&map).unwrap());
 
