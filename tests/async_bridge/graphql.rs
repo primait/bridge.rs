@@ -19,11 +19,7 @@ struct Person {
 #[tokio::test]
 async fn simple_request() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(
-        200,
-        query,
-        "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
-    );
+    let (_m, bridge) = create_gql_bridge(200, query, "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}");
     let variables: Option<String> = None;
 
     let result: Person = Request::graphql(&bridge, (query, variables))?
@@ -44,11 +40,7 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(
-        200,
-        query,
-        "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
-    );
+    let (_m, bridge) = create_gql_bridge(200, query, "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}");
 
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query, variables))?
@@ -130,11 +122,7 @@ async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Err
 #[tokio::test]
 async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
     let query = file_content("graphql/hero.graphql");
-    let (_m, bridge) = create_gql_bridge(
-        200,
-        query.as_str(),
-        file_content("graphql/error.json").as_str(),
-    );
+    let (_m, bridge) = create_gql_bridge(200, query.as_str(), file_content("graphql/error.json").as_str());
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
@@ -165,10 +153,5 @@ fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Brid
 fn file_content(path_relative_to_recourses: &str) -> String {
     let mut base_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     base_dir.push("tests/resources");
-    fs::read_to_string(format!(
-        "{}/{}",
-        base_dir.to_str().unwrap(),
-        path_relative_to_recourses
-    ))
-    .unwrap()
+    fs::read_to_string(format!("{}/{}", base_dir.to_str().unwrap(), path_relative_to_recourses)).unwrap()
 }

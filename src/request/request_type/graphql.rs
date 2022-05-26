@@ -27,15 +27,12 @@ pub struct GraphQLRequest<'a> {
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
     custom_headers: HeaderMap,
-    uploads: HashMap<String, GraphqlFileUpload>,
+    uploads: Vec<GraphqlFileUpload>,
 }
 
 impl<'a> GraphQLRequest<'a> {
     /// creates a new GraphQLRequest
-    pub fn new<S: Serialize>(
-        bridge: &'a Bridge,
-        graphql_body: impl Into<GraphQLBody<S>>,
-    ) -> PrimaBridgeResult<Self> {
+    pub fn new<S: Serialize>(bridge: &'a Bridge, graphql_body: impl Into<GraphQLBody<S>>) -> PrimaBridgeResult<Self> {
         let mut custom_headers = HeaderMap::default();
         custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         Ok(Self {
@@ -48,14 +45,14 @@ impl<'a> GraphQLRequest<'a> {
             query_pairs: Default::default(),
             ignore_status_code: Default::default(),
             custom_headers,
-            uploads: HashMap::new(),
+            uploads: vec![],
         })
     }
 
     pub fn new_with_uploads<S: Serialize>(
         bridge: &'a Bridge,
         graphql_body: impl Into<GraphQLBody<S>>,
-        uploads: HashMap<String, GraphqlFileUpload>,
+        uploads: Vec<GraphqlFileUpload>,
     ) -> PrimaBridgeResult<Self> {
         Ok(Self {
             id: Uuid::new_v4(),
@@ -122,10 +119,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
     }
 
     fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self {
-        Self {
-            query_pairs,
-            ..self
-        }
+        Self { query_pairs, ..self }
     }
 
     fn get_id(&self) -> Uuid {
@@ -178,11 +172,12 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
             None
         } else {
             let mut form: Form = Form::new();
+            let mut map: HashMap<String, Vec<String>> = HashMap::<String, Vec<String>>::new();
+
             form = form.text("operations", String::from(self.body.as_ref().unwrap()));
 
-            let mut map = HashMap::<String, Vec<String>>::new();
-            for (index, (path, file)) in self.uploads.iter().enumerate() {
-                map.insert(index.to_string(), vec![path.clone()]);
+            for (index, file) in self.uploads.iter().enumerate() {
+                map.insert(index.to_string(), vec![format!("{}.{}", file.path.as_str(), index)]);
                 let part: Part = Part::bytes(file.bytes.clone()).file_name(file.name());
                 form = form.part(index.to_string(), part);
             }
@@ -194,14 +189,16 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 }
 
 pub struct GraphqlFileUpload {
+    path: String,
     bytes: Vec<u8>,
     name_opt: Option<String>,
     mime_type_opt: Option<String>,
 }
 
 impl GraphqlFileUpload {
-    pub fn new(bytes: Vec<u8>) -> Self {
+    pub fn new(path: impl Into<String>, bytes: Vec<u8>) -> Self {
         Self {
+            path: path.into(),
             bytes,
             name_opt: None,
             mime_type_opt: None,
@@ -215,9 +212,9 @@ impl GraphqlFileUpload {
         }
     }
 
-    pub fn with_name(self, name: String) -> Self {
+    pub fn with_name(self, name: impl Into<String>) -> Self {
         Self {
-            name_opt: Some(name),
+            name_opt: Some(name.into()),
             ..self
         }
     }
@@ -226,9 +223,9 @@ impl GraphqlFileUpload {
         self.mime_type_opt
     }
 
-    pub fn with_mime_type(self, mime_type: String) -> Self {
+    pub fn with_mime_type(self, mime_type: impl Into<String>) -> Self {
         Self {
-            mime_type_opt: Some(mime_type),
+            mime_type_opt: Some(mime_type.into()),
             ..self
         }
     }
