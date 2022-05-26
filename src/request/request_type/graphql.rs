@@ -187,6 +187,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                     reqwest::multipart::Part::bytes(file.to_vec()),
                 );
             }
+            println!("{}", serde_json::to_string(&map).unwrap());
             form = form.text("map", serde_json::to_string(&map).unwrap());
 
             Some(form)
