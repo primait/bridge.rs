@@ -178,6 +178,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
         let status_code = response.status();
         if !self.get_ignore_status_code() && !status_code.is_success() {
+            dbg!(&response);
             return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
 
