@@ -63,7 +63,7 @@ impl<'a> GraphQLRequest<'a> {
             timeout: Duration::from_secs(60),
             query_pairs: Default::default(),
             ignore_status_code: Default::default(),
-            custom_headers,
+            custom_headers: HeaderMap::default(),
             uploads,
         })
     }
