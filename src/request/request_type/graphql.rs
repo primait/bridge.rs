@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
+use reqwest::multipart::{Form, Part};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
@@ -11,6 +12,8 @@ use uuid::Uuid;
 use crate::errors::PrimaBridgeResult;
 use crate::request::{Body, DeliverableRequest, GraphQLBody, RequestType};
 use crate::Bridge;
+
+const DEFAULT_FILENAME: &str = "default";
 
 /// The GraphQLRequest is a struct that represent a GraphQL request to be done with the [Bridge](./../struct.Bridge.html)
 #[allow(clippy::upper_case_acronyms)]
@@ -24,7 +27,7 @@ pub struct GraphQLRequest<'a> {
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
     custom_headers: HeaderMap,
-    uploads: HashMap<String, Vec<u8>>,
+    uploads: HashMap<String, GraphqlFileUpload>,
 }
 
 impl<'a> GraphQLRequest<'a> {
@@ -52,7 +55,7 @@ impl<'a> GraphQLRequest<'a> {
     pub fn new_with_uploads<S: Serialize>(
         bridge: &'a Bridge,
         graphql_body: impl Into<GraphQLBody<S>>,
-        uploads: HashMap<String, Vec<u8>>,
+        uploads: HashMap<String, GraphqlFileUpload>,
     ) -> PrimaBridgeResult<Self> {
         Ok(Self {
             id: Uuid::new_v4(),
@@ -170,25 +173,63 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         RequestType::GraphQL
     }
 
-    fn get_form(&self) -> Option<reqwest::multipart::Form> {
+    fn get_form(&self) -> Option<Form> {
         if self.uploads.is_empty() {
             None
         } else {
-            let mut form = reqwest::multipart::Form::new();
+            let mut form: Form = Form::new();
             form = form.text("operations", String::from(self.body.as_ref().unwrap()));
 
             let mut map = HashMap::<String, Vec<String>>::new();
             for (index, (path, file)) in self.uploads.iter().enumerate() {
                 map.insert(index.to_string(), vec![path.clone()]);
-
-                form = form.part(
-                    index.to_string(),
-                    reqwest::multipart::Part::bytes(file.to_vec()),
-                );
+                let part: Part = Part::bytes(file.bytes.clone()).file_name(file.name());
+                form = form.part(index.to_string(), part);
             }
             form = form.text("map", serde_json::to_string(&map).unwrap());
 
             Some(form)
+        }
+    }
+}
+
+pub struct GraphqlFileUpload {
+    bytes: Vec<u8>,
+    name_opt: Option<String>,
+    mime_type_opt: Option<String>,
+}
+
+impl GraphqlFileUpload {
+    pub fn new(bytes: Vec<u8>) -> Self {
+        Self {
+            bytes,
+            name_opt: None,
+            mime_type_opt: None,
+        }
+    }
+
+    pub fn name(&self) -> String {
+        match &self.name_opt {
+            Some(name) => name.clone(),
+            None => DEFAULT_FILENAME.to_string(),
+        }
+    }
+
+    pub fn with_name(self, name: String) -> Self {
+        Self {
+            name_opt: Some(name),
+            ..self
+        }
+    }
+
+    pub fn mime_type(self) -> Option<String> {
+        self.mime_type_opt
+    }
+
+    pub fn with_mime_type(self, mime_type: String) -> Self {
+        Self {
+            mime_type_opt: Some(mime_type),
+            ..self
         }
     }
 }

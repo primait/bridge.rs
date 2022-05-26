@@ -2,6 +2,7 @@ use reqwest::Method;
 use serde::Serialize;
 
 pub use graphql::GraphQLRequest;
+pub use graphql::GraphqlFileUpload;
 pub use rest::RestRequest;
 
 use crate::errors::PrimaBridgeResult;

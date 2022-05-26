@@ -21,7 +21,7 @@ use reqwest::Url;
 
 pub use self::{
     builder::BridgeBuilder,
-    request::{GraphQLRequest, Request},
+    request::{GraphQLRequest, Request, GraphqlFileUpload},
     response::graphql::{
         Error, ParsedGraphqlResponse, ParsedGraphqlResponseExt, PossiblyParsedData,
     },
