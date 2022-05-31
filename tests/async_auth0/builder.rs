@@ -5,10 +5,7 @@ use prima_bridge::prelude::*;
 
 use crate::async_auth0::{config, Auth0Mocks};
 
-pub(in crate::async_auth0) async fn create_bridge(
-    status_code: usize,
-    body: &str,
-) -> (Auth0Mocks, Bridge) {
+pub(in crate::async_auth0) async fn create_bridge(status_code: usize, body: &str) -> (Auth0Mocks, Bridge) {
     create_bridge_with_path(status_code, body, "/").await
 }
 
@@ -26,9 +23,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_base_and_path(
     let mock = mock("GET", format!("/{}/{}", base, path).as_str())
         .match_header(
             "x-request-id",
-            Matcher::Regex(
-                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
-            ),
+            Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
         )
         .match_header(
             reqwest::header::AUTHORIZATION.as_str(),
@@ -55,9 +50,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_path(
     let mock = mock("GET", path)
         .match_header(
             "x-request-id",
-            Matcher::Regex(
-                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
-            ),
+            Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
         )
         .match_header(
             reqwest::header::AUTHORIZATION.as_str(),
@@ -85,9 +78,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_path_and_header(
     let mock = mock("GET", path)
         .match_header(
             "x-request-id",
-            Matcher::Regex(
-                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
-            ),
+            Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
         )
         .match_header(
             reqwest::header::AUTHORIZATION.as_str(),
@@ -103,9 +94,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_path_and_header(
     (mocks, bridge)
 }
 
-pub(in crate::async_auth0) async fn create_bridge_with_raw_body_matcher(
-    body: &str,
-) -> (Auth0Mocks, Bridge) {
+pub(in crate::async_auth0) async fn create_bridge_with_raw_body_matcher(body: &str) -> (Auth0Mocks, Bridge) {
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
     let mut mocks: Auth0Mocks = Auth0Mocks::new();
     let bridge = Bridge::builder().with_auth0(config()).await.build(url);
@@ -113,9 +102,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_raw_body_matcher(
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
-            Matcher::Regex(
-                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
-            ),
+            Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
         )
         .match_header(
             reqwest::header::AUTHORIZATION.as_str(),
@@ -140,9 +127,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_header_matcher(
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
-            Matcher::Regex(
-                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
-            ),
+            Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
         )
         .match_header(
             reqwest::header::AUTHORIZATION.as_str(),
@@ -157,9 +142,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_header_matcher(
     (mocks, bridge)
 }
 
-pub(in crate::async_auth0) async fn create_bridge_with_user_agent(
-    user_agent: &str,
-) -> (Auth0Mocks, Bridge) {
+pub(in crate::async_auth0) async fn create_bridge_with_user_agent(user_agent: &str) -> (Auth0Mocks, Bridge) {
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
     let mut mocks: Auth0Mocks = Auth0Mocks::new();
     let bridge = Bridge::builder()
@@ -171,9 +154,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_user_agent(
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
-            Matcher::Regex(
-                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
-            ),
+            Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
         )
         .match_header(
             reqwest::header::AUTHORIZATION.as_str(),
@@ -198,9 +179,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_json_body_matcher(
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
-            Matcher::Regex(
-                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
-            ),
+            Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
         )
         .match_header(
             reqwest::header::AUTHORIZATION.as_str(),
@@ -215,9 +194,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_json_body_matcher(
     (mocks, bridge)
 }
 
-pub(in crate::async_auth0) async fn create_bridge_with_binary_body_matcher(
-    body: &[u8],
-) -> (Auth0Mocks, Bridge) {
+pub(in crate::async_auth0) async fn create_bridge_with_binary_body_matcher(body: &[u8]) -> (Auth0Mocks, Bridge) {
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
     let mut mocks: Auth0Mocks = Auth0Mocks::new();
     let bridge = Bridge::builder().with_auth0(config()).await.build(url);
@@ -225,9 +202,7 @@ pub(in crate::async_auth0) async fn create_bridge_with_binary_body_matcher(
     let mock = mock("GET", "/")
         .match_header(
             "x-request-id",
-            Matcher::Regex(
-                r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string(),
-            ),
+            Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
         )
         .match_header(
             reqwest::header::AUTHORIZATION.as_str(),

@@ -16,8 +16,7 @@ pub struct RedisCache {
 
 impl RedisCache {
     pub async fn new(config_ref: &Config) -> Result<Self, Auth0Error> {
-        let client: redis::Client =
-            redis::Client::open(config_ref.cache_type().redis_connection_url())?;
+        let client: redis::Client = redis::Client::open(config_ref.cache_type().redis_connection_url())?;
         // Ensure connection is fine. Should fail otherwise
         let _ = client.get_async_connection().await?;
 
@@ -64,11 +63,7 @@ impl Cache for RedisCache {
         self.get(key).await
     }
 
-    async fn put_jwks(
-        &self,
-        value_ref: &JsonWebKeySet,
-        expiration: Option<usize>,
-    ) -> Result<(), Auth0Error> {
+    async fn put_jwks(&self, value_ref: &JsonWebKeySet, expiration: Option<usize>) -> Result<(), Auth0Error> {
         let key: &str = &cache::jwks_key(&self.caller, &self.audience);
         let mut connection = self.client.get_async_connection().await?;
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;

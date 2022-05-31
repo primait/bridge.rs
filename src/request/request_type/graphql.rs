@@ -34,10 +34,7 @@ pub struct GraphQLRequest<'a> {
 
 impl<'a> GraphQLRequest<'a> {
     /// creates a new GraphQLRequest
-    pub fn new<S: Serialize>(
-        bridge: &'a Bridge,
-        graphql_body: impl Into<GraphQLBody<S>>,
-    ) -> PrimaBridgeResult<Self> {
+    pub fn new<S: Serialize>(bridge: &'a Bridge, graphql_body: impl Into<GraphQLBody<S>>) -> PrimaBridgeResult<Self> {
         let mut custom_headers = HeaderMap::default();
         custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         Ok(Self {
@@ -169,10 +166,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
     }
 
     fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self {
-        Self {
-            query_pairs,
-            ..self
-        }
+        Self { query_pairs, ..self }
     }
 
     fn get_id(&self) -> Uuid {
