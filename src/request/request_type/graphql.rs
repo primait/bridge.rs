@@ -74,11 +74,7 @@ impl<'a> GraphQLRequest<'a> {
 
                 match value_opt {
                     Some(value) => *value = json!(Value::Null),
-                    None => {
-                        return Err(PrimaBridgeError::MultipartFilePathNotFound(
-                            single.path.clone(),
-                        ))
-                    }
+                    None => return Err(PrimaBridgeError::MultipartFilePathNotFound(single.path.clone())),
                 };
             }
             Multipart::Multiple(multiple) => {
@@ -89,13 +85,8 @@ impl<'a> GraphQLRequest<'a> {
                     }
 
                     match value_opt {
-                        Some(value) => {
-                            *value =
-                                json!(Value::Array(files.iter().map(|_| Value::Null).collect()))
-                        }
-                        None => {
-                            return Err(PrimaBridgeError::MultipartFilePathNotFound(path.clone()))
-                        }
+                        Some(value) => *value = json!(Value::Array(files.iter().map(|_| Value::Null).collect())),
+                        None => return Err(PrimaBridgeError::MultipartFilePathNotFound(path.clone())),
                     };
                 }
             }
@@ -225,8 +216,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                 match multipart {
                     Multipart::Single(single) => {
                         map.insert(ZERO.to_string(), vec![single.path.to_string()]);
-                        let part: Part =
-                            Part::bytes(single.file.bytes().to_vec()).file_name(single.file.name());
+                        let part: Part = Part::bytes(single.file.bytes().to_vec()).file_name(single.file.name());
                         form = form.part(ZERO.to_string(), part);
                     }
                     Multipart::Multiple(multiple) => {
@@ -234,8 +224,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                         for (path, files) in multiple.map.iter() {
                             for (id, file) in files.iter().enumerate() {
                                 map.insert(index.to_string(), vec![format!("{}.{}", path, id)]);
-                                let part: Part =
-                                    Part::bytes(file.bytes().to_vec()).file_name(file.name());
+                                let part: Part = Part::bytes(file.bytes().to_vec()).file_name(file.name());
                                 form = form.part(index.to_string(), part);
                                 index += 1;
                             }
@@ -284,9 +273,7 @@ pub struct Multiple {
 
 impl Multiple {
     pub fn new() -> Self {
-        Self {
-            map: HashMap::new(),
-        }
+        Self { map: HashMap::new() }
     }
 
     pub fn add_file(mut self, path: String, file: MultipartFile) -> Self {
