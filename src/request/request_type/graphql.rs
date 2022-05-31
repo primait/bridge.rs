@@ -71,7 +71,7 @@ impl<'a> GraphQLRequest<'a> {
         match &multipart {
             Multipart::Single(single) => {
                 let mut value_opt: Option<&mut Value> = Some(&mut body_as_value);
-                for path in single.path.split(".").collect::<Vec<&str>>() {
+                for path in single.path.split('.').collect::<Vec<&str>>() {
                     value_opt = value_opt.and_then(|a| a.get_mut(path));
                 }
 
@@ -87,7 +87,7 @@ impl<'a> GraphQLRequest<'a> {
             Multipart::Multiple(multiple) => {
                 for (path, files) in &multiple.map {
                     let mut value_opt: Option<&mut Value> = Some(&mut body_as_value);
-                    for path in path.split(".").collect::<Vec<&str>>() {
+                    for path in path.split('.').collect::<Vec<&str>>() {
                         value_opt = value_opt.and_then(|a| a.get_mut(path));
                     }
 
@@ -307,6 +307,12 @@ impl Multiple {
             }
         };
         self
+    }
+}
+
+impl Default for Multiple {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
