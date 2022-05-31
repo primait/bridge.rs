@@ -42,9 +42,9 @@ impl From<Body> for Vec<u8> {
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Serialize)]
 pub struct GraphQLBody<T> {
-    query: String,
+    pub(crate) query: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    variables: Option<T>,
+    pub(crate) variables: Option<T>,
 }
 
 impl<T: Serialize> From<(&str, Option<T>)> for GraphQLBody<T> {

@@ -27,6 +27,10 @@ pub enum PrimaBridgeError {
     },
     #[error("empty body")]
     EmptyBody,
+    #[error("empty variables in multipart request")]
+    EmptyVariablesInMultipartRequest,
+    #[error("multipart file path not found: {0}")]
+    MultipartFilePathNotFound(String),
     #[error("the response body id not valid utf-8. error: {source}")]
     Utf8Error { source: Utf8Error },
 }
