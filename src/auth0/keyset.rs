@@ -37,7 +37,12 @@ impl JsonWebKeySet {
             })?
             .json::<Self>()
             .await
-            .map_err(|e| Auth0Error::JwksFetchDeserializationError(config_ref.jwks_url().as_str().to_string(), e))
+            .map_err(|e| {
+                Auth0Error::JwksFetchDeserializationError(
+                    config_ref.jwks_url().as_str().to_string(),
+                    e,
+                )
+            })
     }
 }
 

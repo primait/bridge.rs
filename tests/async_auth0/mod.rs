@@ -13,7 +13,8 @@ mod rest;
 
 fn config() -> Config {
     Config {
-        token_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap(),
+        token_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "token"))
+            .unwrap(),
         jwks_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "jwks")).unwrap(),
         caller: "caller".to_string(),
         audience: "audience".to_string(),
@@ -35,7 +36,10 @@ struct Auth0Mocks {
 impl Auth0Mocks {
     pub fn new() -> Self {
         let content: String = std::fs::read_to_string("tests/resources/auth0/jwks.json").unwrap();
-        let jwks: Mock = mock("GET", "/jwks").with_status(200).with_body(content).create();
+        let jwks: Mock = mock("GET", "/jwks")
+            .with_status(200)
+            .with_body(content)
+            .create();
 
         let claims: Claims = Claims::new("test".to_string());
         let object: FetchTokenResponse = FetchTokenResponse {
@@ -71,11 +75,15 @@ struct Claims {
 
 impl Claims {
     pub fn new(aud: String) -> Self {
-        Self { aud, exp: Some(86400) }
+        Self {
+            aud,
+            exp: Some(86400),
+        }
     }
 
     pub fn as_jwt(&self) -> String {
-        let content: String = std::fs::read_to_string("tests/resources/auth0/test_cert_key.pem").unwrap();
+        let content: String =
+            std::fs::read_to_string("tests/resources/auth0/test_cert_key.pem").unwrap();
         jsonwebtoken::encode(
             &jsonwebtoken::Header::new(Algorithm::RS256),
             &self,

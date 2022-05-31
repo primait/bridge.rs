@@ -81,8 +81,10 @@ impl Config {
     pub fn test_config() -> Config {
         use std::str::FromStr;
         Config {
-            token_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap(),
-            jwks_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "jwks")).unwrap(),
+            token_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "token"))
+                .unwrap(),
+            jwks_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "jwks"))
+                .unwrap(),
             caller: "caller".to_string(),
             audience: "audience".to_string(),
             cache_type: CacheType::Inmemory,

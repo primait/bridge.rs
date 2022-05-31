@@ -76,7 +76,10 @@ async fn start(
 
                 let jwks_opt = match JsonWebKeySet::fetch(&client, &config).await {
                     Ok(jwks) => {
-                        let _ = cache.put_jwks(&jwks, None).await.log_err("Error caching JWKS");
+                        let _ = cache
+                            .put_jwks(&jwks, None)
+                            .await
+                            .log_err("Error caching JWKS");
                         write(&jwks_lock, jwks.clone());
                         Some(jwks)
                     }
@@ -111,7 +114,10 @@ async fn get_jwks(
         Some(jwks) => Ok(jwks),
         None => {
             let jwks: JsonWebKeySet = JsonWebKeySet::fetch(client_ref, config_ref).await?;
-            let _ = cache_ref.put_jwks(&jwks, None).await.log_err("JWKS cache set failed");
+            let _ = cache_ref
+                .put_jwks(&jwks, None)
+                .await
+                .log_err("JWKS cache set failed");
 
             Ok(jwks)
         }
@@ -119,12 +125,19 @@ async fn get_jwks(
 }
 
 // Try to fetch the token from cache. If it's found return it; fetch from auth0 and put in cache otherwise
-async fn get_token(client_ref: &Client, cache_ref: &Arc<dyn Cache>, config_ref: &Config) -> Result<Token, Auth0Error> {
+async fn get_token(
+    client_ref: &Client,
+    cache_ref: &Arc<dyn Cache>,
+    config_ref: &Config,
+) -> Result<Token, Auth0Error> {
     match cache_ref.get_token().await? {
         Some(token) => Ok(token),
         None => {
             let token: Token = Token::fetch(client_ref, config_ref).await?;
-            let _ = cache_ref.put_token(&token).await.log_err("JWT cache set failed");
+            let _ = cache_ref
+                .put_token(&token)
+                .await
+                .log_err("JWT cache set failed");
 
             Ok(token)
         }
@@ -132,7 +145,9 @@ async fn get_token(client_ref: &Client, cache_ref: &Arc<dyn Cache>, config_ref: 
 }
 
 fn read<T: Clone>(lock_ref: &Arc<RwLock<T>>) -> T {
-    let lock_guard: RwLockReadGuard<T> = lock_ref.read().unwrap_or_else(|poison_error| poison_error.into_inner());
+    let lock_guard: RwLockReadGuard<T> = lock_ref
+        .read()
+        .unwrap_or_else(|poison_error| poison_error.into_inner());
     (*lock_guard).clone()
 }
 

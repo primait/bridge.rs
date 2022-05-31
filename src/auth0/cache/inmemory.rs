@@ -48,7 +48,11 @@ impl Cache for InMemoryCache {
             .transpose()
     }
 
-    async fn put_jwks(&self, value_ref: &JsonWebKeySet, _expiration: Option<usize>) -> Result<(), Auth0Error> {
+    async fn put_jwks(
+        &self,
+        value_ref: &JsonWebKeySet,
+        _expiration: Option<usize>,
+    ) -> Result<(), Auth0Error> {
         let key: String = cache::jwks_key(&self.caller, &self.audience);
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
         let _ = self.key_value.insert(key, encrypted_value);

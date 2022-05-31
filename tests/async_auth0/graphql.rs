@@ -20,7 +20,12 @@ struct Person {
 #[tokio::test]
 async fn simple_request() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(200, query, "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}").await;
+    let (_m, bridge) = create_gql_bridge(
+        200,
+        query,
+        "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
+    )
+    .await;
 
     let variables: Option<String> = None;
 
@@ -42,13 +47,19 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(200, query, "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}").await;
+    let (_m, bridge) = create_gql_bridge(
+        200,
+        query,
+        "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
+    )
+    .await;
 
     let variables: Option<String> = None;
-    let gql_request: GraphQLRequest = GraphQLRequest::new(&bridge, (query, variables))?.with_custom_headers(vec![(
-        HeaderName::from_static("x-prima"),
-        HeaderValue::from_static("test-value"),
-    )]);
+    let gql_request: GraphQLRequest = GraphQLRequest::new(&bridge, (query, variables))?
+        .with_custom_headers(vec![(
+            HeaderName::from_static("x-prima"),
+            HeaderValue::from_static("test-value"),
+        )]);
 
     let bearer: String = bridge.token().unwrap().to_bearer();
     let headers = gql_request.get_all_headers();
@@ -129,7 +140,12 @@ async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Err
 #[tokio::test]
 async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
     let query = file_content("graphql/hero.graphql");
-    let (_m, bridge) = create_gql_bridge(200, query.as_str(), file_content("graphql/error.json").as_str()).await;
+    let (_m, bridge) = create_gql_bridge(
+        200,
+        query.as_str(),
+        file_content("graphql/error.json").as_str(),
+    )
+    .await;
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
@@ -167,5 +183,10 @@ async fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Auth
 fn file_content(path_relative_to_recourses: &str) -> String {
     let mut base_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     base_dir.push("tests/resources");
-    std::fs::read_to_string(format!("{}/{}", base_dir.to_str().unwrap(), path_relative_to_recourses)).unwrap()
+    std::fs::read_to_string(format!(
+        "{}/{}",
+        base_dir.to_str().unwrap(),
+        path_relative_to_recourses
+    ))
+    .unwrap()
 }

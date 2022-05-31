@@ -99,7 +99,9 @@ impl Response {
     where
         for<'de> T: Deserialize<'de>,
     {
-        ParsedGraphqlResponse::from_str(std::str::from_utf8(self.raw_body()).map_err(PrimaBridgeError::utf8_error)?)
+        ParsedGraphqlResponse::from_str(
+            std::str::from_utf8(self.raw_body()).map_err(PrimaBridgeError::utf8_error)?,
+        )
     }
 
     pub fn raw_body(&self) -> &Vec<u8> {
@@ -120,11 +122,17 @@ fn extract_inner_json<T>(url: Url, selectors: Vec<&str>, json_value: Value) -> P
 where
     for<'de> T: Deserialize<'de> + Debug,
 {
-    let inner_result = selectors
-        .into_iter()
-        .try_fold(&json_value, |acc: &Value, accessor: &str| {
-            acc.get(accessor)
-                .ok_or_else(|| PrimaBridgeError::SelectorNotFound(url.clone(), accessor.to_string(), acc.clone()))
-        })?;
+    let inner_result =
+        selectors
+            .into_iter()
+            .try_fold(&json_value, |acc: &Value, accessor: &str| {
+                acc.get(accessor).ok_or_else(|| {
+                    PrimaBridgeError::SelectorNotFound(
+                        url.clone(),
+                        accessor.to_string(),
+                        acc.clone(),
+                    )
+                })
+            })?;
     Ok(serde_json::from_value::<T>(inner_result.clone())?)
 }

@@ -41,10 +41,9 @@ impl Token {
             return Err(Auth0Error::JwtFetchAuthError(status_code));
         }
 
-        let response: FetchTokenResponse = response
-            .json()
-            .await
-            .map_err(|e| Auth0Error::JwtFetchDeserializationError(config_ref.token_url().as_str().to_string(), e))?;
+        let response: FetchTokenResponse = response.json().await.map_err(|e| {
+            Auth0Error::JwtFetchDeserializationError(config_ref.token_url().as_str().to_string(), e)
+        })?;
 
         let access_token: String = response.access_token.clone();
 
@@ -95,7 +94,10 @@ impl Token {
     // Check if the token remaining lifetime it's less than a randomized percentage that is between
     // `max_token_remaining_life_percentage` and `min_token_remaining_life_percentage`
     pub fn needs_refresh(&self, config_ref: &Config) -> bool {
-        self.remaining_life_percentage() < config_ref.staleness_check_percentage().random_value_between()
+        self.remaining_life_percentage()
+            < config_ref
+                .staleness_check_percentage()
+                .random_value_between()
     }
 
     pub fn to_bearer(&self) -> String {

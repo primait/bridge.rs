@@ -53,7 +53,10 @@ impl BridgeBuilder {
 
     pub fn build(self, endpoint: Url) -> Bridge {
         Bridge {
-            client: self.client_builder.build().expect("Unable to create Bridge"),
+            client: self
+                .client_builder
+                .build()
+                .expect("Unable to create Bridge"),
             endpoint,
             #[cfg(feature = "auth0")]
             auth0_opt: self.auth0,

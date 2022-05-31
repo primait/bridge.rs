@@ -16,7 +16,10 @@ struct Data {
 #[tokio::test]
 async fn simple_request() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
-    let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
+    let result: String = RestRequest::new(&bridge)
+        .send()
+        .await?
+        .get_data(&["hello"])?;
 
     assert_eq!("world!", result.as_str());
 
@@ -39,7 +42,8 @@ async fn unserializable_response() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn simple_request_with_custom_path_and_base_path() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path");
+    let (_m, bridge) =
+        create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path");
     let result: String = RestRequest::new(&bridge)
         .to("test_path")
         .send()
@@ -56,7 +60,8 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let header = ("header", "custom");
     let path = "/test_path/simple_request_with_custom_headers";
 
-    let (_m, bridge) = create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
+    let (_m, bridge) =
+        create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
     let response = RestRequest::new(&bridge).to(path).send().await?;
 
     let custom = response
@@ -138,7 +143,10 @@ async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
 
     let (_m, bridge) = create_bridge_with_binary_body_matcher(body);
 
-    let result = RestRequest::new(&bridge).raw_body(body.to_vec()).send().await?;
+    let result = RestRequest::new(&bridge)
+        .raw_body(body.to_vec())
+        .send()
+        .await?;
     assert!(result.is_ok());
 
     assert_eq!(body, &result.raw_body()[..]);
@@ -149,12 +157,21 @@ async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
 async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
     let req = RestRequest::new(&bridge).with_custom_headers(vec![
-        (HeaderName::from_static("x-test"), HeaderValue::from_static("value")),
-        (HeaderName::from_static("x-test"), HeaderValue::from_static("value")),
+        (
+            HeaderName::from_static("x-test"),
+            HeaderValue::from_static("value"),
+        ),
+        (
+            HeaderName::from_static("x-test"),
+            HeaderValue::from_static("value"),
+        ),
     ]);
 
     let headers = req.get_custom_headers();
-    assert_eq!(HeaderValue::from_str("value").ok().as_ref(), headers.get("x-test"));
+    assert_eq!(
+        HeaderValue::from_str("value").ok().as_ref(),
+        headers.get("x-test")
+    );
 
     Ok(())
 }
@@ -175,7 +192,10 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
 
     let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
 
-    let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
+    let result: String = RestRequest::new(&bridge)
+        .send()
+        .await?
+        .get_data(&["hello"])?;
     assert_eq!(result, "world!");
 
     Ok(())
