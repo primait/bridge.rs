@@ -41,6 +41,7 @@ impl From<Body> for Vec<u8> {
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Serialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub struct GraphQLBody<T> {
     pub(crate) query: String,
     #[serde(skip_serializing_if = "Option::is_none")]

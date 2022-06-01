@@ -7,7 +7,7 @@ use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use reqwest::multipart::{Form, Part};
 use reqwest::{Method, Url};
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{json, Map, Value};
 use uuid::Uuid;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
@@ -59,43 +59,27 @@ impl<'a> GraphQLRequest<'a> {
         // No content-type here because Form set it at `multipart/form-data` with extra params for
         // disposition
         let body: GraphQLBody<S> = graphql_body.into();
-        if body.variables.is_none() {
-            return Err(PrimaBridgeError::EmptyVariablesInMultipartRequest);
-        }
-
-        let mut body_as_value: Value = serde_json::to_value(&body)?;
-
-        match &multipart {
+        let value: Value = serde_json::to_value(&body)?;
+        let value: Value = match &multipart {
             Multipart::Single(single) => {
-                let mut value_opt: Option<&mut Value> = Some(&mut body_as_value);
-                for path in single.path.split('.').collect::<Vec<&str>>() {
-                    value_opt = value_opt.and_then(|a| a.get_mut(path));
-                }
-
-                match value_opt {
-                    Some(value) => *value = json!(Value::Null),
-                    None => return Err(PrimaBridgeError::MultipartFilePathNotFound(single.path.clone())),
-                };
+                let path: Vec<&str> = single.path.split('.').collect();
+                let filler: Value = json!(Value::Null);
+                add_field(path, value, &filler)?
             }
-            Multipart::Multiple(multiple) => {
-                for (path, files) in &multiple.map {
-                    let mut value_opt: Option<&mut Value> = Some(&mut body_as_value);
-                    for path in path.split('.').collect::<Vec<&str>>() {
-                        value_opt = value_opt.and_then(|a| a.get_mut(path));
-                    }
-
-                    match value_opt {
-                        Some(value) => *value = json!(Value::Array(files.iter().map(|_| Value::Null).collect())),
-                        None => return Err(PrimaBridgeError::MultipartFilePathNotFound(path.clone())),
-                    };
-                }
-            }
+            Multipart::Multiple(multiple) => multiple.map.iter().fold(Ok(value), |accumulator, (path, files)| {
+                let _ = dbg!(&accumulator);
+                let filler: Value = json!(Value::Array(files.iter().map(|_| Value::Null).collect()));
+                files.iter().fold(accumulator, |acc, _| {
+                    let path_vec: Vec<&str> = path.split('.').collect();
+                    acc.and_then(|a| add_field(path_vec, a, &filler))
+                })
+            })?,
         };
 
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
-            body: serde_json::to_string(&body_as_value)?.try_into()?,
+            body: serde_json::to_string(&value)?.try_into()?,
             method: Method::POST,
             path: Default::default(),
             timeout: Duration::from_secs(60),
@@ -205,9 +189,9 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         RequestType::GraphQL
     }
 
-    fn get_form(&self) -> Option<Form> {
+    fn get_form(&self) -> PrimaBridgeResult<Option<Form>> {
         match &self.multipart {
-            None => None,
+            None => Ok(None),
             Some(multipart) => {
                 let mut form: Form = Form::new();
                 let mut map: HashMap<String, Vec<String>> = HashMap::<String, Vec<String>>::new();
@@ -217,6 +201,12 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                     Multipart::Single(single) => {
                         map.insert(ZERO.to_string(), vec![single.path.to_string()]);
                         let part: Part = Part::bytes(single.file.bytes().to_vec()).file_name(single.file.name());
+                        let part: Part = match &single.file.mime_type_opt {
+                            None => part,
+                            Some(mime_str) => part
+                                .mime_str(mime_str)
+                                .map_err(|_| PrimaBridgeError::InvalidMultipartFileMimeType(mime_str.to_string()))?,
+                        };
                         form = form.part(ZERO.to_string(), part);
                     }
                     Multipart::Multiple(multiple) => {
@@ -225,6 +215,12 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                             for (id, file) in files.iter().enumerate() {
                                 map.insert(index.to_string(), vec![format!("{}.{}", path, id)]);
                                 let part: Part = Part::bytes(file.bytes().to_vec()).file_name(file.name());
+                                let part: Part = match &file.mime_type_opt {
+                                    None => part,
+                                    Some(mime_str) => part.mime_str(mime_str).map_err(|_| {
+                                        PrimaBridgeError::InvalidMultipartFileMimeType(mime_str.to_string())
+                                    })?,
+                                };
                                 form = form.part(index.to_string(), part);
                                 index += 1;
                             }
@@ -232,8 +228,10 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                     }
                 }
 
-                form = form.text("map", serde_json::to_string(&map).unwrap());
-                Some(form)
+                let expectation: &str = "Internal error while to serializing form field `map`";
+                let map_string: String = serde_json::to_string(&map).expect(expectation);
+                form = form.text("map", map_string);
+                Ok(Some(form))
             }
         }
     }
@@ -253,47 +251,6 @@ impl Multipart {
 
     pub fn multiple(map: HashMap<String, Vec<MultipartFile>>) -> Self {
         Self::Multiple(Multiple { map })
-    }
-}
-
-pub struct Single {
-    path: String,
-    file: MultipartFile,
-}
-
-impl Single {
-    pub fn new(path: String, file: MultipartFile) -> Self {
-        Self { path, file }
-    }
-}
-
-pub struct Multiple {
-    map: HashMap<String, Vec<MultipartFile>>,
-}
-
-impl Multiple {
-    pub fn new() -> Self {
-        Self { map: HashMap::new() }
-    }
-
-    pub fn add_file(mut self, path: String, file: MultipartFile) -> Self {
-        match self.map.get(&path) {
-            Some(files) => {
-                let mut files = files.to_vec();
-                files.push(file);
-                self.map.insert(path, files);
-            }
-            None => {
-                self.map.insert(path, vec![file]);
-            }
-        };
-        self
-    }
-}
-
-impl Default for Multiple {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -340,5 +297,345 @@ impl MultipartFile {
             mime_type_opt: Some(mime_type.into()),
             ..self
         }
+    }
+}
+
+pub struct Single {
+    path: String,
+    file: MultipartFile,
+}
+
+impl Single {
+    pub fn new(path: String, file: MultipartFile) -> Self {
+        Self { path, file }
+    }
+}
+
+pub struct Multiple {
+    map: HashMap<String, Vec<MultipartFile>>,
+}
+
+impl Multiple {
+    pub fn new() -> Self {
+        Self { map: HashMap::new() }
+    }
+
+    pub fn add_file(mut self, path: String, file: MultipartFile) -> Self {
+        match self.map.get(&path) {
+            Some(files) => {
+                let mut files = files.to_vec();
+                files.push(file);
+                self.map.insert(path, files);
+            }
+            None => {
+                self.map.insert(path, vec![file]);
+            }
+        };
+        self
+    }
+}
+
+impl Default for Multiple {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+fn add_field(mut paths: Vec<&str>, value: Value, filler: &Value) -> Result<Value, PrimaBridgeError> {
+    Ok(match paths.pop_first() {
+        Some(segment) => match value {
+            Value::Null => craft_field(paths, segment, Map::new(), Value::Null, filler)?,
+            Value::Object(map) => {
+                let inner_value: Value = map.get(segment).cloned().unwrap_or(Value::Null);
+                craft_field(paths, segment, map, inner_value, filler)?
+            }
+            _ => return Err(PrimaBridgeError::MalformedVariables),
+        },
+        None => filler.to_owned(),
+    })
+}
+
+fn craft_field(
+    paths: Vec<&str>,
+    segment: &str,
+    mut map: Map<String, Value>,
+    inner_value: Value,
+    filler: &Value,
+) -> PrimaBridgeResult<Value> {
+    let value: Value = add_field(paths, inner_value, filler)?;
+    map.insert(segment.to_string(), value);
+    Ok(Value::Object(map))
+}
+
+trait PopFirst<T> {
+    fn pop_first(&mut self) -> Option<T>;
+}
+
+impl<T> PopFirst<T> for Vec<T> {
+    fn pop_first(&mut self) -> Option<T> {
+        if self.is_empty() {
+            return None;
+        }
+        Some(self.remove(0))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde::Deserialize;
+    use serde_json::Value;
+    use std::str::FromStr;
+
+    #[derive(Deserialize)]
+    pub struct VariablesSingle {
+        pub input: InputSingle,
+    }
+
+    #[derive(Deserialize)]
+    pub struct InputSingle {
+        pub file: (),
+    }
+
+    #[derive(Deserialize)]
+    pub struct VariablesMulti {
+        pub input: InputMulti,
+    }
+
+    #[derive(Deserialize)]
+    pub struct InputMulti {
+        pub files: Vec<()>,
+        pub images: Vec<()>,
+    }
+
+    #[test]
+    fn multipart_with_single_file_with_explicit_variables_mapping() {
+        let fake_url: Url = Url::from_str("http://prima.it").unwrap();
+        let bridge: Bridge = Bridge::builder().build(fake_url);
+        let multipart: Multipart = get_single_file_multipart();
+
+        let variables: Value = get_single_file_multipart_value();
+
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+
+        let body_str: String = (&req.body).into();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        assert_eq!(graphql_body.variables.unwrap(), variables);
+
+        let parsed_graphql_body: Result<GraphQLBody<VariablesSingle>, serde_json::Error> =
+            serde_json::from_str(body_str.as_str());
+
+        assert!(parsed_graphql_body.is_ok());
+    }
+
+    #[test]
+    fn multipart_with_single_file_without_explicit_variables_mapping() {
+        let fake_url: Url = Url::from_str("http://prima.it").unwrap();
+        let bridge: Bridge = Bridge::builder().build(fake_url);
+        let multipart: Multipart = get_single_file_multipart();
+
+        let variables: Value = Value::Null;
+
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+
+        let body_str: String = (&req.body).into();
+
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+
+        let expectation: Value = get_single_file_multipart_value();
+        assert_eq!(graphql_body.variables.unwrap(), expectation);
+
+        let parsed_graphql_body: Result<GraphQLBody<VariablesSingle>, serde_json::Error> =
+            serde_json::from_str(body_str.as_str());
+
+        assert!(parsed_graphql_body.is_ok());
+    }
+
+    #[test]
+    fn multipart_with_single_file_with_explicit_variables_mapping_with_wrong_value() {
+        let fake_url: Url = Url::from_str("http://prima.it").unwrap();
+        let bridge: Bridge = Bridge::builder().build(fake_url);
+        let multipart: Multipart = get_single_file_multipart();
+
+        let variables: Value = json!({"input": {"file": Value::String("ciao".to_string())}});
+
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+
+        let body_str: String = (&req.body).into();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+
+        let expectation: Value = get_single_file_multipart_value();
+        assert_eq!(graphql_body.variables.unwrap(), expectation);
+
+        let parsed_graphql_body: Result<GraphQLBody<VariablesSingle>, serde_json::Error> =
+            serde_json::from_str(body_str.as_str());
+
+        assert!(parsed_graphql_body.is_ok());
+    }
+
+    #[test]
+    fn multipart_with_single_file_with_explicit_variables_mapping_with_additional_fields() {
+        let fake_url: Url = Url::from_str("http://prima.it").unwrap();
+        let bridge: Bridge = Bridge::builder().build(fake_url);
+        let multipart: Multipart = get_single_file_multipart();
+
+        let variables: Value = json!({
+            "other":{"whatever": Value::String("hello".to_string())},
+            "input": {"file": Value::String("ciao".to_string()), "desc": Value::String("desc".to_string())}
+        });
+
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+
+        let body_str: String = (&req.body).into();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+
+        let expectation: Value = json!({
+            "other":{"whatever": Value::String("hello".to_string())},
+            "input": {"file": Value::Null, "desc": Value::String("desc".to_string())}
+        });
+        assert_eq!(graphql_body.variables.unwrap(), expectation);
+
+        let parsed_graphql_body: Result<GraphQLBody<VariablesSingle>, serde_json::Error> =
+            serde_json::from_str(body_str.as_str());
+
+        assert!(parsed_graphql_body.is_ok());
+    }
+
+    #[test]
+    fn multipart_with_multiple_files_with_explicit_variables_mapping() {
+        let fake_url: Url = Url::from_str("http://prima.it").unwrap();
+        let bridge: Bridge = Bridge::builder().build(fake_url);
+        let multipart: Multipart = get_multi_files_multipart();
+
+        let variables: Value = get_multi_files_multipart_value();
+
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+
+        let body_str: String = (&req.body).into();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+
+        assert_eq!(graphql_body.variables.unwrap(), variables);
+
+        let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
+            serde_json::from_str(body_str.as_str());
+
+        assert!(parsed_graphql_body.is_ok());
+    }
+
+    #[test]
+    fn multipart_with_multiple_files_with_explicit_variables_mapping_with_additional_fields() {
+        let fake_url: Url = Url::from_str("http://prima.it").unwrap();
+        let bridge: Bridge = Bridge::builder().build(fake_url);
+        let multipart: Multipart = get_multi_files_multipart();
+
+        let variables: Value = get_multi_files_multipart_value();
+
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+
+        let body_str: String = (&req.body).into();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+
+        assert_eq!(graphql_body.variables.unwrap(), variables);
+
+        let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
+            serde_json::from_str(body_str.as_str());
+
+        assert!(parsed_graphql_body.is_ok());
+    }
+
+    #[test]
+    fn multipart_with_multiple_files_with_partial_explicit_variables_mapping() {
+        let fake_url: Url = Url::from_str("http://prima.it").unwrap();
+        let bridge: Bridge = Bridge::builder().build(fake_url);
+        let multipart: Multipart = get_multi_files_multipart();
+
+        let variables: Value = json!({"input": {"files": Value::Array(vec![Value::Null, Value::Null])}});
+
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+
+        let body_str: String = (&req.body).into();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+
+        let expectation: Value = get_multi_files_multipart_value();
+        assert_eq!(graphql_body.variables.unwrap(), expectation);
+
+        let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
+            serde_json::from_str(body_str.as_str());
+
+        assert!(parsed_graphql_body.is_ok());
+    }
+
+    #[test]
+    fn multipart_with_multiple_files_with_partial_explicit_variables_mapping_with_wrong_values() {
+        let fake_url: Url = Url::from_str("http://prima.it").unwrap();
+        let bridge: Bridge = Bridge::builder().build(fake_url);
+        let multipart: Multipart = get_multi_files_multipart();
+
+        let variables: Value = json!({"input": {"files": Value::String("ciao".to_string())}});
+
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+
+        let body_str: String = (&req.body).into();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+
+        let expectation: Value = get_multi_files_multipart_value();
+        assert_eq!(graphql_body.variables.unwrap(), expectation);
+
+        let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
+            serde_json::from_str(body_str.as_str());
+
+        assert!(parsed_graphql_body.is_ok());
+    }
+
+    #[test]
+    fn multipart_with_multiple_files_without_explicit_variables_mapping() {
+        let fake_url: Url = Url::from_str("http://prima.it").unwrap();
+        let bridge: Bridge = Bridge::builder().build(fake_url);
+        let multipart: Multipart = get_multi_files_multipart();
+
+        let variables: Value = Value::Null;
+
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+
+        let body_str: String = (&req.body).into();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+
+        let expectation: Value = get_multi_files_multipart_value();
+        assert_eq!(graphql_body.variables.unwrap(), expectation);
+
+        let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
+            serde_json::from_str(body_str.as_str());
+
+        assert!(parsed_graphql_body.is_ok());
+    }
+
+    fn get_single_file_multipart_value() -> Value {
+        json!({"input": {"file": Value::Null}})
+    }
+
+    fn get_multi_files_multipart_value() -> Value {
+        json!({"input": {"files": Value::Array(vec![Value::Null, Value::Null]), "images": Value::Array(vec![Value::Null])}})
+    }
+
+    fn get_single_file_multipart() -> Multipart {
+        let path: &str = "variables.input.file";
+        let file: MultipartFile = MultipartFile::new(vec![]).with_name("ciao1");
+        Multipart::single(path, file)
+    }
+
+    fn get_multi_files_multipart() -> Multipart {
+        let mut map: HashMap<String, Vec<MultipartFile>> = HashMap::new();
+        let _ = map.insert(
+            "variables.input.files".to_string(),
+            vec![
+                MultipartFile::new(vec![]).with_name("ciao1"),
+                MultipartFile::new(vec![]).with_name("ciao2"),
+            ],
+        );
+        let _ = map.insert(
+            "variables.input.images".to_string(),
+            vec![MultipartFile::new(vec![]).with_name("ciao3")],
+        );
+        Multipart::multiple(map)
     }
 }
