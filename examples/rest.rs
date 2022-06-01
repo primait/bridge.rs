@@ -18,7 +18,11 @@ const URL: &str = "https://swapi.dev/api";
 async fn main() {
     let bridge: Bridge = Bridge::builder().build(URL.parse().unwrap());
 
-    let response: Response = Request::get(&bridge).to("people/1").send().await.expect(x);
+    let response: Response = Request::get(&bridge)
+        .to("people/1")
+        .send()
+        .await
+        .expect("http rest request error");
 
     // The response is something like:
     // {
