@@ -22,6 +22,8 @@ const QUERY: &str = "query($input:JobsInput!){jobs(input:$input) {\nid\n title\n
 async fn main() {
     let bridge: Bridge = Bridge::builder().build(URL.parse().unwrap());
 
+    let bytes: Vec<u8> = vec![];
+
     let slug: String = "backend-engineer".to_string();
 
     let mut map: HashMap<String, Vec<MultipartFile>> = HashMap::new();

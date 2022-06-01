@@ -67,7 +67,6 @@ impl<'a> GraphQLRequest<'a> {
                 add_field(path, value, &filler)?
             }
             Multipart::Multiple(multiple) => multiple.map.iter().fold(Ok(value), |accumulator, (path, files)| {
-                let _ = dbg!(&accumulator);
                 let filler: Value = json!(Value::Array(files.iter().map(|_| Value::Null).collect()));
                 files.iter().fold(accumulator, |acc, _| {
                     let path_vec: Vec<&str> = path.split('.').collect();
