@@ -25,10 +25,6 @@ command = "cargo"
 args = ["test", "--features=auth0,gzip"]
 dependencies = ["build"]
 
-[tasks.auth0-example]
-command = "cargo"
-args = ["run", "--example", "auth0", "--features", "auth0"]
-
 [tasks.clippy]
 command = "cargo"
 args = ["clippy", "--all-features", "--", "-D", "warnings"]
