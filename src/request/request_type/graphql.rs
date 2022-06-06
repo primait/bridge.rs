@@ -14,6 +14,7 @@ use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::request::{Body, DeliverableRequest, GraphQLBody, RequestType};
 use crate::Bridge;
 
+const VARIABLES: &str = "variables";
 const ZERO: &str = "0";
 
 /// The GraphQLRequest is a struct that represent a GraphQL request to be done with the [Bridge](./../struct.Bridge.html)
@@ -256,7 +257,7 @@ impl Multipart {
     }
 
     pub fn multiple(map: HashMap<String, Vec<MultipartFile>>) -> Self {
-        Self::Multiple(Multiple { map })
+        Self::Multiple(Multiple::from_map(map))
     }
 }
 
@@ -306,7 +307,10 @@ pub struct Single {
 
 impl Single {
     pub fn new(path: String, file: MultipartFile) -> Self {
-        Self { path, file }
+        Self {
+            path: with_prefix(path),
+            file,
+        }
     }
 }
 
@@ -319,7 +323,17 @@ impl Multiple {
         Self { map: HashMap::new() }
     }
 
+    pub fn from_map(map: HashMap<String, Vec<MultipartFile>>) -> Self {
+        Self {
+            map: map
+                .into_iter()
+                .map(|(path, files)| (with_prefix(path), files))
+                .collect(),
+        }
+    }
+
     pub fn add_file(mut self, path: String, file: MultipartFile) -> Self {
+        let path: String = with_prefix(path);
         match self.map.get(&path) {
             Some(files) => {
                 let mut files = files.to_vec();
@@ -337,6 +351,14 @@ impl Multiple {
 impl Default for Multiple {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+fn with_prefix(string: String) -> String {
+    if string.starts_with(VARIABLES) {
+        string
+    } else {
+        format!("{}.{}", VARIABLES, string)
     }
 }
 
@@ -617,7 +639,7 @@ mod tests {
     }
 
     fn get_single_file_multipart() -> Multipart {
-        let path: &str = "variables.input.file";
+        let path: &str = "input.file";
         let file: MultipartFile = MultipartFile::new(vec![]).with_name("ciao1");
         Multipart::single(path, file)
     }
@@ -632,7 +654,7 @@ mod tests {
             ],
         );
         let _ = map.insert(
-            "variables.input.images".to_string(),
+            "input.images".to_string(),
             vec![MultipartFile::new(vec![]).with_name("ciao3")],
         );
         Multipart::multiple(map)

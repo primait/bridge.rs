@@ -28,14 +28,14 @@ async fn main() {
 
     let mut map: HashMap<String, Vec<MultipartFile>> = HashMap::new();
     let _ = map.insert(
-        "variables.multi.files".to_string(),
+        "multi.files".to_string(),
         vec![
             MultipartFile::new(bytes.clone()).with_name("ciao1"),
             MultipartFile::new(bytes.clone()).with_name("ciao2"),
         ],
     );
     let _ = map.insert(
-        "variables.multi.images".to_string(),
+        "multi.images".to_string(),
         vec![MultipartFile::new(bytes.clone()).with_name("ciao3")],
     );
     let multipart: Multipart = Multipart::multiple(map);
