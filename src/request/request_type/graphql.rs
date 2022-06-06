@@ -14,7 +14,6 @@ use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::request::{Body, DeliverableRequest, GraphQLBody, RequestType};
 use crate::Bridge;
 
-const DEFAULT_FILENAME: &str = "default";
 const ZERO: &str = "0";
 
 /// The GraphQLRequest is a struct that represent a GraphQL request to be done with the [Bridge](./../struct.Bridge.html)
@@ -199,7 +198,11 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                 match multipart {
                     Multipart::Single(single) => {
                         map.insert(ZERO.to_string(), vec![single.path.to_string()]);
-                        let part: Part = Part::bytes(single.file.bytes().to_vec()).file_name(single.file.name());
+                        let part: Part = Part::bytes(single.file.bytes().to_vec());
+                        let part: Part = match single.file.name() {
+                            None => part,
+                            Some(name) => part.file_name(name.to_string()),
+                        };
                         let part: Part = match &single.file.mime_type_opt {
                             None => part,
                             Some(mime_str) => part
@@ -213,7 +216,11 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                         for (path, files) in multiple.map.iter() {
                             for (id, file) in files.iter().enumerate() {
                                 map.insert(index.to_string(), vec![format!("{}.{}", path, id)]);
-                                let part: Part = Part::bytes(file.bytes().to_vec()).file_name(file.name());
+                                let part: Part = Part::bytes(file.bytes().to_vec());
+                                let part: Part = match file.name() {
+                                    None => part,
+                                    Some(name) => part.file_name(name.to_string()),
+                                };
                                 let part: Part = match &file.mime_type_opt {
                                     None => part,
                                     Some(mime_str) => part.mime_str(mime_str).map_err(|_| {
@@ -269,15 +276,12 @@ impl MultipartFile {
         }
     }
 
-    pub fn bytes(&self) -> &[u8] {
+    fn bytes(&self) -> &[u8] {
         &self.bytes
     }
 
-    pub fn name(&self) -> String {
-        match &self.name_opt {
-            Some(name) => name.clone(),
-            None => DEFAULT_FILENAME.to_string(),
-        }
+    fn name(&self) -> &Option<String> {
+        &self.name_opt
     }
 
     pub fn with_name(self, name: impl Into<String>) -> Self {
@@ -285,10 +289,6 @@ impl MultipartFile {
             name_opt: Some(name.into()),
             ..self
         }
-    }
-
-    pub fn mime_type(self) -> Option<String> {
-        self.mime_type_opt
     }
 
     pub fn with_mime_type(self, mime_type: impl Into<String>) -> Self {
