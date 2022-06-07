@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::convert::TryInto;
 use std::time::Duration;
 
@@ -62,14 +62,14 @@ impl<'a> GraphQLRequest<'a> {
         let value: Value = serde_json::to_value(&body)?;
         let value: Value = match &multipart {
             Multipart::Single(single) => {
-                let path: Vec<&str> = single.path.split('.').collect();
+                let path: VecDeque<&str> = single.path.split('.').collect();
                 let filler: Value = json!(Value::Null);
                 add_field(path, value, &filler)?
             }
             Multipart::Multiple(multiple) => multiple.map.iter().fold(Ok(value), |accumulator, (path, files)| {
                 let filler: Value = json!(Value::Array(files.iter().map(|_| Value::Null).collect()));
                 files.iter().fold(accumulator, |acc, _| {
-                    let path_vec: Vec<&str> = path.split('.').collect();
+                    let path_vec: VecDeque<&str> = path.split('.').collect();
                     acc.and_then(|a| add_field(path_vec, a, &filler))
                 })
             })?,
@@ -362,8 +362,8 @@ fn with_prefix(string: String) -> String {
     }
 }
 
-fn add_field(mut paths: Vec<&str>, value: Value, filler: &Value) -> Result<Value, PrimaBridgeError> {
-    Ok(match paths.pop_first() {
+fn add_field(mut paths: VecDeque<&str>, value: Value, filler: &Value) -> Result<Value, PrimaBridgeError> {
+    Ok(match paths.pop_front() {
         Some(segment) => match value {
             Value::Null => craft_field(paths, segment, Map::new(), Value::Null, filler)?,
             Value::Object(map) => {
@@ -377,7 +377,7 @@ fn add_field(mut paths: Vec<&str>, value: Value, filler: &Value) -> Result<Value
 }
 
 fn craft_field(
-    paths: Vec<&str>,
+    paths: VecDeque<&str>,
     segment: &str,
     mut map: Map<String, Value>,
     inner_value: Value,
@@ -386,19 +386,6 @@ fn craft_field(
     let value: Value = add_field(paths, inner_value, filler)?;
     map.insert(segment.to_string(), value);
     Ok(Value::Object(map))
-}
-
-trait PopFirst<T> {
-    fn pop_first(&mut self) -> Option<T>;
-}
-
-impl<T> PopFirst<T> for Vec<T> {
-    fn pop_first(&mut self) -> Option<T> {
-        if self.is_empty() {
-            return None;
-        }
-        Some(self.remove(0))
-    }
 }
 
 #[cfg(test)]
