@@ -8,7 +8,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 pub use body::{Body, GraphQLBody};
-pub use request_type::{GraphQLRequest, Request, RestRequest};
+pub use request_type::{GraphQLRequest, Multipart, MultipartFile, Request, RestRequest};
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
@@ -145,6 +145,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[doc(hidden)]
     fn get_request_type(&self) -> RequestType;
 
+    fn get_form(&self) -> PrimaBridgeResult<Option<reqwest::multipart::Form>> {
+        Ok(None)
+    }
+
     async fn send(&'a self) -> PrimaBridgeResult<Response> {
         use futures_util::future::TryFutureExt;
         let request_id = self.get_id();
@@ -158,14 +162,16 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
             .headers(self.get_all_headers());
 
-        let response = request_builder
-            .body(self.get_body())
-            .send()
-            .map_err(|e| PrimaBridgeError::HttpError {
-                url: url.clone(),
-                source: e,
-            })
-            .await?;
+        let response = match self.get_form()? {
+            Some(form) => request_builder.multipart(form),
+            None => request_builder.body(self.get_body()),
+        }
+        .send()
+        .map_err(|e| PrimaBridgeError::HttpError {
+            url: url.clone(),
+            source: e,
+        })
+        .await?;
 
         let status_code = response.status();
         if !self.get_ignore_status_code() && !status_code.is_success() {

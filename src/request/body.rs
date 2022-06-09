@@ -21,6 +21,12 @@ impl From<&str> for Body {
     }
 }
 
+impl From<&Body> for String {
+    fn from(body: &Body) -> Self {
+        String::from_utf8_lossy(&body.inner).to_string()
+    }
+}
+
 impl From<Vec<u8>> for Body {
     fn from(value: Vec<u8>) -> Self {
         Self { inner: value }
@@ -35,10 +41,11 @@ impl From<Body> for Vec<u8> {
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Serialize)]
+#[cfg_attr(test, derive(serde::Deserialize))]
 pub struct GraphQLBody<T> {
-    query: String,
+    pub(crate) query: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    variables: Option<T>,
+    pub(crate) variables: Option<T>,
 }
 
 impl<T: Serialize> From<(&str, Option<T>)> for GraphQLBody<T> {

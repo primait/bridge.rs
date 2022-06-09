@@ -27,6 +27,10 @@ pub enum PrimaBridgeError {
     },
     #[error("empty body")]
     EmptyBody,
+    #[error("variables map is malformed or provided path not step into objects only")]
+    MalformedVariables,
+    #[error("multipart file has invalid mime type: {0}")]
+    InvalidMultipartFileMimeType(String),
     #[error("the response body id not valid utf-8. error: {source}")]
     Utf8Error { source: Utf8Error },
 }

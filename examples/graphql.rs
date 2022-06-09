@@ -1,27 +1,13 @@
-//! Auth0 example
+//! Graphql example
 //!
-//! This example is the same as examples/graphql.rs example. The only difference is that in this example
-//! every request made by the bridge are authenticated with a JWT token as Bearer authentication.
+//! In this example there's the explanation on how to achieve a graphql call. This serialize a request
+//! containing variables and post to graphql server, deserializing response. The response is the list
+//! of all jobs matching given predicate ("backend-engineer").
 //!
-//! Before run the command to run this example be sure redis is running. Otherwise run this command:
-//!
-//! ```shell
-//! docker run -p 6379:6379 --name bridge_redis -d redis
-//! ```
-//!
-//! Export needed variables:
-//! ```shell
-//! export TOKEN_URL='https://{tenant}.auth0.com/oauth/token'
-//! export JWKS_URL='https://{tenant}/.well-known/jwks.json'
-//! export CLIENT_ID={client_id}
-//! export CLIENT_SECRET={client_secret}
-//! export AUDIENCE={audience}
-//! ```
-//!
-//! And then to run this example execute:
+//! Run this to run the example:
 //!
 //! ```shell
-//! cargo run --example auth0 --features auth0
+//! cargo run --example graphql
 //! ```
 
 use serde::{Deserialize, Serialize};
@@ -34,10 +20,7 @@ const QUERY: &str = "query($input:JobsInput!){jobs(input:$input) {\nid\n title\n
 
 #[tokio::main]
 async fn main() {
-    let bridge: Bridge = Bridge::builder()
-        .with_auth0(auth0::config())
-        .await
-        .build(URL.parse().unwrap());
+    let bridge: Bridge = Bridge::builder().build(URL.parse().unwrap());
 
     let slug: String = "backend-engineer".to_string();
 
@@ -108,34 +91,4 @@ pub struct Job {
     pub id: String,
     pub title: String,
     pub apply_url: String,
-}
-
-mod auth0 {
-    use std::time::Duration;
-
-    use prima_bridge::auth0::{CacheType, Config, StalenessCheckPercentage};
-
-    pub fn config() -> Config {
-        use reqwest::Url;
-        use std::str::FromStr;
-
-        let token_url: String = std::env::var("TOKEN_URL").unwrap();
-        let jwks_url: String = std::env::var("JWKS_URL").unwrap();
-        let client_id: String = std::env::var("CLIENT_ID").unwrap();
-        let client_secret: String = std::env::var("CLIENT_SECRET").unwrap();
-        let audience: String = std::env::var("AUDIENCE").unwrap();
-
-        Config {
-            token_url: Url::from_str(token_url.as_str()).unwrap(),
-            jwks_url: Url::from_str(jwks_url.as_str()).unwrap(),
-            caller: "paperboy".to_string(),
-            audience,
-            cache_type: CacheType::Inmemory,
-            token_encryption_key: "32char_long_token_encryption_key".to_string(),
-            check_interval: Duration::from_secs(2),
-            staleness_check_percentage: StalenessCheckPercentage::new(0.1, 0.5),
-            client_id,
-            client_secret,
-        }
-    }
 }
