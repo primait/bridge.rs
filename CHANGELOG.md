@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Next]
 
+### Changed
+
+- removed `block_modes` deprecated dependency in favour of the new `cbc` dependency
+
 ## [0.12.0]
 
 ### Removed
