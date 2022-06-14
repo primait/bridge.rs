@@ -17,7 +17,7 @@ pub fn encrypt<T: Serialize>(value_ref: &T, token_encryption_key_str: &str) -> R
 
     // `unwrap` here is fine because `IV` is set here and the only error returned is: `InvalidKeyIvLength`
     // and this must never happen
-    let mut buf = [0u8; 48];
+    let mut buf = vec![0u8; json.len()];
     buf[..json.len()].copy_from_slice(json.as_bytes());
     let ct = Aes256Enc::new(token_encryption_key_str.as_bytes().into(), IV.as_bytes().into())
         .encrypt_padded_mut::<Pkcs7>(&mut buf, json.len())
