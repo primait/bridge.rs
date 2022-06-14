@@ -1,3 +1,4 @@
+use aes::cipher::block_padding::UnpadError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -17,5 +18,5 @@ pub enum Auth0Error {
     #[error("redis error: {0}")]
     RedisError(#[from] redis::RedisError),
     #[error(transparent)]
-    CryptoError(#[from] block_modes::BlockModeError),
+    CryptoError(#[from] UnpadError),
 }
