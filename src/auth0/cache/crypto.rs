@@ -15,13 +15,8 @@ const IV: &str = "301a9e39735f4646";
 pub fn encrypt<T: Serialize>(value_ref: &T, token_encryption_key_str: &str) -> Result<Vec<u8>, Auth0Error> {
     let json: String = serde_json::to_string(value_ref)?;
 
-    // `unwrap` here is fine because `IV` is set here and the only error returned is: `InvalidKeyIvLength`
-    // and this must never happen
-    let mut buf = vec![0u8; json.len()];
-    buf[..json.len()].copy_from_slice(json.as_bytes());
     let ct = Aes256Enc::new(token_encryption_key_str.as_bytes().into(), IV.as_bytes().into())
-        .encrypt_padded_mut::<Pkcs7>(&mut buf, json.len())
-        .unwrap();
+        .encrypt_padded_vec_mut::<Pkcs7>(json.as_bytes());
 
     Ok(ct.to_vec())
 }
@@ -32,10 +27,9 @@ where
 {
     // `unwrap` here is fine because `IV` is set here and the only error returned is: `InvalidKeyIvLength`
     // and this must never happen
-    let mut buf = Vec::from(encrypted);
     let pt = Aes256Dec::new(token_encryption_key_str.as_bytes().into(), IV.as_bytes().into())
-        .decrypt_padded_mut::<Pkcs7>(&mut buf)
+        .decrypt_padded_vec_mut::<Pkcs7>(encrypted)
         .unwrap();
 
-    Ok(serde_json::from_slice(pt)?)
+    Ok(serde_json::from_slice(&pt)?)
 }
