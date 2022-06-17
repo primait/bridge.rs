@@ -21,7 +21,7 @@ serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.78"
 thiserror = "1.0.30"
 tokio = { version = "1.16.1", features = ["macros", "rt-multi-thread"], optional = true }
-uuid = { version = ">=0.7.0, <1.2.0", features = ["serde", "v4"] }
+uuid = { version = ">=0.7.0, <2.0.0", features = ["serde", "v4"] }
 futures = { version = "0.3.21", optional = true }
 futures-util = { version = "0.3.21", optional = true }
 opentelemetry = { version = ">=0.17.0, <0.18.0", optional = true }
