@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Next]
 
+## [0.13.0]
+
 ### Changed
 
 - removed `block_modes` deprecated dependency in favour of the new `cbc` dependency
@@ -176,7 +178,8 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Next]: https://github.com/primait/bridge.rs/compare/0.12.0...HEAD
+[Next]: https://github.com/primait/bridge.rs/compare/0.13.0...HEAD
+[0.13.0]: https://github.com/primait/bridge.rs/compare/0.12.0...0.13.0
 [0.12.0]: https://github.com/primait/bridge.rs/compare/0.11.0...0.12.0
 [0.11.0]: https://github.com/primait/bridge.rs/compare/0.10.0...0.11.0
 [0.10.0]: https://github.com/primait/bridge.rs/compare/0.9.2...0.10.0
