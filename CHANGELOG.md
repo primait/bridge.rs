@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Next]
 
+### Add
+
+- New function `status_code` to get `StatusCode` from `Response`. 
+
 ## [0.13.0]
 
 ### Changed
