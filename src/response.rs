@@ -106,6 +106,10 @@ impl Response {
         &self.response_body
     }
 
+    pub fn status_code(&self) -> &StatusCode {
+        &self.status_code
+    }
+
     /// returns `true` if the response is successful
     pub fn is_ok(&self) -> bool {
         self.status_code.is_success()

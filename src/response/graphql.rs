@@ -32,18 +32,15 @@ where
             Ok(t) => Ok(t.into()),
             Err(_e) => {
                 let value: Value = serde_json::from_str(body_as_str)?;
-                Ok(ParsedGraphqlResponse::Err(PossiblyParsedData::UnparsedData(
-                    value,
-                    vec![],
-                )))
+                Ok(Err(PossiblyParsedData::UnparsedData(value, vec![])))
             }
         }
     }
 
     fn get_errors(&self) -> Vec<Error> {
         match self {
-            ParsedGraphqlResponse::Ok(_) => vec![],
-            ParsedGraphqlResponse::Err(possibly_parsed_data) => match possibly_parsed_data {
+            Ok(_) => vec![],
+            Err(possibly_parsed_data) => match possibly_parsed_data {
                 PossiblyParsedData::ParsedData(_, errors) => errors.to_vec(),
                 PossiblyParsedData::UnparsedData(_, errors) => errors.to_vec(),
                 PossiblyParsedData::EmptyData(errors) => errors.to_vec(),
@@ -68,11 +65,11 @@ struct GraphqlResponse<T> {
 impl<T> From<GraphqlResponse<T>> for ParsedGraphqlResponse<T> {
     fn from(gql_response: GraphqlResponse<T>) -> Self {
         match (gql_response.data, gql_response.errors) {
-            (Some(t), None) => Self::Ok(t),
-            (Some(t), Some(errors)) => Self::Err(PossiblyParsedData::ParsedData(t, errors)),
-            (None, Some(errors)) => Self::Err(PossiblyParsedData::EmptyData(errors)),
+            (Some(t), None) => Ok(t),
+            (Some(t), Some(errors)) => Err(PossiblyParsedData::ParsedData(t, errors)),
+            (None, Some(errors)) => Err(PossiblyParsedData::EmptyData(errors)),
             // this should not happen!
-            _ => Self::Err(PossiblyParsedData::EmptyData(vec![])),
+            _ => Err(PossiblyParsedData::EmptyData(vec![])),
         }
     }
 }
