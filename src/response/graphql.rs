@@ -32,10 +32,7 @@ where
             Ok(t) => Ok(t.into()),
             Err(_e) => {
                 let value: Value = serde_json::from_str(body_as_str)?;
-                Ok(Err(PossiblyParsedData::UnparsedData(
-                    value,
-                    vec![],
-                )))
+                Ok(Err(PossiblyParsedData::UnparsedData(value, vec![])))
             }
         }
     }
