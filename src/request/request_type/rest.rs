@@ -48,12 +48,13 @@ impl<'a> RestRequest<'a> {
         }
     }
 
+    /// Request method defaults to `POST`
     pub fn new_with_multipart(bridge: &'a Bridge, multipart: RestMultipart) -> Self {
         Self {
+            method: Method::POST,
             id: Uuid::new_v4(),
             bridge,
             body: Default::default(),
-            method: Default::default(), // GET
             path: Default::default(),
             timeout: Duration::from_secs(60),
             query_pairs: Default::default(),
