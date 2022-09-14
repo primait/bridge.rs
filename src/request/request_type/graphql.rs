@@ -444,7 +444,7 @@ mod tests {
 
         let variables: Value = Value::Null;
 
-        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
         let body_str: String = (&req.body).into();
 
@@ -467,7 +467,7 @@ mod tests {
 
         let variables: Value = json!({"input": {"file": Value::String("ciao".to_string())}});
 
-        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
         let body_str: String = (&req.body).into();
         let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
@@ -492,7 +492,7 @@ mod tests {
             "input": {"file": Value::String("ciao".to_string()), "desc": Value::String("desc".to_string())}
         });
 
-        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
         let body_str: String = (&req.body).into();
         let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
@@ -559,7 +559,7 @@ mod tests {
 
         let variables: Value = json!({"input": {"files": Value::Array(vec![Value::Null, Value::Null])}});
 
-        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
         let body_str: String = (&req.body).into();
         let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
@@ -581,7 +581,7 @@ mod tests {
 
         let variables: Value = json!({"input": {"files": Value::String("ciao".to_string())}});
 
-        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
         let body_str: String = (&req.body).into();
         let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
@@ -603,7 +603,7 @@ mod tests {
 
         let variables: Value = Value::Null;
 
-        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
+        let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
         let body_str: String = (&req.body).into();
         let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
