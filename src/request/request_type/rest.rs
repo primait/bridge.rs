@@ -148,8 +148,8 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         self.method.clone()
     }
 
-    fn get_custom_headers(&self) -> HeaderMap {
-        self.custom_headers.clone()
+    fn get_custom_headers(&self) -> &HeaderMap {
+        &self.custom_headers
     }
 
     #[cfg(feature = "auth0")]
@@ -157,35 +157,35 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         &self.bridge.auth0_opt
     }
 
-    fn get_body(&self) -> Vec<u8> {
-        self.body.clone().map(Into::into).unwrap_or_default()
+    fn into_body(self) -> Vec<u8> {
+        self.body.map(Into::into).unwrap_or_default()
     }
 
     fn get_request_type(&self) -> RequestType {
         RequestType::Rest
     }
 
-    fn get_form(&self) -> PrimaBridgeResult<Option<Form>> {
-        let multipart = match &self.multipart {
+    fn into_form(self) -> PrimaBridgeResult<Result<Form, Self>> {
+        let multipart = match self.multipart {
             Some(multipart) => multipart,
-            None => return Ok(None),
+            None => return Ok(Err(self)),
         };
 
         let mut form = Form::new();
 
         match multipart {
             RestMultipart::Single { form_field, file } => {
-                form = form.part(form_field.clone(), file.clone().into_part()?);
+                form = form.part(form_field, file.into_part()?);
             }
 
             RestMultipart::Multiple { files } => {
                 for (form_field, file) in files {
-                    form = form.part(form_field.clone(), file.clone().into_part()?);
+                    form = form.part(form_field, file.into_part()?);
                 }
             }
         }
 
-        Ok(Some(form))
+        Ok(Ok(form))
     }
 }
 
