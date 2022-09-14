@@ -29,7 +29,7 @@ pub struct GraphQLRequest<'a> {
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
     custom_headers: HeaderMap,
-    multipart: Option<Multipart>,
+    multipart: Option<GraphQLMultipart>,
 }
 
 impl<'a> GraphQLRequest<'a> {
@@ -54,19 +54,19 @@ impl<'a> GraphQLRequest<'a> {
     pub fn new_with_multipart<S: Serialize>(
         bridge: &'a Bridge,
         graphql_body: impl Into<GraphQLBody<S>>,
-        multipart: Multipart,
+        multipart: GraphQLMultipart,
     ) -> PrimaBridgeResult<Self> {
         // No content-type here because Form set it at `multipart/form-data` with extra params for
         // disposition
         let body: GraphQLBody<S> = graphql_body.into();
         let value: Value = serde_json::to_value(&body)?;
         let value: Value = match &multipart {
-            Multipart::Single(single) => {
+            GraphQLMultipart::Single(single) => {
                 let path: VecDeque<&str> = single.path.split('.').collect();
                 let filler: Value = json!(Value::Null);
                 add_field(path, value, &filler)?
             }
-            Multipart::Multiple(multiple) => multiple.map.iter().fold(Ok(value), |accumulator, (path, files)| {
+            GraphQLMultipart::Multiple(multiple) => multiple.map.iter().fold(Ok(value), |accumulator, (path, files)| {
                 let filler: Value = json!(Value::Array(files.iter().map(|_| Value::Null).collect()));
                 files.iter().fold(accumulator, |acc, _| {
                     let path_vec: VecDeque<&str> = path.split('.').collect();
@@ -197,11 +197,11 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                 form = form.text("operations", String::from(&self.body));
 
                 match multipart {
-                    Multipart::Single(single) => {
+                    GraphQLMultipart::Single(single) => {
                         map.insert(ZERO.to_string(), vec![single.path.to_string()]);
                         form = form.part(ZERO.to_string(), single.file.clone().into_part()?);
                     }
-                    Multipart::Multiple(multiple) => {
+                    GraphQLMultipart::Multiple(multiple) => {
                         let mut index = 0;
                         for (path, files) in multiple.map.iter() {
                             for (id, file) in files.iter().enumerate() {
@@ -224,12 +224,12 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 
 // The path in query variable. Eg: if query/mutation has a param named files (representing the
 // multipart upload) this should be something like `variables.files`
-pub enum Multipart {
+pub enum GraphQLMultipart {
     Single(Single),
     Multiple(Multiple),
 }
 
-impl Multipart {
+impl GraphQLMultipart {
     pub fn single(path: impl Into<String>, file: MultipartFile) -> Self {
         Self::Single(Single::new(path.into(), file))
     }
@@ -359,7 +359,7 @@ mod tests {
     fn multipart_with_single_file_with_explicit_variables_mapping() {
         let fake_url: Url = Url::from_str("http://prima.it").unwrap();
         let bridge: Bridge = Bridge::builder().build(fake_url);
-        let multipart: Multipart = get_single_file_multipart();
+        let multipart: GraphQLMultipart = get_single_file_multipart();
 
         let variables: Value = get_single_file_multipart_value();
 
@@ -379,7 +379,7 @@ mod tests {
     fn multipart_with_single_file_without_explicit_variables_mapping() {
         let fake_url: Url = Url::from_str("http://prima.it").unwrap();
         let bridge: Bridge = Bridge::builder().build(fake_url);
-        let multipart: Multipart = get_single_file_multipart();
+        let multipart: GraphQLMultipart = get_single_file_multipart();
 
         let variables: Value = Value::Null;
 
@@ -402,7 +402,7 @@ mod tests {
     fn multipart_with_single_file_with_explicit_variables_mapping_with_wrong_value() {
         let fake_url: Url = Url::from_str("http://prima.it").unwrap();
         let bridge: Bridge = Bridge::builder().build(fake_url);
-        let multipart: Multipart = get_single_file_multipart();
+        let multipart: GraphQLMultipart = get_single_file_multipart();
 
         let variables: Value = json!({"input": {"file": Value::String("ciao".to_string())}});
 
@@ -424,7 +424,7 @@ mod tests {
     fn multipart_with_single_file_with_explicit_variables_mapping_with_additional_fields() {
         let fake_url: Url = Url::from_str("http://prima.it").unwrap();
         let bridge: Bridge = Bridge::builder().build(fake_url);
-        let multipart: Multipart = get_single_file_multipart();
+        let multipart: GraphQLMultipart = get_single_file_multipart();
 
         let variables: Value = json!({
             "other":{"whatever": Value::String("hello".to_string())},
@@ -452,7 +452,7 @@ mod tests {
     fn multipart_with_multiple_files_with_explicit_variables_mapping() {
         let fake_url: Url = Url::from_str("http://prima.it").unwrap();
         let bridge: Bridge = Bridge::builder().build(fake_url);
-        let multipart: Multipart = get_multi_files_multipart();
+        let multipart: GraphQLMultipart = get_multi_files_multipart();
 
         let variables: Value = get_multi_files_multipart_value();
 
@@ -473,7 +473,7 @@ mod tests {
     fn multipart_with_multiple_files_with_explicit_variables_mapping_with_additional_fields() {
         let fake_url: Url = Url::from_str("http://prima.it").unwrap();
         let bridge: Bridge = Bridge::builder().build(fake_url);
-        let multipart: Multipart = get_multi_files_multipart();
+        let multipart: GraphQLMultipart = get_multi_files_multipart();
 
         let variables: Value = get_multi_files_multipart_value();
 
@@ -494,7 +494,7 @@ mod tests {
     fn multipart_with_multiple_files_with_partial_explicit_variables_mapping() {
         let fake_url: Url = Url::from_str("http://prima.it").unwrap();
         let bridge: Bridge = Bridge::builder().build(fake_url);
-        let multipart: Multipart = get_multi_files_multipart();
+        let multipart: GraphQLMultipart = get_multi_files_multipart();
 
         let variables: Value = json!({"input": {"files": Value::Array(vec![Value::Null, Value::Null])}});
 
@@ -516,7 +516,7 @@ mod tests {
     fn multipart_with_multiple_files_with_partial_explicit_variables_mapping_with_wrong_values() {
         let fake_url: Url = Url::from_str("http://prima.it").unwrap();
         let bridge: Bridge = Bridge::builder().build(fake_url);
-        let multipart: Multipart = get_multi_files_multipart();
+        let multipart: GraphQLMultipart = get_multi_files_multipart();
 
         let variables: Value = json!({"input": {"files": Value::String("ciao".to_string())}});
 
@@ -538,7 +538,7 @@ mod tests {
     fn multipart_with_multiple_files_without_explicit_variables_mapping() {
         let fake_url: Url = Url::from_str("http://prima.it").unwrap();
         let bridge: Bridge = Bridge::builder().build(fake_url);
-        let multipart: Multipart = get_multi_files_multipart();
+        let multipart: GraphQLMultipart = get_multi_files_multipart();
 
         let variables: Value = Value::Null;
 
@@ -564,13 +564,13 @@ mod tests {
         json!({"input": {"files": Value::Array(vec![Value::Null, Value::Null]), "images": Value::Array(vec![Value::Null])}})
     }
 
-    fn get_single_file_multipart() -> Multipart {
+    fn get_single_file_multipart() -> GraphQLMultipart {
         let path: &str = "input.file";
         let file: MultipartFile = MultipartFile::new(vec![]).with_name("ciao1");
-        Multipart::single(path, file)
+        GraphQLMultipart::single(path, file)
     }
 
-    fn get_multi_files_multipart() -> Multipart {
+    fn get_multi_files_multipart() -> GraphQLMultipart {
         let mut map: HashMap<String, Vec<MultipartFile>> = HashMap::new();
         let _ = map.insert(
             "variables.input.files".to_string(),
@@ -583,6 +583,6 @@ mod tests {
             "input.images".to_string(),
             vec![MultipartFile::new(vec![]).with_name("ciao3")],
         );
-        Multipart::multiple(map)
+        GraphQLMultipart::multiple(map)
     }
 }
