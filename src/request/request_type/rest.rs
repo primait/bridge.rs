@@ -1,7 +1,6 @@
-use std::borrow::Cow;
-use std::collections::HashMap;
 use std::convert::TryInto;
 use std::time::Duration;
+use std::{borrow::Cow, collections::HashSet};
 
 use async_trait::async_trait;
 use reqwest::{
@@ -13,7 +12,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 use crate::errors::PrimaBridgeResult;
-use crate::request::{Body, DeliverableRequest, RequestType};
+use crate::request::{Body, DeliverableRequest, MultipartFormFileField, RequestType};
 use crate::{Bridge, MultipartFile};
 
 /// The RestRequest is a struct that represent a REST request to be done with the [Bridge](./../struct.Bridge.html)
@@ -175,13 +174,13 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         let mut form = Form::new();
 
         match multipart {
-            RestMultipart::Single { form_field, file } => {
-                form = form.part(form_field, file.into_part()?);
+            RestMultipart::Single(field) => {
+                form = form.part(field.field_name, field.file.into_part()?);
             }
 
-            RestMultipart::Multiple { files } => {
-                for (form_field, file) in files {
-                    form = form.part(form_field, file.into_part()?);
+            RestMultipart::Multiple(fields) => {
+                for field in fields {
+                    form = form.part(field.field_name, field.file.into_part()?);
                 }
             }
         }
@@ -192,27 +191,18 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
 
 #[derive(Debug)]
 pub enum RestMultipart {
-    Single {
-        form_field: Cow<'static, str>,
-        file: MultipartFile,
-    },
-
-    Multiple {
-        files: HashMap<String, MultipartFile>,
-    },
+    Single(MultipartFormFileField),
+    Multiple(HashSet<MultipartFormFileField>),
 }
 impl RestMultipart {
     pub fn single<S>(form_field: S, file: MultipartFile) -> Self
     where
         S: Into<Cow<'static, str>>,
     {
-        Self::Single {
-            form_field: form_field.into(),
-            file,
-        }
+        Self::Single(MultipartFormFileField::new(form_field, file))
     }
 
-    pub fn multiple(files: HashMap<String, MultipartFile>) -> Self {
-        Self::Multiple { files }
+    pub fn multiple(files: HashSet<MultipartFormFileField>) -> Self {
+        Self::Multiple(files)
     }
 }

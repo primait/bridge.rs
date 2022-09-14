@@ -1,5 +1,5 @@
-pub use graphql::GraphQLRequest;
 pub use graphql::GraphQLMultipart;
+pub use graphql::GraphQLRequest;
 use reqwest::Method;
 pub use rest::{RestMultipart, RestRequest};
 use serde::Serialize;

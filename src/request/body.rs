@@ -1,7 +1,9 @@
+use std::borrow::Cow;
+
 use reqwest::multipart::Part;
 use serde::Serialize;
 
-use crate::prelude::{PrimaBridgeResult, PrimaBridgeError};
+use crate::prelude::{PrimaBridgeError, PrimaBridgeResult};
 
 #[derive(Clone, Debug)]
 pub struct Body {
@@ -114,5 +116,33 @@ impl MultipartFile {
                 .map_err(|_| PrimaBridgeError::InvalidMultipartFileMimeType(mime.to_string()))?;
         }
         Ok(part)
+    }
+}
+
+#[derive(Debug)]
+pub struct MultipartFormFileField {
+    pub(crate) field_name: Cow<'static, str>,
+    pub(crate) file: MultipartFile,
+}
+impl MultipartFormFileField {
+    pub fn new<S>(file_name: S, file: MultipartFile) -> Self
+    where
+        S: Into<Cow<'static, str>>,
+    {
+        Self {
+            field_name: file_name.into(),
+            file,
+        }
+    }
+}
+impl std::hash::Hash for MultipartFormFileField {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.field_name.hash(state);
+    }
+}
+impl Eq for MultipartFormFileField {}
+impl PartialEq for MultipartFormFileField {
+    fn eq(&self, other: &Self) -> bool {
+        self.field_name == other.field_name
     }
 }

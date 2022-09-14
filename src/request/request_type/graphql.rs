@@ -66,13 +66,15 @@ impl<'a> GraphQLRequest<'a> {
                 let filler: Value = json!(Value::Null);
                 add_field(path, value, &filler)?
             }
-            GraphQLMultipart::Multiple(multiple) => multiple.map.iter().fold(Ok(value), |accumulator, (path, files)| {
-                let filler: Value = json!(Value::Array(files.iter().map(|_| Value::Null).collect()));
-                files.iter().fold(accumulator, |acc, _| {
-                    let path_vec: VecDeque<&str> = path.split('.').collect();
-                    acc.and_then(|a| add_field(path_vec, a, &filler))
-                })
-            })?,
+            GraphQLMultipart::Multiple(multiple) => {
+                multiple.map.iter().fold(Ok(value), |accumulator, (path, files)| {
+                    let filler: Value = json!(Value::Array(files.iter().map(|_| Value::Null).collect()));
+                    files.iter().fold(accumulator, |acc, _| {
+                        let path_vec: VecDeque<&str> = path.split('.').collect();
+                        acc.and_then(|a| add_field(path_vec, a, &filler))
+                    })
+                })?
+            }
         };
 
         Ok(Self {

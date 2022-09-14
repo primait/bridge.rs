@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::error::Error;
 use std::iter::FromIterator;
 
@@ -9,7 +9,7 @@ use reqwest::{
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use prima_bridge::{prelude::*, MultipartFile, RestMultipart};
+use prima_bridge::{prelude::*, MultipartFile, MultipartFormFileField, RestMultipart};
 
 use crate::common::*;
 
@@ -217,16 +217,16 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
 
     let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
 
-    let multipart = RestMultipart::multiple(HashMap::from_iter(
+    let multipart = RestMultipart::multiple(HashSet::from_iter(
         [
-            (
-                "first_file".to_string(),
+            MultipartFormFileField::new(
+                "first_file",
                 MultipartFile::new(b"Hello, world!".to_vec())
                     .with_name("hello_world.txt")
                     .with_mime_type("text/plain"),
             ),
-            (
-                "second_file".to_string(),
+            MultipartFormFileField::new(
+                "second_file",
                 MultipartFile::new(b"Goodbye, world!".to_vec())
                     .with_name("goodbye_world.dat")
                     .with_mime_type("application/octet-stream"),
