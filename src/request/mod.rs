@@ -8,7 +8,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 pub use body::{Body, GraphQLBody};
-pub use request_type::{GraphQLRequest, Multipart, MultipartFile, Request, RestRequest};
+pub use request_type::{GraphQLRequest, Multipart, MultipartFile, Request, RestMultipart, RestRequest};
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};

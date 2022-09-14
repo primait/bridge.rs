@@ -199,36 +199,14 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                 match multipart {
                     Multipart::Single(single) => {
                         map.insert(ZERO.to_string(), vec![single.path.to_string()]);
-                        let part: Part = Part::bytes(single.file.bytes().to_vec());
-                        let part: Part = match single.file.name() {
-                            None => part,
-                            Some(name) => part.file_name(name.to_string()),
-                        };
-                        let part: Part = match &single.file.mime_type_opt {
-                            None => part,
-                            Some(mime_str) => part
-                                .mime_str(mime_str)
-                                .map_err(|_| PrimaBridgeError::InvalidMultipartFileMimeType(mime_str.to_string()))?,
-                        };
-                        form = form.part(ZERO.to_string(), part);
+                        form = form.part(ZERO.to_string(), single.file.clone().into_part()?);
                     }
                     Multipart::Multiple(multiple) => {
                         let mut index = 0;
                         for (path, files) in multiple.map.iter() {
                             for (id, file) in files.iter().enumerate() {
                                 map.insert(index.to_string(), vec![format!("{}.{}", path, id)]);
-                                let part: Part = Part::bytes(file.bytes().to_vec());
-                                let part: Part = match file.name() {
-                                    None => part,
-                                    Some(name) => part.file_name(name.to_string()),
-                                };
-                                let part: Part = match &file.mime_type_opt {
-                                    None => part,
-                                    Some(mime_str) => part.mime_str(mime_str).map_err(|_| {
-                                        PrimaBridgeError::InvalidMultipartFileMimeType(mime_str.to_string())
-                                    })?,
-                                };
-                                form = form.part(index.to_string(), part);
+                                form = form.part(index.to_string(), file.clone().into_part()?);
                                 index += 1;
                             }
                         }
@@ -246,6 +224,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 
 // The path in query variable. Eg: if query/mutation has a param named files (representing the
 // multipart upload) this should be something like `variables.files`
+#[derive(Debug)]
 pub enum Multipart {
     Single(Single),
     Multiple(Multiple),
@@ -263,9 +242,9 @@ impl Multipart {
 
 #[derive(Debug, Clone)]
 pub struct MultipartFile {
-    bytes: Vec<u8>,
-    name_opt: Option<String>,
-    mime_type_opt: Option<String>,
+    pub(crate) bytes: Vec<u8>,
+    pub(crate) name_opt: Option<String>,
+    pub(crate) mime_type_opt: Option<String>,
 }
 
 impl MultipartFile {
@@ -275,14 +254,6 @@ impl MultipartFile {
             name_opt: None,
             mime_type_opt: None,
         }
-    }
-
-    fn bytes(&self) -> &[u8] {
-        &self.bytes
-    }
-
-    fn name(&self) -> &Option<String> {
-        &self.name_opt
     }
 
     pub fn with_name(self, name: impl Into<String>) -> Self {
@@ -298,11 +269,25 @@ impl MultipartFile {
             ..self
         }
     }
+
+    pub(crate) fn into_part(self) -> PrimaBridgeResult<Part> {
+        let mut part = Part::stream_with_length(self.bytes.clone(), self.bytes.len() as u64);
+        if let Some(name) = &self.name_opt {
+            part = part.file_name(name.clone());
+        }
+        if let Some(mime) = &self.mime_type_opt {
+            part = part
+                .mime_str(mime.as_str())
+                .map_err(|_| PrimaBridgeError::InvalidMultipartFileMimeType(mime.to_string()))?;
+        }
+        Ok(part)
+    }
 }
 
+#[derive(Debug)]
 pub struct Single {
-    path: String,
-    file: MultipartFile,
+    pub(crate) path: String,
+    pub(crate) file: MultipartFile,
 }
 
 impl Single {
@@ -314,8 +299,9 @@ impl Single {
     }
 }
 
+#[derive(Debug)]
 pub struct Multiple {
-    map: HashMap<String, Vec<MultipartFile>>,
+    pub(crate) map: HashMap<String, Vec<MultipartFile>>,
 }
 
 impl Multiple {

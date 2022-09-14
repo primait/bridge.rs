@@ -1,15 +1,20 @@
+use std::borrow::Cow;
+use std::collections::HashMap;
 use std::convert::TryInto;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
-use reqwest::{Method, Url};
+use reqwest::{
+    header::{HeaderMap, HeaderValue, CONTENT_TYPE},
+    multipart::Form,
+    Method, Url,
+};
 use serde::Serialize;
 use uuid::Uuid;
 
 use crate::errors::PrimaBridgeResult;
 use crate::request::{Body, DeliverableRequest, RequestType};
-use crate::Bridge;
+use crate::{Bridge, MultipartFile};
 
 /// The RestRequest is a struct that represent a REST request to be done with the [Bridge](./../struct.Bridge.html)
 #[derive(Debug)]
@@ -23,6 +28,7 @@ pub struct RestRequest<'a> {
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
     custom_headers: HeaderMap,
+    multipart: Option<RestMultipart>,
 }
 
 impl<'a> RestRequest<'a> {
@@ -38,6 +44,22 @@ impl<'a> RestRequest<'a> {
             query_pairs: Default::default(),
             ignore_status_code: Default::default(),
             custom_headers: Default::default(),
+            multipart: Default::default(),
+        }
+    }
+
+    pub fn new_with_multipart(bridge: &'a Bridge, multipart: RestMultipart) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            bridge,
+            body: Default::default(),
+            method: Default::default(), // GET
+            path: Default::default(),
+            timeout: Duration::from_secs(60),
+            query_pairs: Default::default(),
+            ignore_status_code: Default::default(),
+            custom_headers: Default::default(),
+            multipart: Some(multipart),
         }
     }
 }
@@ -141,5 +163,55 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
 
     fn get_request_type(&self) -> RequestType {
         RequestType::Rest
+    }
+
+    fn get_form(&self) -> PrimaBridgeResult<Option<Form>> {
+        let multipart = match &self.multipart {
+            Some(multipart) => multipart,
+            None => return Ok(None),
+        };
+
+        let mut form = Form::new();
+
+        match multipart {
+            RestMultipart::Single { form_field, file } => {
+                form = form.part(form_field.clone(), file.clone().into_part()?);
+            }
+
+            RestMultipart::Multiple { files } => {
+                for (form_field, file) in files {
+                    form = form.part(form_field.clone(), file.clone().into_part()?);
+                }
+            }
+        }
+
+        Ok(Some(form))
+    }
+}
+
+#[derive(Debug)]
+pub enum RestMultipart {
+    Single {
+        form_field: Cow<'static, str>,
+        file: MultipartFile,
+    },
+
+    Multiple {
+        files: HashMap<String, MultipartFile>,
+    },
+}
+impl RestMultipart {
+    pub fn single<S>(form_field: S, file: MultipartFile) -> Self
+    where
+        S: Into<Cow<'static, str>>,
+    {
+        Self::Single {
+            form_field: form_field.into(),
+            file,
+        }
+    }
+
+    pub fn multiple(files: HashMap<String, MultipartFile>) -> Self {
+        Self::Multiple { files }
     }
 }

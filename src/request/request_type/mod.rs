@@ -1,7 +1,7 @@
 pub use graphql::GraphQLRequest;
 pub use graphql::{Multipart, MultipartFile};
 use reqwest::Method;
-pub use rest::RestRequest;
+pub use rest::{RestMultipart, RestRequest};
 use serde::Serialize;
 
 use crate::errors::PrimaBridgeResult;
