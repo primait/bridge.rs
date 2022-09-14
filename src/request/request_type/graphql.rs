@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
-use reqwest::multipart::{Form, Part};
+use reqwest::multipart::Form;
 use reqwest::{Method, Url};
 use serde::Serialize;
 use serde_json::{json, Map, Value};
@@ -13,6 +13,8 @@ use uuid::Uuid;
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::request::{Body, DeliverableRequest, GraphQLBody, RequestType};
 use crate::Bridge;
+
+pub use crate::request::body::MultipartFile;
 
 const VARIABLES: &str = "variables";
 const ZERO: &str = "0";
@@ -224,7 +226,6 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 
 // The path in query variable. Eg: if query/mutation has a param named files (representing the
 // multipart upload) this should be something like `variables.files`
-#[derive(Debug)]
 pub enum Multipart {
     Single(Single),
     Multiple(Multiple),
@@ -240,54 +241,9 @@ impl Multipart {
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct MultipartFile {
-    pub(crate) bytes: Vec<u8>,
-    pub(crate) name_opt: Option<String>,
-    pub(crate) mime_type_opt: Option<String>,
-}
-
-impl MultipartFile {
-    pub fn new(bytes: Vec<u8>) -> Self {
-        Self {
-            bytes,
-            name_opt: None,
-            mime_type_opt: None,
-        }
-    }
-
-    pub fn with_name(self, name: impl Into<String>) -> Self {
-        Self {
-            name_opt: Some(name.into()),
-            ..self
-        }
-    }
-
-    pub fn with_mime_type(self, mime_type: impl Into<String>) -> Self {
-        Self {
-            mime_type_opt: Some(mime_type.into()),
-            ..self
-        }
-    }
-
-    pub(crate) fn into_part(self) -> PrimaBridgeResult<Part> {
-        let mut part = Part::stream_with_length(self.bytes.clone(), self.bytes.len() as u64);
-        if let Some(name) = &self.name_opt {
-            part = part.file_name(name.clone());
-        }
-        if let Some(mime) = &self.mime_type_opt {
-            part = part
-                .mime_str(mime.as_str())
-                .map_err(|_| PrimaBridgeError::InvalidMultipartFileMimeType(mime.to_string()))?;
-        }
-        Ok(part)
-    }
-}
-
-#[derive(Debug)]
 pub struct Single {
-    pub(crate) path: String,
-    pub(crate) file: MultipartFile,
+    path: String,
+    file: MultipartFile,
 }
 
 impl Single {
@@ -299,9 +255,8 @@ impl Single {
     }
 }
 
-#[derive(Debug)]
 pub struct Multiple {
-    pub(crate) map: HashMap<String, Vec<MultipartFile>>,
+    map: HashMap<String, Vec<MultipartFile>>,
 }
 
 impl Multiple {
