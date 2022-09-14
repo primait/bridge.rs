@@ -1,4 +1,7 @@
+use reqwest::multipart::Part;
 use serde::Serialize;
+
+use crate::prelude::{PrimaBridgeResult, PrimaBridgeError};
 
 #[derive(Clone, Debug)]
 pub struct Body {
@@ -66,5 +69,50 @@ impl<T: Serialize> From<(String, Option<T>)> for GraphQLBody<T> {
 impl<T: Serialize> From<(String, T)> for GraphQLBody<T> {
     fn from((query, variables): (String, T)) -> Self {
         (query.as_str(), Some(variables)).into()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct MultipartFile {
+    pub(crate) bytes: Vec<u8>,
+    pub(crate) name_opt: Option<String>,
+    pub(crate) mime_type_opt: Option<String>,
+}
+
+impl MultipartFile {
+    pub fn new(bytes: Vec<u8>) -> Self {
+        Self {
+            bytes,
+            name_opt: None,
+            mime_type_opt: None,
+        }
+    }
+
+    pub fn with_name(self, name: impl Into<String>) -> Self {
+        Self {
+            name_opt: Some(name.into()),
+            ..self
+        }
+    }
+
+    pub fn with_mime_type(self, mime_type: impl Into<String>) -> Self {
+        Self {
+            mime_type_opt: Some(mime_type.into()),
+            ..self
+        }
+    }
+
+    pub(crate) fn into_part(self) -> PrimaBridgeResult<Part> {
+        let len = self.bytes.len() as u64;
+        let mut part = Part::stream_with_length(self.bytes, len);
+        if let Some(name) = self.name_opt {
+            part = part.file_name(name);
+        }
+        if let Some(mime) = self.mime_type_opt {
+            part = part
+                .mime_str(mime.as_str())
+                .map_err(|_| PrimaBridgeError::InvalidMultipartFileMimeType(mime.to_string()))?;
+        }
+        Ok(part)
     }
 }
