@@ -171,8 +171,8 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         self.method.clone()
     }
 
-    fn get_custom_headers(&self) -> HeaderMap {
-        self.custom_headers.clone()
+    fn get_custom_headers(&self) -> &HeaderMap {
+        &self.custom_headers
     }
 
     #[cfg(feature = "auth0")]
@@ -180,17 +180,17 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         &self.bridge.auth0_opt
     }
 
-    fn get_body(&self) -> Vec<u8> {
-        self.body.clone().into()
+    fn into_body(self) -> Vec<u8> {
+        self.body.into()
     }
 
     fn get_request_type(&self) -> RequestType {
         RequestType::GraphQL
     }
 
-    fn get_form(&self) -> PrimaBridgeResult<Option<Form>> {
-        match &self.multipart {
-            None => Ok(None),
+    fn into_form(self) -> PrimaBridgeResult<Result<Form, Self>> {
+        match self.multipart {
+            None => Ok(Err(self)),
             Some(multipart) => {
                 let mut form: Form = Form::new();
                 let mut map: HashMap<String, Vec<String>> = HashMap::<String, Vec<String>>::new();
@@ -199,14 +199,14 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                 match multipart {
                     GraphQLMultipart::Single(single) => {
                         map.insert(ZERO.to_string(), vec![single.path.to_string()]);
-                        form = form.part(ZERO.to_string(), single.file.clone().into_part()?);
+                        form = form.part(ZERO.to_string(), single.file.into_part()?);
                     }
                     GraphQLMultipart::Multiple(multiple) => {
                         let mut index = 0;
-                        for (path, files) in multiple.map.iter() {
-                            for (id, file) in files.iter().enumerate() {
+                        for (path, files) in multiple.map.into_iter() {
+                            for (id, file) in files.into_iter().enumerate() {
                                 map.insert(index.to_string(), vec![format!("{}.{}", path, id)]);
-                                form = form.part(index.to_string(), file.clone().into_part()?);
+                                form = form.part(index.to_string(), file.into_part()?);
                                 index += 1;
                             }
                         }
@@ -216,7 +216,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
                 let expectation: &str = "Internal error while to serializing form field `map`";
                 let map_string: String = serde_json::to_string(&map).expect(expectation);
                 form = form.text("map", map_string);
-                Ok(Some(form))
+                Ok(Ok(form))
             }
         }
     }

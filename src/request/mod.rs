@@ -54,7 +54,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// adds a new set of headers to the request. Any header already present gets merged.
     fn add_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         let mut custom_headers = HeaderMap::new();
-        custom_headers.extend(self.get_custom_headers());
+        custom_headers.extend(self.get_custom_headers().iter().map(|(k, v)| (k.clone(), v.clone())));
         custom_headers.extend(headers);
         self.set_custom_headers(custom_headers)
     }
@@ -107,7 +107,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     fn get_method(&self) -> Method;
 
     #[doc(hidden)]
-    fn get_custom_headers(&self) -> HeaderMap;
+    fn get_custom_headers(&self) -> &HeaderMap;
 
     #[cfg(feature = "auth0")]
     #[doc(hidden)]
@@ -132,7 +132,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
     fn get_all_headers(&self) -> HeaderMap {
         let mut additional_headers = HeaderMap::new();
-        additional_headers.extend(self.get_custom_headers());
+        additional_headers.extend(self.get_custom_headers().iter().map(|(k, v)| (k.clone(), v.clone())));
         additional_headers.extend(self.tracing_headers());
         #[cfg(feature = "auth0")]
         additional_headers.extend(self.get_auth0_headers());
@@ -140,19 +140,23 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     }
 
     #[doc(hidden)]
-    fn get_body(&self) -> Vec<u8>;
-
-    #[doc(hidden)]
     fn get_request_type(&self) -> RequestType;
 
-    fn get_form(&self) -> PrimaBridgeResult<Option<reqwest::multipart::Form>> {
-        Ok(None)
+    #[doc(hidden)]
+    fn into_body(self) -> Vec<u8>;
+
+    #[doc(hidden)]
+    /// Returns `Ok(Err(Self))` if this request has no form data
+    fn into_form(self) -> PrimaBridgeResult<Result<reqwest::multipart::Form, Self>> {
+        Ok(Err(self))
     }
 
-    async fn send(&'a self) -> PrimaBridgeResult<Response> {
+    async fn send(self) -> PrimaBridgeResult<Response> {
         use futures_util::future::TryFutureExt;
         let request_id = self.get_id();
         let url = self.get_url();
+        let ignore_status_code = self.get_ignore_status_code();
+        let request_type = self.get_request_type();
 
         let request_builder = self
             .get_bridge()
@@ -162,9 +166,9 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
             .headers(self.get_all_headers());
 
-        let response = match self.get_form()? {
-            Some(form) => request_builder.multipart(form),
-            None => request_builder.body(self.get_body()),
+        let response = match self.into_form()? {
+            Ok(form) => request_builder.multipart(form),
+            Err(this) => request_builder.body(this.into_body()),
         }
         .send()
         .map_err(|e| PrimaBridgeError::HttpError {
@@ -174,7 +178,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         .await?;
 
         let status_code = response.status();
-        if !self.get_ignore_status_code() && !status_code.is_success() {
+        if !ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
 
@@ -189,16 +193,16 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .await?
             .to_vec();
 
-        match self.get_request_type() {
+        match request_type {
             RequestType::Rest => Ok(Response::rest(
-                url.clone(),
+                url,
                 response_body,
                 status_code,
                 response_headers,
                 request_id,
             )),
             RequestType::GraphQL => Ok(Response::graphql(
-                url.clone(),
+                url,
                 response_body,
                 status_code,
                 response_headers,
