@@ -12,9 +12,7 @@ use uuid::Uuid;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::request::{Body, DeliverableRequest, GraphQLBody, RequestType};
-use crate::Bridge;
-
-pub use crate::request::body::MultipartFile;
+use crate::{Bridge, MultipartFile};
 
 const VARIABLES: &str = "variables";
 const ZERO: &str = "0";
