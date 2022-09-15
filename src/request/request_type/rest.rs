@@ -12,7 +12,7 @@ use serde::Serialize;
 use uuid::Uuid;
 
 use crate::errors::PrimaBridgeResult;
-use crate::request::{Body, DeliverableRequest, MultipartFormFileField, RequestType};
+use crate::request::{Body, DeliverableRequest, DeliverableRequestBody, MultipartFormFileField, RequestType};
 use crate::{Bridge, MultipartFile};
 
 /// The RestRequest is a struct that represent a REST request to be done with the [Bridge](./../struct.Bridge.html)
@@ -157,35 +157,19 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         &self.bridge.auth0_opt
     }
 
-    fn into_body(self) -> Vec<u8> {
-        self.body.map(Into::into).unwrap_or_default()
+    fn into_body(self) -> PrimaBridgeResult<DeliverableRequestBody> {
+        Ok(match self.multipart {
+            Some(multipart) => DeliverableRequestBody::Multipart(multipart.into_form()?),
+            None => self
+                .body
+                .map(Into::into)
+                .map(DeliverableRequestBody::Bytes)
+                .unwrap_or_default(),
+        })
     }
 
     fn get_request_type(&self) -> RequestType {
         RequestType::Rest
-    }
-
-    fn into_form(self) -> PrimaBridgeResult<Result<Form, Self>> {
-        let multipart = match self.multipart {
-            Some(multipart) => multipart,
-            None => return Ok(Err(self)),
-        };
-
-        let mut form = Form::new();
-
-        match multipart {
-            RestMultipart::Single(field) => {
-                form = form.part(field.field_name, field.file.into_part()?);
-            }
-
-            RestMultipart::Multiple(fields) => {
-                for field in fields {
-                    form = form.part(field.field_name, field.file.into_part()?);
-                }
-            }
-        }
-
-        Ok(Ok(form))
     }
 }
 
@@ -204,5 +188,23 @@ impl RestMultipart {
 
     pub fn multiple(files: HashSet<MultipartFormFileField>) -> Self {
         Self::Multiple(files)
+    }
+
+    fn into_form(self) -> PrimaBridgeResult<Form> {
+        let mut form = Form::new();
+
+        match self {
+            Self::Single(field) => {
+                form = form.part(field.field_name, field.file.into_part()?);
+            }
+
+            Self::Multiple(fields) => {
+                for field in fields {
+                    form = form.part(field.field_name, field.file.into_part()?);
+                }
+            }
+        }
+
+        Ok(form)
     }
 }

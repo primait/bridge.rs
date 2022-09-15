@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::multipart::Form;
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
@@ -20,6 +21,16 @@ pub enum RequestType {
     Rest,
     #[allow(clippy::upper_case_acronyms)]
     GraphQL,
+}
+
+pub enum DeliverableRequestBody {
+    Bytes(Vec<u8>),
+    Multipart(Form),
+}
+impl Default for DeliverableRequestBody {
+    fn default() -> Self {
+        Self::Bytes(Default::default())
+    }
 }
 
 /// Represent a request that is ready to be delivered to the server
@@ -143,13 +154,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     fn get_request_type(&self) -> RequestType;
 
     #[doc(hidden)]
-    fn into_body(self) -> Vec<u8>;
-
-    #[doc(hidden)]
-    /// Returns `Ok(Err(Self))` if this request has no form data
-    fn into_form(self) -> PrimaBridgeResult<Result<reqwest::multipart::Form, Self>> {
-        Ok(Err(self))
-    }
+    fn into_body(self) -> PrimaBridgeResult<DeliverableRequestBody>;
 
     async fn send(self) -> PrimaBridgeResult<Response> {
         use futures_util::future::TryFutureExt;
@@ -166,9 +171,9 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
             .headers(self.get_all_headers());
 
-        let response = match self.into_form()? {
-            Ok(form) => request_builder.multipart(form),
-            Err(this) => request_builder.body(this.into_body()),
+        let response = match self.into_body()? {
+            DeliverableRequestBody::Bytes(bytes) => request_builder.body(bytes),
+            DeliverableRequestBody::Multipart(form) => request_builder.multipart(form),
         }
         .send()
         .map_err(|e| PrimaBridgeError::HttpError {
