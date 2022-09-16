@@ -55,10 +55,18 @@ impl From<String> for Body {
     }
 }
 
-impl From<&str> for Body {
-    fn from(val: &str) -> Self {
+impl From<&'static str> for Body {
+    fn from(val: &'static str) -> Self {
         Self {
             inner: val.to_string().into_bytes().into(),
+        }
+    }
+}
+
+impl From<&'static [u8]> for Body {
+    fn from(val: &'static [u8]) -> Self {
+        Self {
+            inner: val.to_vec().into(),
         }
     }
 }
