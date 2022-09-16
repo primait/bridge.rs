@@ -74,17 +74,17 @@ impl<T: Serialize> From<(String, T)> for GraphQLBody<T> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct MultipartFile {
-    pub(crate) bytes: Vec<u8>,
+    pub(crate) body: reqwest::Body,
     pub(crate) name_opt: Option<String>,
     pub(crate) mime_type_opt: Option<String>,
 }
 
 impl MultipartFile {
-    pub fn new(bytes: Vec<u8>) -> Self {
+    pub fn new(body: impl Into<reqwest::Body>) -> Self {
         Self {
-            bytes,
+            body: body.into(),
             name_opt: None,
             mime_type_opt: None,
         }
@@ -105,8 +105,7 @@ impl MultipartFile {
     }
 
     pub(crate) fn into_part(self) -> PrimaBridgeResult<Part> {
-        let len = self.bytes.len() as u64;
-        let mut part = Part::stream_with_length(self.bytes, len);
+        let mut part = Part::stream(self.body);
         if let Some(name) = self.name_opt {
             part = part.file_name(name);
         }

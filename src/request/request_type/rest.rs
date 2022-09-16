@@ -186,6 +186,7 @@ impl RestMultipart {
         Self::Single(MultipartFormFileField::new(form_field, file))
     }
 
+    #[allow(clippy::mutable_key_type)] // caused by reqwest::Body
     pub fn multiple(files: HashSet<MultipartFormFileField>) -> Self {
         Self::Multiple(files)
     }
