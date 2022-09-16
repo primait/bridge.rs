@@ -24,12 +24,12 @@ pub enum RequestType {
 }
 
 pub enum DeliverableRequestBody {
-    Bytes(Vec<u8>),
+    RawBody(Body),
     Multipart(Form),
 }
 impl Default for DeliverableRequestBody {
     fn default() -> Self {
-        Self::Bytes(Default::default())
+        Self::RawBody(Default::default())
     }
 }
 
@@ -172,7 +172,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .headers(self.get_all_headers());
 
         let response = match self.into_body()? {
-            DeliverableRequestBody::Bytes(bytes) => request_builder.body(bytes),
+            DeliverableRequestBody::RawBody(body) => request_builder.body(body.inner),
             DeliverableRequestBody::Multipart(form) => request_builder.multipart(form),
         }
         .send()

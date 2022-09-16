@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
-use reqwest::multipart::Form;
+use reqwest::multipart::{Form, Part};
 use reqwest::{Method, Url};
 use serde::Serialize;
 use serde_json::{json, Map, Value};
@@ -185,7 +185,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
     fn into_body(self) -> PrimaBridgeResult<DeliverableRequestBody> {
         Ok(match self.multipart {
             Some(multipart) => DeliverableRequestBody::Multipart(multipart.into_form(self.body)?),
-            None => DeliverableRequestBody::Bytes(self.body.into()),
+            None => DeliverableRequestBody::RawBody(self.body),
         })
     }
 
@@ -213,7 +213,7 @@ impl GraphQLMultipart {
     pub fn into_form(self, body: Body) -> PrimaBridgeResult<Form> {
         let mut form: Form = Form::new();
         let mut map: HashMap<String, Vec<String>> = HashMap::<String, Vec<String>>::new();
-        form = form.text("operations", String::from(&body));
+        form = form.part("operations", Part::stream(body.inner));
 
         match self {
             Self::Single(single) => {
@@ -363,12 +363,12 @@ mod tests {
 
         let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
 
-        let body_str: String = (&req.body).into();
-        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        let body_str = req.body.as_str().unwrap();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_ref()).unwrap();
         assert_eq!(graphql_body.variables.unwrap(), variables);
 
         let parsed_graphql_body: Result<GraphQLBody<VariablesSingle>, serde_json::Error> =
-            serde_json::from_str(body_str.as_str());
+            serde_json::from_str(body_str.as_ref());
 
         assert!(parsed_graphql_body.is_ok());
     }
@@ -383,15 +383,15 @@ mod tests {
 
         let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
-        let body_str: String = (&req.body).into();
+        let body_str = req.body.as_str().unwrap();
 
-        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_ref()).unwrap();
 
         let expectation: Value = get_single_file_multipart_value();
         assert_eq!(graphql_body.variables.unwrap(), expectation);
 
         let parsed_graphql_body: Result<GraphQLBody<VariablesSingle>, serde_json::Error> =
-            serde_json::from_str(body_str.as_str());
+            serde_json::from_str(body_str.as_ref());
 
         assert!(parsed_graphql_body.is_ok());
     }
@@ -406,14 +406,14 @@ mod tests {
 
         let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
-        let body_str: String = (&req.body).into();
-        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        let body_str = req.body.as_str().unwrap();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_ref()).unwrap();
 
         let expectation: Value = get_single_file_multipart_value();
         assert_eq!(graphql_body.variables.unwrap(), expectation);
 
         let parsed_graphql_body: Result<GraphQLBody<VariablesSingle>, serde_json::Error> =
-            serde_json::from_str(body_str.as_str());
+            serde_json::from_str(body_str.as_ref());
 
         assert!(parsed_graphql_body.is_ok());
     }
@@ -431,8 +431,8 @@ mod tests {
 
         let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
-        let body_str: String = (&req.body).into();
-        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        let body_str = req.body.as_str().unwrap();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_ref()).unwrap();
 
         let expectation: Value = json!({
             "other":{"whatever": Value::String("hello".to_string())},
@@ -441,7 +441,7 @@ mod tests {
         assert_eq!(graphql_body.variables.unwrap(), expectation);
 
         let parsed_graphql_body: Result<GraphQLBody<VariablesSingle>, serde_json::Error> =
-            serde_json::from_str(body_str.as_str());
+            serde_json::from_str(body_str.as_ref());
 
         assert!(parsed_graphql_body.is_ok());
     }
@@ -456,13 +456,13 @@ mod tests {
 
         let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
 
-        let body_str: String = (&req.body).into();
-        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        let body_str = req.body.as_str().unwrap();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_ref()).unwrap();
 
         assert_eq!(graphql_body.variables.unwrap(), variables);
 
         let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
-            serde_json::from_str(body_str.as_str());
+            serde_json::from_str(body_str.as_ref());
 
         assert!(parsed_graphql_body.is_ok());
     }
@@ -477,13 +477,13 @@ mod tests {
 
         let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables.clone())), multipart).unwrap();
 
-        let body_str: String = (&req.body).into();
-        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        let body_str = req.body.as_str().unwrap();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_ref()).unwrap();
 
         assert_eq!(graphql_body.variables.unwrap(), variables);
 
         let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
-            serde_json::from_str(body_str.as_str());
+            serde_json::from_str(body_str.as_ref());
 
         assert!(parsed_graphql_body.is_ok());
     }
@@ -498,14 +498,14 @@ mod tests {
 
         let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
-        let body_str: String = (&req.body).into();
-        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        let body_str = req.body.as_str().unwrap();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_ref()).unwrap();
 
         let expectation: Value = get_multi_files_multipart_value();
         assert_eq!(graphql_body.variables.unwrap(), expectation);
 
         let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
-            serde_json::from_str(body_str.as_str());
+            serde_json::from_str(body_str.as_ref());
 
         assert!(parsed_graphql_body.is_ok());
     }
@@ -520,14 +520,14 @@ mod tests {
 
         let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
-        let body_str: String = (&req.body).into();
-        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        let body_str = req.body.as_str().unwrap();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_ref()).unwrap();
 
         let expectation: Value = get_multi_files_multipart_value();
         assert_eq!(graphql_body.variables.unwrap(), expectation);
 
         let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
-            serde_json::from_str(body_str.as_str());
+            serde_json::from_str(body_str.as_ref());
 
         assert!(parsed_graphql_body.is_ok());
     }
@@ -542,14 +542,14 @@ mod tests {
 
         let req = GraphQLRequest::new_with_multipart(&bridge, ("query", Some(variables)), multipart).unwrap();
 
-        let body_str: String = (&req.body).into();
-        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_str()).unwrap();
+        let body_str = req.body.as_str().unwrap();
+        let graphql_body: GraphQLBody<Value> = serde_json::from_str(body_str.as_ref()).unwrap();
 
         let expectation: Value = get_multi_files_multipart_value();
         assert_eq!(graphql_body.variables.unwrap(), expectation);
 
         let parsed_graphql_body: Result<GraphQLBody<VariablesMulti>, serde_json::Error> =
-            serde_json::from_str(body_str.as_str());
+            serde_json::from_str(body_str.as_ref());
 
         assert!(parsed_graphql_body.is_ok());
     }

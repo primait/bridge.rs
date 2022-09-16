@@ -163,7 +163,7 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
             None => self
                 .body
                 .map(Into::into)
-                .map(DeliverableRequestBody::Bytes)
+                .map(DeliverableRequestBody::RawBody)
                 .unwrap_or_default(),
         })
     }

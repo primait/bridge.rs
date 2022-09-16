@@ -5,15 +5,30 @@ use serde::Serialize;
 
 use crate::prelude::{PrimaBridgeError, PrimaBridgeResult};
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Body {
-    inner: Vec<u8>,
+    pub(crate) inner: reqwest::Body,
+}
+
+impl Body {
+    #[cfg(test)]
+    pub(crate) fn as_str(&self) -> Option<Cow<'_, str>> {
+        self.inner.as_bytes().map(String::from_utf8_lossy)
+    }
+}
+
+impl Default for Body {
+    fn default() -> Self {
+        Self {
+            inner: reqwest::Body::from(Vec::new()),
+        }
+    }
 }
 
 impl From<String> for Body {
     fn from(val: String) -> Self {
         Self {
-            inner: val.into_bytes(),
+            inner: val.into_bytes().into(),
         }
     }
 }
@@ -21,26 +36,14 @@ impl From<String> for Body {
 impl From<&str> for Body {
     fn from(val: &str) -> Self {
         Self {
-            inner: val.to_string().into_bytes(),
+            inner: val.to_string().into_bytes().into(),
         }
-    }
-}
-
-impl From<&Body> for String {
-    fn from(body: &Body) -> Self {
-        String::from_utf8_lossy(&body.inner).to_string()
     }
 }
 
 impl From<Vec<u8>> for Body {
     fn from(value: Vec<u8>) -> Self {
-        Self { inner: value }
-    }
-}
-
-impl From<Body> for Vec<u8> {
-    fn from(body: Body) -> Self {
-        body.inner
+        Self { inner: value.into() }
     }
 }
 
@@ -76,13 +79,13 @@ impl<T: Serialize> From<(String, T)> for GraphQLBody<T> {
 
 #[derive(Debug)]
 pub struct MultipartFile {
-    pub(crate) body: reqwest::Body,
+    pub(crate) body: Body,
     pub(crate) name_opt: Option<String>,
     pub(crate) mime_type_opt: Option<String>,
 }
 
 impl MultipartFile {
-    pub fn new(body: impl Into<reqwest::Body>) -> Self {
+    pub fn new(body: impl Into<Body>) -> Self {
         Self {
             body: body.into(),
             name_opt: None,
@@ -105,7 +108,7 @@ impl MultipartFile {
     }
 
     pub(crate) fn into_part(self) -> PrimaBridgeResult<Part> {
-        let mut part = Part::stream(self.body);
+        let mut part = Part::stream(self.body.inner);
         if let Some(name) = self.name_opt {
             part = part.file_name(name);
         }
