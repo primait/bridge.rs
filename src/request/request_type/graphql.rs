@@ -195,7 +195,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 }
 
 /// A [GraphQLRequest] multipart body as according to [this specification](https://github.com/jaydenseric/graphql-multipart-request-spec).
-/// 
+///
 /// Can either be `Single` (one file) or `Multiple` (multiple files).
 pub enum GraphQLMultipart {
     Single(Single),

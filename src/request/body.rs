@@ -7,9 +7,9 @@ use crate::prelude::{PrimaBridgeError, PrimaBridgeResult};
 
 #[derive(Debug)]
 /// A request body.
-/// 
+///
 /// It can be an in-memory buffer, a file, or a stream.
-/// 
+///
 /// See the various `From` implementations for ways to construct a `Body`.
 pub struct Body {
     pub(crate) inner: reqwest::Body,

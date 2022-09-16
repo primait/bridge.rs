@@ -22,8 +22,8 @@ use reqwest::Url;
 pub use self::{
     builder::BridgeBuilder,
     request::{
-        Body, GraphQLMultipart, GraphQLRequest, MultipartFile, MultipartFormFileField, Request, RestMultipart,
-        RestRequest, DeliverableRequest
+        Body, DeliverableRequest, GraphQLMultipart, GraphQLRequest, MultipartFile, MultipartFormFileField, Request,
+        RestMultipart, RestRequest,
     },
     response::graphql::{Error, ParsedGraphqlResponse, ParsedGraphqlResponseExt, PossiblyParsedData},
     response::Response,
