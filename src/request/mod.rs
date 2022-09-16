@@ -59,19 +59,25 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// get request timeout
     fn get_timeout(&self) -> Duration;
 
+    /// adds a new header to the request. If the header is already present, it gets overwritten.
+    fn with_custom_header(mut self, name: HeaderName, value: HeaderValue) -> Self {
+        self.get_custom_headers_mut().insert(name, value);
+        self
+    }
+
     /// adds a new set of headers to the request. Any header already present gets overwritten.
     fn with_custom_headers(mut self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         self.get_custom_headers_mut().extend(headers);
         self
     }
 
-    /// add a custom query string param
+    /// add a custom query string parameter
     fn with_query_pair(mut self, name: &'a str, value: &'a str) -> Self {
         self.get_query_pairs_mut().push((name, value));
         self
     }
 
-    /// add a custom query string param
+    /// add a list of custom query string parameters
     fn with_query_pairs(mut self, pairs: Vec<(&'a str, &'a str)>) -> Self {
         self.get_query_pairs_mut().extend(pairs);
         self
