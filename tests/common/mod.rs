@@ -3,6 +3,12 @@ use reqwest::Url;
 
 use prima_bridge::prelude::*;
 
+#[allow(unused)]
+pub fn enable_mockito_logging() {
+    std::env::set_var("RUST_LOG", "mockito=debug");
+    env_logger::init();
+}
+
 pub fn create_bridge(status_code: usize, body: &str) -> (Mock, Bridge) {
     create_bridge_with_path(status_code, body, "/")
 }
