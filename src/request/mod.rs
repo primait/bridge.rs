@@ -59,44 +59,28 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// get request timeout
     fn get_timeout(&self) -> Duration;
 
-    /// adds a new set of headers to the request. Any header already present gets merged.
-    fn set_custom_headers(self, headers: HeaderMap) -> Self;
+    /// sets the headers for a request (merging with the existing headers)
+    fn with_custom_headers(self, headers: HeaderMap) -> Self;
 
     /// adds a new set of headers to the request. Any header already present gets merged.
-    fn add_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
-        let mut custom_headers = HeaderMap::new();
-        custom_headers.extend(self.get_custom_headers().iter().map(|(k, v)| (k.clone(), v.clone())));
-        custom_headers.extend(headers);
-        self.set_custom_headers(custom_headers)
-    }
-
-    /// adds a new set of headers to the request. Any header already present gets removed.
-    fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self;
-
-    /// add a custom header to the set of request headers
-    fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
-        self.add_custom_headers(headers)
+    fn add_custom_headers(mut self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+        self.get_custom_headers_mut().extend(headers);
+        self
     }
 
     /// add a custom query string param
-    fn with_query_pair(self, name: &'a str, value: &'a str) -> Self {
-        let mut query_pairs = self.get_query_pairs().to_vec();
-        query_pairs.push((name, value));
-        self.set_query_pairs(query_pairs)
+    fn add_query_pair(mut self, name: &'a str, value: &'a str) -> Self {
+        self.get_query_pairs_mut().push((name, value));
+        self
     }
 
     /// add a custom query string param
-    fn with_query_pairs(self, pairs: Vec<(&'a str, &'a str)>) -> Self {
-        let query_pairs = self.get_query_pairs().to_vec();
-        let query_pairs = pairs.iter().fold(query_pairs, |mut acc, (name, value)| {
-            acc.push((name, value));
-            acc
-        });
-
-        self.set_query_pairs(query_pairs)
+    fn add_query_pairs(mut self, pairs: Vec<(&'a str, &'a str)>) -> Self {
+        self.get_query_pairs_mut().extend(pairs);
+        self
     }
 
-    /// retrurns a unique id for the request
+    /// returns a unique id for the request
     fn get_id(&self) -> Uuid;
 
     #[doc(hidden)]
@@ -112,6 +96,9 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     fn get_query_pairs(&self) -> &[(&'a str, &'a str)];
 
     #[doc(hidden)]
+    fn get_query_pairs_mut(&mut self) -> &mut Vec<(&'a str, &'a str)>;
+
+    #[doc(hidden)]
     fn get_ignore_status_code(&self) -> bool;
 
     #[doc(hidden)]
@@ -119,6 +106,9 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
     #[doc(hidden)]
     fn get_custom_headers(&self) -> &HeaderMap;
+
+    #[doc(hidden)]
+    fn get_custom_headers_mut(&mut self) -> &mut HeaderMap;
 
     #[cfg(feature = "auth0")]
     #[doc(hidden)]

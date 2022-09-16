@@ -18,23 +18,20 @@ const URL: &str = "https://youtube.com/";
 async fn main() {
     let bridge: Bridge = Bridge::builder().build(URL.parse().unwrap());
 
-    let multipart = RestMultipart::multiple(HashSet::from_iter(
-        [
-            MultipartFormFileField::new(
-                "file0",
-                MultipartFile::new("Hello, world!")
-                    .with_name("hello_world.txt")
-                    .with_mime_type("text/plain"),
-            ),
-            MultipartFormFileField::new(
-                "file1",
-                MultipartFile::new("Goodbye, world!")
-                    .with_name("goodbye_world.dat")
-                    .with_mime_type("application/octet-stream"),
-            ),
-        ]
-        .into_iter(),
-    ));
+    let multipart = RestMultipart::multiple(HashSet::from_iter([
+        MultipartFormFileField::new(
+            "file0",
+            MultipartFile::new("Hello, world!")
+                .with_name("hello_world.txt")
+                .with_mime_type("text/plain"),
+        ),
+        MultipartFormFileField::new(
+            "file1",
+            MultipartFile::new("Goodbye, world!")
+                .with_name("goodbye_world.dat")
+                .with_mime_type("application/octet-stream"),
+        ),
+    ]));
 
     let response: Response = RestRequest::new_with_multipart(&bridge, multipart)
         .to("upload")

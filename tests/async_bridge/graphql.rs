@@ -1,8 +1,9 @@
 use std::error::Error;
 use std::fs;
+use std::iter::FromIterator;
 
 use mockito::{mock, Matcher, Mock};
-use reqwest::header::{HeaderName, HeaderValue};
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::Deserialize;
 use serde_json::json;
@@ -43,10 +44,10 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query, variables))?
-        .with_custom_headers(vec![(
+        .with_custom_headers(HeaderMap::from_iter([(
             HeaderName::from_static("x-prima"),
             HeaderValue::from_static("test-value"),
-        )])
+        )]))
         .send()
         .await?;
 

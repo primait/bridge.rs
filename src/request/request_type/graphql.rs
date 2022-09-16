@@ -134,15 +134,9 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         self.timeout
     }
 
-    fn set_custom_headers(self, headers: HeaderMap) -> Self {
-        Self {
-            custom_headers: headers,
-            ..self
-        }
-    }
-
-    fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self {
-        Self { query_pairs, ..self }
+    fn with_custom_headers(mut self, headers: HeaderMap) -> Self {
+        self.custom_headers.extend(headers.into_iter());
+        self
     }
 
     fn get_id(&self) -> Uuid {
@@ -165,6 +159,10 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         self.query_pairs.as_slice()
     }
 
+    fn get_query_pairs_mut(&mut self) -> &mut Vec<(&'a str, &'a str)> {
+        &mut self.query_pairs
+    }
+
     fn get_ignore_status_code(&self) -> bool {
         self.ignore_status_code
     }
@@ -175,6 +173,10 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 
     fn get_custom_headers(&self) -> &HeaderMap {
         &self.custom_headers
+    }
+
+    fn get_custom_headers_mut(&mut self) -> &mut HeaderMap {
+        &mut self.custom_headers
     }
 
     #[cfg(feature = "auth0")]
