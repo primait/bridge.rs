@@ -2,7 +2,7 @@ use std::error::Error;
 
 use mockito;
 use mockito::{mock, Matcher, Mock};
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::Deserialize;
 use serde_json::json;
@@ -45,11 +45,10 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_gql_bridge(200, query, "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}").await;
 
     let variables: Option<String> = None;
-    let gql_request: GraphQLRequest =
-        GraphQLRequest::new(&bridge, (query, variables))?.with_custom_headers(HeaderMap::from_iter([(
-            HeaderName::from_static("x-prima"),
-            HeaderValue::from_static("test-value"),
-        )]));
+    let gql_request: GraphQLRequest = GraphQLRequest::new(&bridge, (query, variables))?.with_custom_headers(vec![(
+        HeaderName::from_static("x-prima"),
+        HeaderValue::from_static("test-value"),
+    )]);
 
     let bearer: String = bridge.token().unwrap().to_bearer();
     let headers = gql_request.get_all_headers();

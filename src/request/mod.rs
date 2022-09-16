@@ -59,23 +59,20 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// get request timeout
     fn get_timeout(&self) -> Duration;
 
-    /// sets the headers for a request (merging with the existing headers)
-    fn with_custom_headers(self, headers: HeaderMap) -> Self;
-
-    /// adds a new set of headers to the request. Any header already present gets merged.
-    fn add_custom_headers(mut self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+    /// adds a new set of headers to the request. Any header already present gets overwritten.
+    fn with_custom_headers(mut self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
         self.get_custom_headers_mut().extend(headers);
         self
     }
 
     /// add a custom query string param
-    fn add_query_pair(mut self, name: &'a str, value: &'a str) -> Self {
+    fn with_query_pair(mut self, name: &'a str, value: &'a str) -> Self {
         self.get_query_pairs_mut().push((name, value));
         self
     }
 
     /// add a custom query string param
-    fn add_query_pairs(mut self, pairs: Vec<(&'a str, &'a str)>) -> Self {
+    fn with_query_pairs(mut self, pairs: Vec<(&'a str, &'a str)>) -> Self {
         self.get_query_pairs_mut().extend(pairs);
         self
     }

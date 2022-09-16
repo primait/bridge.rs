@@ -134,11 +134,6 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         self.timeout
     }
 
-    fn with_custom_headers(mut self, headers: HeaderMap) -> Self {
-        self.custom_headers.extend(headers.into_iter());
-        self
-    }
-
     fn get_id(&self) -> Uuid {
         self.id
     }

@@ -3,7 +3,7 @@ use std::error::Error;
 use std::iter::FromIterator;
 
 use reqwest::{
-    header::{HeaderMap, HeaderName, HeaderValue},
+    header::{HeaderName, HeaderValue},
     Method,
 };
 use serde::{Deserialize, Serialize};
@@ -118,10 +118,10 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge_with_header_matcher(("x-prima", "test-value"));
 
     let result = RestRequest::new(&bridge)
-        .with_custom_headers(HeaderMap::from_iter([(
+        .with_custom_headers(vec![(
             HeaderName::from_static("x-prima"),
             HeaderValue::from_static("test-value"),
-        )]))
+        )])
         .send()
         .await;
     assert!(result.is_ok());
@@ -153,10 +153,10 @@ async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
-    let req = RestRequest::new(&bridge).with_custom_headers(HeaderMap::from_iter([
+    let req = RestRequest::new(&bridge).with_custom_headers(vec![
         (HeaderName::from_static("x-test"), HeaderValue::from_static("value")),
         (HeaderName::from_static("x-test"), HeaderValue::from_static("value")),
-    ]));
+    ]);
 
     let headers = req.get_custom_headers();
     assert_eq!(HeaderValue::from_str("value").ok().as_ref(), headers.get("x-test"));
