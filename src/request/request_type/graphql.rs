@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{hash_map, HashMap, VecDeque};
 use std::convert::TryInto;
 use std::time::Duration;
 
@@ -273,16 +273,14 @@ impl Multiple {
 
     pub fn add_file(mut self, path: String, file: MultipartFile) -> Self {
         let path: String = with_prefix(path);
-        match self.map.get(&path) {
-            Some(files) => {
-                let mut files = files.to_vec();
-                files.push(file);
-                self.map.insert(path, files);
+        match self.map.entry(path) {
+            hash_map::Entry::Occupied(mut o) => {
+                o.get_mut().push(file);
             }
-            None => {
-                self.map.insert(path, vec![file]);
+            hash_map::Entry::Vacant(v) => {
+                v.insert(vec![file]);
             }
-        };
+        }
         self
     }
 }
