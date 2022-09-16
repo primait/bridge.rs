@@ -174,6 +174,11 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
 }
 
 #[derive(Debug)]
+/// A [RestRequest] multipart form body.
+/// 
+/// Can either be `Single` (one file) or `Multiple` (multiple files).
+/// 
+/// Each file corresponds to a named field in the form data.
 pub enum RestMultipart {
     Single(MultipartFormFileField),
     Multiple(HashSet<MultipartFormFileField>),

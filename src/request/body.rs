@@ -6,6 +6,11 @@ use serde::Serialize;
 use crate::prelude::{PrimaBridgeError, PrimaBridgeResult};
 
 #[derive(Debug)]
+/// A request body.
+/// 
+/// It can be an in-memory buffer, a file, or a stream.
+/// 
+/// See the various `From` implementations for ways to construct a `Body`.
 pub struct Body {
     pub(crate) inner: reqwest::Body,
 }
@@ -101,6 +106,7 @@ impl<T: Serialize> From<(String, T)> for GraphQLBody<T> {
 }
 
 #[derive(Debug)]
+/// A multipart-form file, containing the file's desired name, its MIME type, and its contents as an in-memory buffer or stream.
 pub struct MultipartFile {
     pub(crate) body: Body,
     pub(crate) name_opt: Option<String>,
@@ -145,6 +151,7 @@ impl MultipartFile {
 }
 
 #[derive(Debug)]
+/// A named multipart-form field which contains a file.
 pub struct MultipartFormFileField {
     pub(crate) field_name: Cow<'static, str>,
     pub(crate) file: MultipartFile,

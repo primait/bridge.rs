@@ -194,8 +194,9 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
     }
 }
 
-// The path in query variable. Eg: if query/mutation has a param named files (representing the
-// multipart upload) this should be something like `variables.files`
+/// A [GraphQLRequest] multipart body as according to [this specification](https://github.com/jaydenseric/graphql-multipart-request-spec).
+/// 
+/// Can either be `Single` (one file) or `Multiple` (multiple files).
 pub enum GraphQLMultipart {
     Single(Single),
     Multiple(Multiple),
