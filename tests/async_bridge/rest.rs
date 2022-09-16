@@ -245,6 +245,34 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[tokio::test]
+async fn multipart_rest_single_file_stream() -> Result<(), Box<dyn Error>> {
+    let _mock = mockito::mock("POST", "/")
+        .with_status(200)
+        .with_body("{\"hello\": \"world!\"}")
+        .match_header("Content-Type", mockito::Matcher::Regex(r#"^multipart/form-data"#.to_string()))
+        .match_body(mockito::Matcher::Regex(r#"Content-Disposition: form-data; name="my_streamed_file"; filename="howdy_world\.txt"\s+Content-Type: text/plain\s+Howdy, world!"#.to_string()))
+        .create();
+
+    let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
+
+    let multipart = RestMultipart::single(
+        "my_streamed_file",
+        MultipartFile::new(tokio::fs::File::open("tests/resources/howdy_world.txt").await.unwrap())
+            .with_name("howdy_world.txt")
+            .with_mime_type("text/plain"),
+    );
+
+    let result: String = RestRequest::new_with_multipart(&bridge, multipart)
+        .method(Method::POST)
+        .send()
+        .await?
+        .get_data(&["hello"])?;
+    assert_eq!(result, "world!");
+
+    Ok(())
+}
+
 #[cfg(feature = "gzip")]
 #[tokio::test]
 async fn gzip_compression() -> Result<(), Box<dyn Error>> {

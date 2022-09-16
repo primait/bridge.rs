@@ -11,6 +11,23 @@ pub struct Body {
 }
 
 impl Body {
+    /// Construct a `Body` from a streamable type.
+    ///
+    /// Generally, you can just use the various `From` implementations to create a `Body` instead.
+    ///
+    /// This is provided for cases where you don't want to load the entire body into memory at once,
+    /// and instead want to stream it from something like a file handle.
+    pub fn from_stream<S>(stream: S) -> Body
+    where
+        S: futures::stream::TryStream + Send + Sync + 'static,
+        S::Error: Into<Box<dyn std::error::Error + Send + Sync>>,
+        bytes::Bytes: From<S::Ok>,
+    {
+        Self {
+            inner: reqwest::Body::wrap_stream(stream),
+        }
+    }
+
     #[cfg(test)]
     pub(crate) fn as_str(&self) -> Option<Cow<'_, str>> {
         self.inner.as_bytes().map(String::from_utf8_lossy)
@@ -44,6 +61,12 @@ impl From<&str> for Body {
 impl From<Vec<u8>> for Body {
     fn from(value: Vec<u8>) -> Self {
         Self { inner: value.into() }
+    }
+}
+
+impl From<tokio::fs::File> for Body {
+    fn from(file: tokio::fs::File) -> Self {
+        Self { inner: file.into() }
     }
 }
 
