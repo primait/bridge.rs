@@ -9,21 +9,20 @@ repository = "https://github.com/primait/bridge.rs"
 readme = "README.md"
 
 [features]
-default = ["async", "tracing_opentelemetry"]
-async = ["reqwest", "futures", "futures-util"]
+default = ["tracing_opentelemetry"]
 tracing_opentelemetry = ["opentelemetry", "tracing", "tracing-opentelemetry"]
 gzip = ["reqwest/gzip"]
-auth0 = ["tokio", "rand", "redis", "jsonwebtoken", "chrono", "chrono-tz", "aes", "cbc", "dashmap", "tracing"]
+auth0 = ["rand", "redis", "jsonwebtoken", "chrono", "chrono-tz", "aes", "cbc", "dashmap", "tracing"]
 
 [dependencies]
-reqwest = { version = "0.11.9", features = ["json", "multipart"], optional = true }
+reqwest = { version = "0.11.9", features = ["json", "multipart"] }
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.78"
 thiserror = "1.0.30"
-tokio = { version = "1.16.1", features = ["macros", "rt-multi-thread"], optional = true }
+tokio = { version = "1.16.1", features = ["macros", "rt-multi-thread"] }
 uuid = { version = ">=0.7.0, <2.0.0", features = ["serde", "v4"] }
-futures = { version = "0.3.21", optional = true }
-futures-util = { version = "0.3.21", optional = true }
+futures = "0.3.21"
+futures-util = "0.3.21"
 opentelemetry = { version = ">=0.17.0, <0.18.0", optional = true }
 tracing = { version = "0.1.30", optional = true }
 tracing-opentelemetry = { version = "0.17.0", optional = true }
