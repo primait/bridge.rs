@@ -1,8 +1,8 @@
-use std::collections::HashSet;
-use std::error::Error;
-use reqwest::Method;
 use prima_bridge::prelude::*;
 use prima_bridge::{MultipartFile, MultipartFormFileField, RestMultipart};
+use reqwest::Method;
+use std::collections::HashSet;
+use std::error::Error;
 
 #[tokio::test]
 async fn multipart_rest_single_file() -> Result<(), Box<dyn Error>> {
@@ -74,7 +74,7 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
                     .with_mime_type("application/octet-stream"),
             ),
         ]
-            .into_iter(),
+        .into_iter(),
     ));
 
     let result: String = RestRequest::new_with_multipart(&bridge, multipart)
