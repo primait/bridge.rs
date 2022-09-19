@@ -74,7 +74,7 @@ mod tests {
 
         let token_str: &str = "token";
         let token: Token = Token::new(token_str.to_string(), Utc::now(), Utc::now());
-        let () = cache.put_token(&token).await.unwrap();
+        cache.put_token(&token).await.unwrap();
 
         let result: Option<Token> = cache.get_token().await.unwrap();
         assert!(result.is_some());
@@ -82,7 +82,7 @@ mod tests {
 
         let string: &str = "{\"keys\": []}";
         let jwks: JsonWebKeySet = serde_json::from_str(string).unwrap();
-        let () = cache.put_jwks(&jwks, None).await.unwrap();
+        cache.put_jwks(&jwks, None).await.unwrap();
 
         let result: Option<JsonWebKeySet> = cache.get_jwks().await.unwrap();
         assert!(result.is_some());
