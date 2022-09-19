@@ -1,15 +1,10 @@
-use std::collections::HashSet;
 use std::error::Error;
-use std::iter::FromIterator;
 
-use reqwest::{
-    header::{HeaderName, HeaderValue},
-    Method,
-};
+use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use prima_bridge::{prelude::*, MultipartFile, MultipartFormFileField, RestMultipart};
+use prima_bridge::prelude::*;
 
 use crate::common::*;
 
