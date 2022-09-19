@@ -116,15 +116,15 @@ impl<T: Serialize> From<(String, T)> for GraphQLBody<T> {
 #[derive(Debug)]
 /// A multipart-form file, containing the file's desired name, its MIME type, and its contents as an in-memory buffer or stream.
 pub struct MultipartFile {
-    pub(crate) body: Body,
+    pub(crate) content: Body,
     pub(crate) name_opt: Option<String>,
     pub(crate) mime_type_opt: Option<String>,
 }
 
 impl MultipartFile {
-    pub fn new(body: impl Into<Body>) -> Self {
+    pub fn new(content: impl Into<Body>) -> Self {
         Self {
-            body: body.into(),
+            content: content.into(),
             name_opt: None,
             mime_type_opt: None,
         }
@@ -145,7 +145,7 @@ impl MultipartFile {
     }
 
     pub(crate) fn into_part(self) -> PrimaBridgeResult<Part> {
-        let mut part = Part::stream(self.body.inner);
+        let mut part = Part::stream(self.content.inner);
         if let Some(name) = self.name_opt {
             part = part.file_name(name);
         }
