@@ -1,3 +1,4 @@
+use mockito::{mock, Matcher};
 use prima_bridge::prelude::*;
 use prima_bridge::{MultipartFile, MultipartFormFileField, RestMultipart};
 use reqwest::Method;
@@ -6,11 +7,11 @@ use std::error::Error;
 
 #[tokio::test]
 async fn multipart_rest_single_file() -> Result<(), Box<dyn Error>> {
-    let _mock = mockito::mock("POST", "/")
+    let _mock = mock("POST", "/")
         .with_status(200)
         .with_body("{\"hello\": \"world!\"}")
-        .match_header("Content-Type", mockito::Matcher::Regex(r#"^multipart/form-data"#.to_string()))
-        .match_body(mockito::Matcher::Regex(
+        .match_header("Content-Type", Matcher::Regex(r#"^multipart/form-data"#.to_string()))
+        .match_body(Matcher::Regex(
             r#"Content-Disposition: form-data; name="my_single_file"; filename="hello_world\.txt"\s+Content-Type: text/plain\s+Hello, world!"#.to_string()
         ))
         .create();
@@ -36,25 +37,19 @@ async fn multipart_rest_single_file() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
-    // Because a HashSet is used in RestMultipart::multiple, the order of each file is undefined, so the
-    // matching Regex must be able to match the files in either order.
     let re_first_file = r#"Content-Disposition: form-data; name="first_file"; filename="hello_world\.txt"\s+Content-Type: text/plain\s+Hello, world!"#;
     let re_second_file = r#"Content-Disposition: form-data; name="second_file"; filename="goodbye_world\.dat"\s+Content-Type: application/octet-stream\s+Goodbye, world!"#;
-    let re_body = format!(
-        // This will generate a regular expression that matches re_first_file...re_second_file OR re_second_file...re_first_file
-        r#"{re_first_file}[\s\S]+\S[\s\S]+{re_second_file}|{re_second_file}[\s\S]+\S[\s\S]+{re_first_file}"#,
-        re_first_file = re_first_file,
-        re_second_file = re_second_file
-    );
 
-    let _mock = mockito::mock("POST", "/")
+    let _mock = mock("POST", "/")
         .with_status(200)
         .with_body("{\"hello\": \"world!\"}")
-        .match_header(
-            "Content-Type",
-            mockito::Matcher::Regex(r#"^multipart/form-data"#.to_string()),
-        )
-        .match_body(mockito::Matcher::Regex(re_body))
+        .match_header("Content-Type", Matcher::Regex(r#"^multipart/form-data"#.to_string()))
+        // Because a HashSet is used in RestMultipart::multiple, the order of each file is undefined,
+        // so we must be able to match the files in either order.
+        .match_body(Matcher::AllOf(vec![
+            Matcher::Regex(re_first_file.to_string()),
+            Matcher::Regex(re_second_file.to_string()),
+        ]))
         .create();
 
     let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
@@ -89,11 +84,11 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn multipart_rest_single_file_stream() -> Result<(), Box<dyn Error>> {
-    let _mock = mockito::mock("POST", "/")
+    let _mock = mock("POST", "/")
         .with_status(200)
         .with_body("{\"hello\": \"world!\"}")
-        .match_header("Content-Type", mockito::Matcher::Regex(r#"^multipart/form-data"#.to_string()))
-        .match_body(mockito::Matcher::Regex(r#"Content-Disposition: form-data; name="my_streamed_file"; filename="howdy_world\.txt"\s+Content-Type: text/plain\s+Howdy, world!"#.to_string()))
+        .match_header("Content-Type", Matcher::Regex(r#"^multipart/form-data"#.to_string()))
+        .match_body(Matcher::Regex(r#"Content-Disposition: form-data; name="my_streamed_file"; filename="howdy_world\.txt"\s+Content-Type: text/plain\s+Howdy, world!"#.to_string()))
         .create();
 
     let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
