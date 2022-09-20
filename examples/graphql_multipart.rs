@@ -26,16 +26,16 @@ async fn main() {
 
     let slug: String = "backend-engineer".to_string();
 
-    let mut map: HashMap<String, Vec<MultipartFile>> = HashMap::new();
+    let mut map: HashMap<&str, Vec<MultipartFile>> = HashMap::new();
     map.insert(
-        "multi.files".to_string(),
+        "multi.files",
         vec![
             MultipartFile::new(bytes.clone()).with_name("ciao1"),
             MultipartFile::new(bytes.clone()).with_name("ciao2"),
         ],
     );
     map.insert(
-        "multi.images".to_string(),
+        "multi.images",
         vec![MultipartFile::new(bytes.clone()).with_name("ciao3")],
     );
     let multipart: GraphQLMultipart = GraphQLMultipart::multiple(map);

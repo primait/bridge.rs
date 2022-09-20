@@ -202,7 +202,7 @@ impl GraphQLMultipart {
         Self::Single(Single::new(path.into(), file))
     }
 
-    pub fn multiple(map: HashMap<String, Vec<MultipartFile>>) -> Self {
+    pub fn multiple(map: HashMap<impl Into<String>, Vec<MultipartFile>>) -> Self {
         Self::Multiple(Multiple::from_map(map))
     }
 
@@ -258,11 +258,11 @@ impl Multiple {
         Self { map: HashMap::new() }
     }
 
-    pub fn from_map(map: HashMap<String, Vec<MultipartFile>>) -> Self {
+    pub fn from_map(map: HashMap<impl Into<String>, Vec<MultipartFile>>) -> Self {
         Self {
             map: map
                 .into_iter()
-                .map(|(path, files)| (with_variables_prefix(path), files))
+                .map(|(path, files)| (with_variables_prefix(path.into()), files))
                 .collect(),
         }
     }

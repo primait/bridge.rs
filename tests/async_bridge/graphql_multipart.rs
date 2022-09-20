@@ -72,7 +72,7 @@ async fn multipart_graphql_multiple_files() -> Result<(), Box<dyn Error>> {
             .with_name("hello_world.txt")
             .with_mime_type("text/plain"),
     ];
-    let multipart_body = GraphQLMultipart::multiple(HashMap::from([("files".to_string(), files)]));
+    let multipart_body = GraphQLMultipart::multiple(HashMap::from([("files", files)]));
     let response =
         GraphQLRequest::new_with_multipart(&bridge, (MULTIPLE_UPLOAD_QUERY, Option::<()>::None), multipart_body)?
             .send()
