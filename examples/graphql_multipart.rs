@@ -27,14 +27,14 @@ async fn main() {
     let slug: String = "backend-engineer".to_string();
 
     let mut map: HashMap<String, Vec<MultipartFile>> = HashMap::new();
-    let _ = map.insert(
+    map.insert(
         "multi.files".to_string(),
         vec![
             MultipartFile::new(bytes.clone()).with_name("ciao1"),
             MultipartFile::new(bytes.clone()).with_name("ciao2"),
         ],
     );
-    let _ = map.insert(
+    map.insert(
         "multi.images".to_string(),
         vec![MultipartFile::new(bytes.clone()).with_name("ciao3")],
     );

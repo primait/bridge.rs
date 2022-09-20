@@ -7,7 +7,7 @@ use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
 use reqwest::multipart::{Form, Part};
 use reqwest::{Method, Url};
 use serde::Serialize;
-use serde_json::{json, Map, Value};
+use serde_json::{Map, Value};
 use uuid::Uuid;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
@@ -58,17 +58,15 @@ impl<'a> GraphQLRequest<'a> {
     ) -> PrimaBridgeResult<Self> {
         // No content-type here because Form set it at `multipart/form-data` with extra params for
         // disposition
-        let body: GraphQLBody<S> = graphql_body.into();
-        let value: Value = serde_json::to_value(&body)?;
-        let value: Value = match &multipart {
+        let json_body = serde_json::to_value(&graphql_body.into())?;
+        let body_with_injected_variables = match &multipart {
             GraphQLMultipart::Single(single) => {
                 let path: VecDeque<&str> = single.path.split('.').collect();
-                let filler: Value = json!(Value::Null);
-                add_field(path, value, &filler)?
+                add_field(path, json_body, &Value::Null)?
             }
             GraphQLMultipart::Multiple(multiple) => {
-                multiple.map.iter().fold(Ok(value), |accumulator, (path, files)| {
-                    let filler: Value = json!(Value::Array(files.iter().map(|_| Value::Null).collect()));
+                multiple.map.iter().fold(Ok(json_body), |accumulator, (path, files)| {
+                    let filler = Value::Array(vec![Value::Null; files.len()]);
                     files.iter().fold(accumulator, |acc, _| {
                         let path_vec: VecDeque<&str> = path.split('.').collect();
                         acc.and_then(|a| add_field(path_vec, a, &filler))
@@ -80,7 +78,7 @@ impl<'a> GraphQLRequest<'a> {
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
-            body: serde_json::to_string(&value)?.try_into()?,
+            body: serde_json::to_string(&body_with_injected_variables)?.try_into()?,
             method: Method::POST,
             path: Default::default(),
             timeout: Duration::from_secs(60),
@@ -210,9 +208,9 @@ impl GraphQLMultipart {
 
     pub fn into_form(self, body: Body) -> PrimaBridgeResult<Form> {
         let mut form: Form = Form::new();
-        let mut map: HashMap<String, Vec<String>> = HashMap::<String, Vec<String>>::new();
         form = form.part("operations", Part::stream(body.inner));
 
+        let mut map: HashMap<String, Vec<String>> = HashMap::new();
         match self {
             Self::Single(single) => {
                 map.insert(ZERO.to_string(), vec![single.path.to_string()]);
@@ -230,8 +228,8 @@ impl GraphQLMultipart {
             }
         }
 
-        let expectation: &str = "Internal error while to serializing form field `map`";
-        let map_string: String = serde_json::to_string(&map).expect(expectation);
+        let map_string: String =
+            serde_json::to_string(&map).expect("Internal error while to serializing form field `map`");
         form = form.text("map", map_string);
         Ok(form)
     }
@@ -245,7 +243,7 @@ pub struct Single {
 impl Single {
     pub fn new(path: String, file: MultipartFile) -> Self {
         Self {
-            path: with_prefix(path),
+            path: with_variables_prefix(path),
             file,
         }
     }
@@ -264,13 +262,13 @@ impl Multiple {
         Self {
             map: map
                 .into_iter()
-                .map(|(path, files)| (with_prefix(path), files))
+                .map(|(path, files)| (with_variables_prefix(path), files))
                 .collect(),
         }
     }
 
     pub fn add_file(mut self, path: String, file: MultipartFile) -> Self {
-        let path: String = with_prefix(path);
+        let path: String = with_variables_prefix(path);
         match self.map.entry(path) {
             hash_map::Entry::Occupied(mut o) => {
                 o.get_mut().push(file);
@@ -289,25 +287,25 @@ impl Default for Multiple {
     }
 }
 
-fn with_prefix(string: String) -> String {
-    if string.starts_with(VARIABLES) {
-        string
+fn with_variables_prefix(path: String) -> String {
+    if path.starts_with(VARIABLES) {
+        path
     } else {
-        format!("{}.{}", VARIABLES, string)
+        format!("{}.{}", VARIABLES, path)
     }
 }
 
-fn add_field(mut paths: VecDeque<&str>, value: Value, filler: &Value) -> Result<Value, PrimaBridgeError> {
-    Ok(match paths.pop_front() {
-        Some(segment) => match value {
-            Value::Null => craft_field(paths, segment, Map::new(), Value::Null, filler)?,
+fn add_field(mut path_segments: VecDeque<&str>, json: Value, field_value: &Value) -> Result<Value, PrimaBridgeError> {
+    Ok(match path_segments.pop_front() {
+        Some(segment) => match json {
+            Value::Null => craft_field(path_segments, segment, Map::new(), Value::Null, field_value)?,
             Value::Object(map) => {
                 let inner_value: Value = map.get(segment).cloned().unwrap_or(Value::Null);
-                craft_field(paths, segment, map, inner_value, filler)?
+                craft_field(path_segments, segment, map, inner_value, field_value)?
             }
             _ => return Err(PrimaBridgeError::MalformedVariables),
         },
-        None => filler.to_owned(),
+        None => field_value.to_owned(),
     })
 }
 
@@ -316,9 +314,9 @@ fn craft_field(
     segment: &str,
     mut map: Map<String, Value>,
     inner_value: Value,
-    filler: &Value,
+    field_value: &Value,
 ) -> PrimaBridgeResult<Value> {
-    let value: Value = add_field(paths, inner_value, filler)?;
+    let value: Value = add_field(paths, inner_value, field_value)?;
     map.insert(segment.to_string(), value);
     Ok(Value::Object(map))
 }
@@ -327,7 +325,7 @@ fn craft_field(
 mod tests {
     use super::*;
     use serde::Deserialize;
-    use serde_json::Value;
+    use serde_json::{json, Value};
     use std::str::FromStr;
 
     #[derive(Deserialize)]
