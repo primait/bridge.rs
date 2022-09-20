@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - **(BREAKING)** `{RestRequest, GraphQLRequest}.add_custom_headers` and `set_custom_headers`: use `with_custom_headers` instead
+- `(GraphQL)Multipart.into_form`: it is a private API that wasn't meant to be exported publicly
 - `async` feature: it was enabled by default and disabling it caused compilation to break
 
 ## [0.13.1] - 2022-06-23

@@ -218,7 +218,7 @@ impl GraphQLMultipart {
         Self::Multiple(Multiple::from_map(map))
     }
 
-    pub fn into_form(self, body: Body) -> PrimaBridgeResult<Form> {
+    pub(crate) fn into_form(self, body: Body) -> PrimaBridgeResult<Form> {
         let mut form: Form = Form::new();
         form = form.part("operations", Part::stream(body.inner));
 
