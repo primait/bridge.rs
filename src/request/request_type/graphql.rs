@@ -193,15 +193,27 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 ///
 /// Can either be `Single` (one file) or `Multiple` (multiple files).
 pub enum GraphQLMultipart {
-    Single(Single),
-    Multiple(Multiple),
+    Single(#[doc(hidden)] Single),
+    Multiple(#[doc(hidden)] Multiple),
 }
 
 impl GraphQLMultipart {
+    /// Creates a GraphQL multipart body containing a single file.
+    ///
+    /// The `path` parameter is the path to the field in the GraphQL `variables` object
+    /// that will act as a placeholder for the uploaded file.  
+    /// The field will be automatically injected into the `variables` object: you don't need to add it
+    /// to your existing variables struct.
     pub fn single(path: impl Into<String>, file: MultipartFile) -> Self {
         Self::Single(Single::new(path.into(), file))
     }
 
+    /// Creates a GraphQL multipart body containing a list of files or multiple lists of files.
+    ///
+    /// Each key in the hash map is the path to the array field in the GraphQL `variables`
+    /// object that will act as a placeholder for the list of files corresponding to that key.  
+    /// The fields will be automatically injected into the `variables` object: you don't need to add them
+    /// to your existing variables struct.
     pub fn multiple(map: HashMap<impl Into<String>, Vec<MultipartFile>>) -> Self {
         Self::Multiple(Multiple::from_map(map))
     }
