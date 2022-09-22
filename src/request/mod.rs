@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::time::Duration;
 
 use async_trait::async_trait;
@@ -238,6 +237,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[cfg(feature = "tracing_opentelemetry")]
     fn tracing_headers(&self) -> HeaderMap {
         use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
+        use std::collections::HashMap;
         use tracing_opentelemetry::OpenTelemetrySpanExt;
 
         let context = tracing::Span::current().context();
