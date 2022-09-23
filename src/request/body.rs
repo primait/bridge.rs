@@ -39,14 +39,6 @@ impl Body {
     }
 }
 
-impl Default for Body {
-    fn default() -> Self {
-        Self {
-            inner: reqwest::Body::from(Vec::new()),
-        }
-    }
-}
-
 impl From<String> for Body {
     fn from(val: String) -> Self {
         Self {

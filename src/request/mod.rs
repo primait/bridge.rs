@@ -22,14 +22,12 @@ pub enum RequestType {
     GraphQL,
 }
 
+#[derive(Default)]
 pub enum DeliverableRequestBody {
+    #[default]
+    Empty,
     RawBody(Body),
     Multipart(Form),
-}
-impl Default for DeliverableRequestBody {
-    fn default() -> Self {
-        Self::RawBody(Default::default())
-    }
 }
 
 /// Represent a request that is ready to be delivered to the server
@@ -164,6 +162,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .headers(self.get_all_headers());
 
         let response = match self.into_body()? {
+            DeliverableRequestBody::Empty => request_builder,
             DeliverableRequestBody::RawBody(body) => request_builder.body(body.inner),
             DeliverableRequestBody::Multipart(form) => request_builder.multipart(form),
         }
