@@ -6,7 +6,7 @@
 //! Run this to run the example:
 //!
 //! ```shell
-//! cargo run --example graphql_multipart
+//! cargo run --example rest_multipart
 //! ```
 use std::{collections::HashSet, iter::FromIterator};
 
