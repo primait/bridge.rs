@@ -22,12 +22,16 @@ pub enum RequestType {
     GraphQL,
 }
 
-#[derive(Default)]
 pub enum DeliverableRequestBody {
-    #[default]
     Empty,
     RawBody(Body),
     Multipart(Form),
+}
+
+impl Default for DeliverableRequestBody {
+    fn default() -> Self {
+        DeliverableRequestBody::Empty
+    }
 }
 
 /// Represent a request that is ready to be delivered to the server
