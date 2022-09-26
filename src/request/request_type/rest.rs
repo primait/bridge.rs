@@ -15,7 +15,7 @@ use crate::errors::PrimaBridgeResult;
 use crate::request::{Body, DeliverableRequest, DeliverableRequestBody, MultipartFormFileField, RequestType};
 use crate::{Bridge, MultipartFile};
 
-/// The RestRequest is a struct that represent a REST request to be done with the [Bridge](./../struct.Bridge.html)
+/// The RestRequest is a struct that represent a REST request to be done with a [Bridge].
 #[derive(Debug)]
 pub struct RestRequest<'a> {
     id: Uuid,
@@ -31,13 +31,15 @@ pub struct RestRequest<'a> {
 }
 
 impl<'a> RestRequest<'a> {
-    /// creates a new RestRequest
+    /// Creates a new RestRequest.
+    ///
+    /// It is recommended to use one of the methods on [Request](crate::Request) to create a new request more easily.
     pub fn new(bridge: &'a Bridge) -> Self {
         Self {
             id: Uuid::new_v4(),
             bridge,
             body: Default::default(),
-            method: Default::default(), // GET
+            method: Method::GET,
             path: Default::default(),
             timeout: Duration::from_secs(60),
             query_pairs: Default::default(),
@@ -47,7 +49,7 @@ impl<'a> RestRequest<'a> {
         }
     }
 
-    /// Sets the given multipart form content as the body of the request
+    /// Sets the given multipart form content as the body of the request.
     pub fn multipart_body(self, multipart: RestMultipart) -> Self {
         Self {
             multipart: Some(multipart),
@@ -161,7 +163,8 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
 #[derive(Debug)]
 /// A [RestRequest] multipart form body.
 ///
-/// Can either be `Single` (one file) or `Multiple` (multiple files).
+/// Only files can be included in the multipart body.  
+/// It can either be `Single` (one file) or `Multiple` (multiple files).
 ///
 /// Each file corresponds to a named field in the form data.
 pub enum RestMultipart {

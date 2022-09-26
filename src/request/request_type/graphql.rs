@@ -17,7 +17,7 @@ use crate::{Bridge, MultipartFile};
 const VARIABLES: &str = "variables";
 const ZERO: &str = "0";
 
-/// The GraphQLRequest is a struct that represent a GraphQL request to be done with the [Bridge](./../struct.Bridge.html)
+/// The GraphQLRequest is a struct that represent a GraphQL request to be done with a [Bridge].
 #[allow(clippy::upper_case_acronyms)]
 pub struct GraphQLRequest<'a> {
     id: Uuid,
@@ -33,7 +33,7 @@ pub struct GraphQLRequest<'a> {
 }
 
 impl<'a> GraphQLRequest<'a> {
-    /// creates a new GraphQLRequest
+    /// Creates a new GraphQLRequest
     pub fn new<S: Serialize>(bridge: &'a Bridge, graphql_body: impl Into<GraphQLBody<S>>) -> PrimaBridgeResult<Self> {
         let mut custom_headers = HeaderMap::default();
         custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
@@ -191,7 +191,8 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
 
 /// A [GraphQLRequest] multipart body as according to [this specification](https://github.com/jaydenseric/graphql-multipart-request-spec).
 ///
-/// Can either be `Single` (one file) or `Multiple` (multiple files).
+/// Only files can be included in the multipart body.  
+/// It can either be `Single` (one file) or `Multiple` (multiple files).
 pub enum GraphQLMultipart {
     Single(#[doc(hidden)] Single),
     Multiple(#[doc(hidden)] Multiple),

@@ -13,10 +13,9 @@ use super::DeliverableRequest;
 mod graphql;
 mod rest;
 
-/// A server request
+/// A utility type to construct requests more easily.
 pub struct Request;
 
-/// Useful type to construct new requests
 impl Request {
     /// Create a new GraphQL request
     pub fn graphql<S: Serialize>(
@@ -26,32 +25,32 @@ impl Request {
         GraphQLRequest::new(bridge, graphql_body)
     }
 
-    /// Create a rest request
+    /// Create a new REST request
     pub fn rest(bridge: &Bridge) -> RestRequest {
         Self::get(bridge)
     }
 
-    /// Create a new GET request
+    /// Create a new GET REST request
     pub fn get(bridge: &Bridge) -> RestRequest {
         RestRequest::new(bridge)
     }
 
-    /// Create a new POST request
+    /// Create a new POST REST request
     pub fn post(bridge: &Bridge) -> RestRequest {
         RestRequest::new(bridge).method(Method::POST)
     }
 
-    /// Create a new PATCH request
+    /// Create a new PATCH REST request
     pub fn patch(bridge: &Bridge) -> RestRequest {
         RestRequest::new(bridge).method(Method::PATCH)
     }
 
-    /// Create a new DELETE request
+    /// Create a new DELETE REST request
     pub fn delete(bridge: &Bridge) -> RestRequest {
         RestRequest::new(bridge).method(Method::DELETE)
     }
 
-    /// Create a new PUT request
+    /// Create a new PUT REST request
     pub fn put(bridge: &Bridge) -> RestRequest {
         RestRequest::new(bridge).method(Method::PUT)
     }
