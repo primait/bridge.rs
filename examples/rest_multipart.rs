@@ -1,7 +1,4 @@
-//! Rest example
-//!
-//! In this example there's the explanation on how to achieve a rest call to an endpoint and parsing
-//! the response. The response is the person fetched from persons api with id=1.
+//! REST multipart example
 //!
 //! Run this to run the example:
 //!
