@@ -5,7 +5,7 @@ use reqwest::Url;
 use crate::auth0;
 use crate::Bridge;
 
-/// A builder for creating Bridge instances
+/// A builder for creating [Bridge] instances.
 pub struct BridgeBuilder {
     client_builder: reqwest::ClientBuilder,
     #[cfg(feature = "auth0")]

@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 use prima_bridge::prelude::*;
-use prima_bridge::{Multipart, MultipartFile, ParsedGraphqlResponse};
+use prima_bridge::{GraphQLMultipart, MultipartFile, ParsedGraphqlResponse};
 
 const URL: &str = "https://api.graphql.jobs/";
 const QUERY: &str = "query($input:JobsInput!){jobs(input:$input) {\nid\n title\n applyUrl\n}}";
@@ -26,19 +26,19 @@ async fn main() {
 
     let slug: String = "backend-engineer".to_string();
 
-    let mut map: HashMap<String, Vec<MultipartFile>> = HashMap::new();
-    let _ = map.insert(
-        "multi.files".to_string(),
+    let mut map: HashMap<&str, Vec<MultipartFile>> = HashMap::new();
+    map.insert(
+        "multi.files",
         vec![
             MultipartFile::new(bytes.clone()).with_name("ciao1"),
             MultipartFile::new(bytes.clone()).with_name("ciao2"),
         ],
     );
-    let _ = map.insert(
-        "multi.images".to_string(),
+    map.insert(
+        "multi.images",
         vec![MultipartFile::new(bytes.clone()).with_name("ciao3")],
     );
-    let multipart: Multipart = Multipart::multiple(map);
+    let multipart: GraphQLMultipart = GraphQLMultipart::multiple(map);
 
     let response: Response =
         GraphQLRequest::new_with_multipart(&bridge, (QUERY, Some(JobsRequest::new(slug))), multipart)

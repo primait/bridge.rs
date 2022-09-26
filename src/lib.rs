@@ -1,11 +1,11 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-//! This crate gives an high level api to execute external request.
+//! This crate gives an high level API to execute external requests.
 //!
 //! It is supposed to give the basics building blocks for building bridges to other services
-//! while abstracting the low level stuffs like adding custom headers and request tracing.
+//! while abstracting the low level stuff like adding custom headers and request tracing.
 //!
-//! Right now it supports Rest and GraphQL requests.
+//! It supports both REST and GraphQL requests.
 //!
 //! You should start by creating a [Bridge](struct.Bridge.html) instance.
 //! This instance should live for all the application lifetime.
@@ -21,7 +21,10 @@ use reqwest::Url;
 
 pub use self::{
     builder::BridgeBuilder,
-    request::{GraphQLRequest, Multipart, MultipartFile, Request},
+    request::{
+        Body, DeliverableRequest, GraphQLMultipart, GraphQLRequest, MultipartFile, MultipartFormFileField, Request,
+        RestMultipart, RestRequest,
+    },
     response::graphql::{Error, ParsedGraphqlResponse, ParsedGraphqlResponseExt, PossiblyParsedData},
     response::Response,
 };

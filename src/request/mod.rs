@@ -1,14 +1,14 @@
-use std::collections::HashMap;
 use std::time::Duration;
 
 use async_trait::async_trait;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::multipart::Form;
 use reqwest::{Method, Url};
 use serde::Serialize;
 use uuid::Uuid;
 
-pub use body::{Body, GraphQLBody};
-pub use request_type::{GraphQLRequest, Multipart, MultipartFile, Request, RestRequest};
+pub use body::{Body, GraphQLBody, MultipartFile, MultipartFormFileField};
+pub use request_type::{GraphQLMultipart, GraphQLRequest, Request, RestMultipart, RestRequest};
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
@@ -22,7 +22,19 @@ pub enum RequestType {
     GraphQL,
 }
 
-/// Represent a request that is ready to be delivered to the server
+pub enum DeliverableRequestBody {
+    Empty,
+    RawBody(Body),
+    Multipart(Form),
+}
+
+impl Default for DeliverableRequestBody {
+    fn default() -> Self {
+        DeliverableRequestBody::Empty
+    }
+}
+
+/// Represents a request that is ready to be delivered to the server.
 #[async_trait]
 pub trait DeliverableRequest<'a>: Sized + 'a {
     /// sets the raw body for the request
@@ -48,44 +60,31 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     /// get request timeout
     fn get_timeout(&self) -> Duration;
 
-    /// adds a new set of headers to the request. Any header already present gets merged.
-    fn set_custom_headers(self, headers: HeaderMap) -> Self;
-
-    /// adds a new set of headers to the request. Any header already present gets merged.
-    fn add_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
-        let mut custom_headers = HeaderMap::new();
-        custom_headers.extend(self.get_custom_headers());
-        custom_headers.extend(headers);
-        self.set_custom_headers(custom_headers)
+    /// adds a new header to the request. If the header is already present, it gets overwritten.
+    fn with_custom_header(mut self, name: HeaderName, value: HeaderValue) -> Self {
+        self.get_custom_headers_mut().insert(name, value);
+        self
     }
 
-    /// adds a new set of headers to the request. Any header already present gets removed.
-    fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self;
-
-    /// add a custom header to the set of request headers
-    fn with_custom_headers(self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
-        self.add_custom_headers(headers)
+    /// adds a new set of headers to the request. Any header already present gets overwritten.
+    fn with_custom_headers(mut self, headers: Vec<(HeaderName, HeaderValue)>) -> Self {
+        self.get_custom_headers_mut().extend(headers);
+        self
     }
 
-    /// add a custom query string param
-    fn with_query_pair(self, name: &'a str, value: &'a str) -> Self {
-        let mut query_pairs = self.get_query_pairs().to_vec();
-        query_pairs.push((name, value));
-        self.set_query_pairs(query_pairs)
+    /// add a custom query string parameter
+    fn with_query_pair(mut self, name: &'a str, value: &'a str) -> Self {
+        self.get_query_pairs_mut().push((name, value));
+        self
     }
 
-    /// add a custom query string param
-    fn with_query_pairs(self, pairs: Vec<(&'a str, &'a str)>) -> Self {
-        let query_pairs = self.get_query_pairs().to_vec();
-        let query_pairs = pairs.iter().fold(query_pairs, |mut acc, (name, value)| {
-            acc.push((name, value));
-            acc
-        });
-
-        self.set_query_pairs(query_pairs)
+    /// add a list of custom query string parameters
+    fn with_query_pairs(mut self, pairs: Vec<(&'a str, &'a str)>) -> Self {
+        self.get_query_pairs_mut().extend(pairs);
+        self
     }
 
-    /// retrurns a unique id for the request
+    /// returns a unique id for the request
     fn get_id(&self) -> Uuid;
 
     #[doc(hidden)]
@@ -101,13 +100,19 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     fn get_query_pairs(&self) -> &[(&'a str, &'a str)];
 
     #[doc(hidden)]
+    fn get_query_pairs_mut(&mut self) -> &mut Vec<(&'a str, &'a str)>;
+
+    #[doc(hidden)]
     fn get_ignore_status_code(&self) -> bool;
 
     #[doc(hidden)]
     fn get_method(&self) -> Method;
 
     #[doc(hidden)]
-    fn get_custom_headers(&self) -> HeaderMap;
+    fn get_custom_headers(&self) -> &HeaderMap;
+
+    #[doc(hidden)]
+    fn get_custom_headers_mut(&mut self) -> &mut HeaderMap;
 
     #[cfg(feature = "auth0")]
     #[doc(hidden)]
@@ -131,8 +136,8 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     }
 
     fn get_all_headers(&self) -> HeaderMap {
-        let mut additional_headers = HeaderMap::new();
-        additional_headers.extend(self.get_custom_headers());
+        let mut additional_headers = self.get_custom_headers().clone();
+        #[cfg(feature = "tracing_opentelemetry")]
         additional_headers.extend(self.tracing_headers());
         #[cfg(feature = "auth0")]
         additional_headers.extend(self.get_auth0_headers());
@@ -140,19 +145,17 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     }
 
     #[doc(hidden)]
-    fn get_body(&self) -> Vec<u8>;
-
-    #[doc(hidden)]
     fn get_request_type(&self) -> RequestType;
 
-    fn get_form(&self) -> PrimaBridgeResult<Option<reqwest::multipart::Form>> {
-        Ok(None)
-    }
+    #[doc(hidden)]
+    fn into_body(self) -> PrimaBridgeResult<DeliverableRequestBody>;
 
-    async fn send(&'a self) -> PrimaBridgeResult<Response> {
+    async fn send(self) -> PrimaBridgeResult<Response> {
         use futures_util::future::TryFutureExt;
         let request_id = self.get_id();
         let url = self.get_url();
+        let ignore_status_code = self.get_ignore_status_code();
+        let request_type = self.get_request_type();
 
         let request_builder = self
             .get_bridge()
@@ -162,9 +165,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
             .headers(self.get_all_headers());
 
-        let response = match self.get_form()? {
-            Some(form) => request_builder.multipart(form),
-            None => request_builder.body(self.get_body()),
+        let response = match self.into_body()? {
+            DeliverableRequestBody::Empty => request_builder,
+            DeliverableRequestBody::RawBody(body) => request_builder.body(body.inner),
+            DeliverableRequestBody::Multipart(form) => request_builder.multipart(form),
         }
         .send()
         .map_err(|e| PrimaBridgeError::HttpError {
@@ -174,7 +178,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         .await?;
 
         let status_code = response.status();
-        if !self.get_ignore_status_code() && !status_code.is_success() {
+        if !ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
 
@@ -189,16 +193,16 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             .await?
             .to_vec();
 
-        match self.get_request_type() {
+        match request_type {
             RequestType::Rest => Ok(Response::rest(
-                url.clone(),
+                url,
                 response_body,
                 status_code,
                 response_headers,
                 request_id,
             )),
             RequestType::GraphQL => Ok(Response::graphql(
-                url.clone(),
+                url,
                 response_body,
                 status_code,
                 response_headers,
@@ -236,6 +240,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[cfg(feature = "tracing_opentelemetry")]
     fn tracing_headers(&self) -> HeaderMap {
         use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
+        use std::collections::HashMap;
         use tracing_opentelemetry::OpenTelemetrySpanExt;
 
         let context = tracing::Span::current().context();

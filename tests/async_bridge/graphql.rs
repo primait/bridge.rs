@@ -1,7 +1,6 @@
 use std::error::Error;
 use std::fs;
 
-use mockito;
 use mockito::{mock, Matcher, Mock};
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::Url;
@@ -91,7 +90,7 @@ async fn error_response_parser() -> Result<(), Box<dyn Error>> {
         .await?;
     let parsed_response = response.parse_graphql_response::<GqlResponse>()?;
 
-    assert!(!parsed_response.is_ok());
+    assert!(parsed_response.is_err());
     assert!(parsed_response.has_parsed_data());
     assert_eq!(1, parsed_response.get_errors().len());
 
@@ -112,7 +111,7 @@ async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Err
         .await?;
     let parsed_response = response.parse_graphql_response::<GqlResponse>()?;
 
-    assert!(!parsed_response.is_ok());
+    assert!(parsed_response.is_err());
     assert!(parsed_response.has_parsed_data());
     assert_eq!(1, parsed_response.get_errors().len());
 
@@ -129,7 +128,7 @@ async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
         .await?;
     let parsed_response = response.parse_graphql_response::<GqlResponse>()?;
 
-    assert!(!parsed_response.is_ok());
+    assert!(parsed_response.is_err());
     assert!(!parsed_response.has_parsed_data());
     assert_eq!(1, parsed_response.get_errors().len());
 

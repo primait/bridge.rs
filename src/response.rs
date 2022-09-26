@@ -17,7 +17,7 @@ enum RequestType {
     GraphQL,
 }
 
-/// A server response
+/// A server response.
 #[derive(Debug)]
 pub struct Response {
     url: Url,

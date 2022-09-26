@@ -1,17 +1,21 @@
 use std::convert::TryInto;
 use std::time::Duration;
+use std::{borrow::Cow, collections::HashSet};
 
 use async_trait::async_trait;
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
-use reqwest::{Method, Url};
+use reqwest::{
+    header::{HeaderMap, HeaderValue, CONTENT_TYPE},
+    multipart::Form,
+    Method, Url,
+};
 use serde::Serialize;
 use uuid::Uuid;
 
 use crate::errors::PrimaBridgeResult;
-use crate::request::{Body, DeliverableRequest, RequestType};
-use crate::Bridge;
+use crate::request::{Body, DeliverableRequest, DeliverableRequestBody, MultipartFormFileField, RequestType};
+use crate::{Bridge, MultipartFile};
 
-/// The RestRequest is a struct that represent a REST request to be done with the [Bridge](./../struct.Bridge.html)
+/// The RestRequest is a struct that represent a REST request to be done with a [Bridge].
 #[derive(Debug)]
 pub struct RestRequest<'a> {
     id: Uuid,
@@ -23,21 +27,33 @@ pub struct RestRequest<'a> {
     query_pairs: Vec<(&'a str, &'a str)>,
     ignore_status_code: bool,
     custom_headers: HeaderMap,
+    multipart: Option<RestMultipart>,
 }
 
 impl<'a> RestRequest<'a> {
-    /// creates a new RestRequest
+    /// Creates a new RestRequest.
+    ///
+    /// It is recommended to use one of the methods on [Request](crate::Request) to create a new request more easily.
     pub fn new(bridge: &'a Bridge) -> Self {
         Self {
             id: Uuid::new_v4(),
             bridge,
             body: Default::default(),
-            method: Default::default(), // GET
+            method: Method::GET,
             path: Default::default(),
             timeout: Duration::from_secs(60),
             query_pairs: Default::default(),
             ignore_status_code: Default::default(),
             custom_headers: Default::default(),
+            multipart: Default::default(),
+        }
+    }
+
+    /// Sets the given multipart form content as the body of the request.
+    pub fn multipart_body(self, multipart: RestMultipart) -> Self {
+        Self {
+            multipart: Some(multipart),
+            ..self
         }
     }
 }
@@ -87,17 +103,6 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         self.timeout
     }
 
-    fn set_custom_headers(self, headers: HeaderMap) -> Self {
-        Self {
-            custom_headers: headers,
-            ..self
-        }
-    }
-
-    fn set_query_pairs(self, query_pairs: Vec<(&'a str, &'a str)>) -> Self {
-        Self { query_pairs, ..self }
-    }
-
     fn get_id(&self) -> Uuid {
         self.id
     }
@@ -118,6 +123,10 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         self.query_pairs.as_slice()
     }
 
+    fn get_query_pairs_mut(&mut self) -> &mut Vec<(&'a str, &'a str)> {
+        &mut self.query_pairs
+    }
+
     fn get_ignore_status_code(&self) -> bool {
         self.ignore_status_code
     }
@@ -126,8 +135,12 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         self.method.clone()
     }
 
-    fn get_custom_headers(&self) -> HeaderMap {
-        self.custom_headers.clone()
+    fn get_custom_headers(&self) -> &HeaderMap {
+        &self.custom_headers
+    }
+
+    fn get_custom_headers_mut(&mut self) -> &mut HeaderMap {
+        &mut self.custom_headers
     }
 
     #[cfg(feature = "auth0")]
@@ -135,11 +148,57 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         &self.bridge.auth0_opt
     }
 
-    fn get_body(&self) -> Vec<u8> {
-        self.body.clone().map(Into::into).unwrap_or_default()
+    fn into_body(self) -> PrimaBridgeResult<DeliverableRequestBody> {
+        Ok(match self.multipart {
+            Some(multipart) => DeliverableRequestBody::Multipart(multipart.into_form()?),
+            None => self.body.map(DeliverableRequestBody::RawBody).unwrap_or_default(),
+        })
     }
 
     fn get_request_type(&self) -> RequestType {
         RequestType::Rest
+    }
+}
+
+#[derive(Debug)]
+/// A [RestRequest] multipart form body.
+///
+/// Only files can be included in the multipart body.  
+/// It can either be `Single` (one file) or `Multiple` (multiple files).
+///
+/// Each file corresponds to a named field in the form data.
+pub enum RestMultipart {
+    Single(MultipartFormFileField),
+    Multiple(HashSet<MultipartFormFileField>),
+}
+impl RestMultipart {
+    pub fn single<S>(form_field: S, file: MultipartFile) -> Self
+    where
+        S: Into<Cow<'static, str>>,
+    {
+        Self::Single(MultipartFormFileField::new(form_field, file))
+    }
+
+    #[allow(clippy::mutable_key_type)] // caused by reqwest::Body
+    pub fn multiple(files: HashSet<MultipartFormFileField>) -> Self {
+        Self::Multiple(files)
+    }
+
+    fn into_form(self) -> PrimaBridgeResult<Form> {
+        let mut form = Form::new();
+
+        match self {
+            Self::Single(field) => {
+                form = form.part(field.field_name, field.file.into_part()?);
+            }
+
+            Self::Multiple(fields) => {
+                for field in fields {
+                    form = form.part(field.field_name, field.file.into_part()?);
+                }
+            }
+        }
+
+        Ok(form)
     }
 }

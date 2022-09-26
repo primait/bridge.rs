@@ -165,7 +165,7 @@ async fn gzip_compression() -> Result<(), Box<dyn Error>> {
     use flate2::{write::GzEncoder, Compression};
     use std::io::prelude::*;
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-    encoder.write(b"{\"hello\": \"world!\"}")?;
+    encoder.write_all(b"{\"hello\": \"world!\"}")?;
     let body = encoder.finish()?;
     let _mock = mockito::mock("GET", "/")
         .with_status(200)

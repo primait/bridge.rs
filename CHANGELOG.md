@@ -7,9 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Next]
 
+### Added
+
+- Added the ability to send files via REST multipart requests by using the new `RestRequest.multipart_body` method.  
+  Refer to the example in the repository to see how to use the new APIs.
+- Added `{RestRequest, GraphQLRequest}.with_custom_header` to set a single custom header for a request
+
+### Changed
+
+- **(BREAKING)** `Multipart` has been renamed into `GraphQLMultipart` to avoid ambiguity with `RestMultipart`
+- `MultipartFile::new` now accepts anything that can be converted into a `Body` instead of just a `Vec<u8>`.  
+  This allows to provide the file content from a stream, which can be useful in case you want to send a file, but you don't want to load it in memory all at once.
+  - To better support this use case, a [tokio::fs::File](https://docs.rs/tokio/latest/tokio/fs/struct.File.html) can now be converted into a `Body` too
+- Reduced cloning and allocations throughout the library
+- Re-exported more types at the top level of the crate
+
+### Removed
+
+- **(BREAKING)** `{RestRequest, GraphQLRequest}.add_custom_headers` and `set_custom_headers`: use `with_custom_headers` instead
+- `(GraphQL)Multipart.into_form`: it is a private API that wasn't meant to be exported publicly
+- `async` feature: it was enabled by default and disabling it caused compilation to break
+
 ## [0.13.1] - 2022-06-23
 
-### Add
+### Added
 
 - New function `status_code` to get `StatusCode` from `Response`. 
 
