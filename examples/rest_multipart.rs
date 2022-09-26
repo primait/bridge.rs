@@ -33,7 +33,8 @@ async fn main() {
         ),
     ]));
 
-    let response: Response = RestRequest::new_with_multipart(&bridge, multipart)
+    let response: Response = Request::post(&bridge)
+        .multipart_body(multipart)
         .to("upload")
         .send()
         .await

@@ -1,7 +1,6 @@
 use mockito::{mock, Matcher};
 use prima_bridge::prelude::*;
 use prima_bridge::{MultipartFile, MultipartFormFileField, RestMultipart};
-use reqwest::Method;
 use std::collections::HashSet;
 use std::error::Error;
 
@@ -25,8 +24,8 @@ async fn multipart_rest_single_file() -> Result<(), Box<dyn Error>> {
             .with_mime_type("text/plain"),
     );
 
-    let result: String = RestRequest::new_with_multipart(&bridge, multipart)
-        .method(Method::POST)
+    let result: String = Request::post(&bridge)
+        .multipart_body(multipart)
         .send()
         .await?
         .get_data(&["hello"])?;
@@ -72,8 +71,8 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
         .into_iter(),
     ));
 
-    let result: String = RestRequest::new_with_multipart(&bridge, multipart)
-        .method(Method::POST)
+    let result: String = Request::post(&bridge)
+        .multipart_body(multipart)
         .send()
         .await?
         .get_data(&["hello"])?;
@@ -100,8 +99,8 @@ async fn multipart_rest_single_file_stream() -> Result<(), Box<dyn Error>> {
             .with_mime_type("text/plain"),
     );
 
-    let result: String = RestRequest::new_with_multipart(&bridge, multipart)
-        .method(Method::POST)
+    let result: String = Request::post(&bridge)
+        .multipart_body(multipart)
         .send()
         .await?
         .get_data(&["hello"])?;

@@ -47,19 +47,11 @@ impl<'a> RestRequest<'a> {
         }
     }
 
-    /// Request method defaults to `POST`
-    pub fn new_with_multipart(bridge: &'a Bridge, multipart: RestMultipart) -> Self {
+    /// Sets the given multipart form content as the body of the request
+    pub fn multipart_body(self, multipart: RestMultipart) -> Self {
         Self {
-            method: Method::POST,
-            id: Uuid::new_v4(),
-            bridge,
-            body: Default::default(),
-            path: Default::default(),
-            timeout: Duration::from_secs(60),
-            query_pairs: Default::default(),
-            ignore_status_code: Default::default(),
-            custom_headers: Default::default(),
             multipart: Some(multipart),
+            ..self
         }
     }
 }

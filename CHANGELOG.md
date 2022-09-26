@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added the ability to send files via REST multipart requests by using the new `RestRequest.new_with_multipart` method.  
+- Added the ability to send files via REST multipart requests by using the new `RestRequest.multipart_body` method.  
   Refer to the example in the repository to see how to use the new APIs.
 - Added `{RestRequest, GraphQLRequest}.with_custom_header` to set a single custom header for a request
 
