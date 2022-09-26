@@ -149,11 +149,7 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
     fn into_body(self) -> PrimaBridgeResult<DeliverableRequestBody> {
         Ok(match self.multipart {
             Some(multipart) => DeliverableRequestBody::Multipart(multipart.into_form()?),
-            None => self
-                .body
-                .map(Into::into)
-                .map(DeliverableRequestBody::RawBody)
-                .unwrap_or_default(),
+            None => self.body.map(DeliverableRequestBody::RawBody).unwrap_or_default(),
         })
     }
 
