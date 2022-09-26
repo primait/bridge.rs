@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Next]
+## [Unreleased]
+
+---
+
+## [0.14.0] - 2022-09-26
 
 ### Added
 
@@ -28,11 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `(GraphQL)Multipart.into_form`: it is a private API that wasn't meant to be exported publicly
 - `async` feature: it was enabled by default and disabling it caused compilation to break
 
+---
+
 ## [0.13.1] - 2022-06-23
 
 ### Added
 
-- New function `status_code` to get `StatusCode` from `Response`. 
+- New function `status_code` to get `StatusCode` from `Response`.
+
+---
 
 ## [0.13.0]
 
@@ -40,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - removed `block_modes` deprecated dependency in favour of the new `cbc` dependency
 - broaden the dependency on uuid to support 1.x versions
+
+---
 
 ## [0.12.0]
 
@@ -53,23 +63,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - graphql multipart request as specified [here](https://github.com/jaydenseric/graphql-multipart-request-spec).
 - examples for rest, graphql, graphql multipart and generic request with auth0 authentication.
 
+---
+
 ## [0.11.0]
 
 - opentelemetry updated to version 0.17. **Careful!!!** The opentelemetry version in your project should match the one in this library (*breaking change*)
 - various dependency updates
 - removed log dependency, use tracing everywhere
 
+---
+
 ## [0.10.0]
 
 - dashmap dependency updated (<https://github.com/primait/bridge.rs/pull/64>)
+
+---
 
 ## [0.9.2]
 
 - test fix
 
+---
+
 ## [0.9.1]
 
 - lint fix
+
+---
 
 ## [0.9.0]
 
@@ -78,9 +98,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Other deps updated
 - Documentation now shows required features
 
+---
+
 ## [0.8.0]
 
 - added new function `with_auth0` in bridge builder. This enables jwt authentication to called endpoint.
+
+---
 
 ## [0.7.3]
 
@@ -88,6 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - opentelemetry updated to version 0.16. **Careful!!!** The opentelemetry version in your project should match the one in this library
 - several dependencies updated
 - docker file based on Rust 1.54
+
+---
 
 ## [0.7.2]
 
@@ -98,6 +124,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - proper handling of graphql errors with a new `ParsedGraphqlResponse` type
 - adds ability to specify a request timeout
 
+---
+
 ## [0.7.1]
 
 ### breaking change
@@ -105,6 +133,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - opentelemetry updated to version 0.13. **Careful!!!** The opentelemetry version in your project should match the one in this library
 - several dependencies updated
 - docker file based on Rust 1.51
+
+---
 
 ## [0.7.0]
 
@@ -117,17 +147,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - tokio and tokio-test are now dev-dependencies
 
+---
+
 ## [0.6.0]
 
 ### breaking change
 
 - bump tokio to 1.0, which brings rustc minimum version to 1.45
 
+---
+
 ## [0.5.1]
 
 ### features
 
 - relaxed the uuid requirement
+
+---
 
 ## [0.5.0]
 
@@ -136,17 +172,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - opentelemetry updated to version 0.11. **Careful!!!** The opentelemetry version in your project should match the one in this library
 - tracing-opentelemetry updated to version 0.10. **Careful!!!** The tracing-opentelemetry version in your project should match the one in this library
 
+---
+
 ## [0.4.1]
 
 ### features
 
 - adds the ability to set user-agent header
 
+---
+
 ## [0.4.0]
 
 ### breaking change
 
 - opentelemetry updated to version 0.10.0. **Careful!!!** The opentelemetry version in your project should match the one in this library
+
+---
 
 ## [0.3.0]
 
@@ -158,11 +200,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - removed the bridge.request api (deprecated) in favor of `Request::get` or `RestRequest::new` and `GraphQLRequest::new` functions.
 
+---
+
 ## [0.2.4]
 
 ### bugfix
 
 - fixes the test suite. No impact on the api.
+
+---
 
 ## [0.2.3]
 
@@ -170,17 +216,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - double content-type header for graphql request
 
+---
+
 ## [0.2.2]
 
 ### bugfix
 
 - better handling of headers
 
+---
+
 ## [0.2.1]
 
 ### features
 
 - adds back the `with_query_pair` and `with_query_pairs` api
+
+---
 
 ## [0.2.0]
 
@@ -205,7 +257,8 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Next]: https://github.com/primait/bridge.rs/compare/0.13.1...HEAD
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.0...HEAD
+[0.14.0]: https://github.com/primait/bridge.rs/compare/0.13.1...0.14.0
 [0.13.1]: https://github.com/primait/bridge.rs/compare/0.13.0...0.13.1
 [0.13.0]: https://github.com/primait/bridge.rs/compare/0.12.0...0.13.0
 [0.12.0]: https://github.com/primait/bridge.rs/compare/0.11.0...0.12.0
@@ -224,7 +277,6 @@ The old API is still available but deprecated. It will be removed soon.
 [0.5.0]: https://github.com/primait/bridge.rs/compare/0.4.1...0.5.0
 [0.4.1]: https://github.com/primait/bridge.rs/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/primait/bridge.rs/compare/0.3.1...0.4.0
-[0.3.1]: https://github.com/primait/bridge.rs/compare/0.3.0...0.3.1
 [0.3.0]: https://github.com/primait/bridge.rs/compare/0.2.4...0.3.0
 [0.2.4]: https://github.com/primait/bridge.rs/compare/0.2.3...0.2.4
 [0.2.3]: https://github.com/primait/bridge.rs/compare/0.2.2...0.2.3
