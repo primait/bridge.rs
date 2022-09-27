@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use reqwest::header::{HeaderName, HeaderValue};
+use reqwest::{header::{HeaderName, HeaderValue}, redirect::Policy};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -19,6 +19,55 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
     let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
 
     assert_eq!("world!", result.as_str());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn request_with_redirect_policy_none() -> Result<(), Box<dyn Error>> {
+    let _destination_mock = mockito::mock("GET", "/destination")
+        .with_status(200)
+        .with_body("{\"after\": \"redirect\"}")
+        .create();
+
+    let redirect_to = format!("{}/destination", mockito::server_url());
+    let body = "{\"before\": \"redirect\"}";
+    let (_m, bridge) = create_bridge_with_redirect(302, body, "/", &redirect_to, Policy::none());
+
+    let result: Response = RestRequest::new(&bridge)
+        .ignore_status_code()
+        .send()
+        .await
+        .expect("request failed");
+
+    assert!(result.status_code().is_redirection());
+    assert_eq!(result.headers().get("Location").unwrap().to_str().unwrap(), redirect_to);
+    let response : serde_json::Value = serde_json::from_slice(result.raw_body()).expect("Failed to deserialize response");
+    assert_eq!(response, json!({"before": "redirect"}));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn request_with_redirect_policy_follow() -> Result<(), Box<dyn Error>> {
+    let _destination_mock = mockito::mock("GET", "/destination")
+        .with_status(200)
+        .with_body("{\"after\": \"redirect\"}")
+        .create();
+    
+    let redirect_to = format!("{}/destination", mockito::server_url());
+    let body = "{\"before\": \"redirect\"}";
+    let (_m, bridge) = create_bridge_with_redirect(302, body, "/", &redirect_to, Policy::limited(2));
+
+    let result: Response = RestRequest::new(&bridge)
+        .ignore_status_code()
+        .send()
+        .await
+        .expect("request failed");
+
+    assert!(result.status_code().is_success());
+    let response : serde_json::Value = serde_json::from_slice(result.raw_body()).expect("Failed to deserialize response");
+    assert_eq!(response, json!({"after": "redirect"}));
 
     Ok(())
 }
