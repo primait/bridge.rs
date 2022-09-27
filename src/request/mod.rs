@@ -150,6 +150,14 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     #[doc(hidden)]
     fn into_body(self) -> PrimaBridgeResult<DeliverableRequestBody>;
 
+    /// Returns the request body as a slice of bytes.
+    ///
+    /// This will return `None` in the following cases:
+    ///
+    /// - The request body is multipart form data
+    /// - The request body is a stream (eg. a file) and therefore not in memory
+    fn get_body(&self) -> Option<&[u8]>;
+
     async fn send(self) -> PrimaBridgeResult<Response> {
         use futures_util::future::TryFutureExt;
         let request_id = self.get_id();

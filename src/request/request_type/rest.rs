@@ -155,6 +155,10 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         })
     }
 
+    fn get_body(&self) -> Option<&[u8]> {
+        self.body.as_ref().and_then(|body| body.as_bytes())
+    }
+
     fn get_request_type(&self) -> RequestType {
         RequestType::Rest
     }
