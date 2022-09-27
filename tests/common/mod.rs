@@ -1,7 +1,7 @@
 use mockito::{mock, BinaryBody, Matcher, Mock};
-use reqwest::Url;
-
 use prima_bridge::prelude::*;
+use prima_bridge::redirect::Policy;
+use reqwest::Url;
 
 #[allow(unused)]
 pub fn enable_mockito_logging() {
@@ -146,6 +146,29 @@ pub fn create_bridge_with_binary_body_matcher(body: &[u8]) -> (Mock, Bridge) {
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
     let bridge = Bridge::builder().build(url);
+
+    (mock, bridge)
+}
+
+pub fn create_bridge_with_redirect(
+    status_code: usize,
+    body: &str,
+    path: &str,
+    redirect_to: &str,
+    policy: Policy,
+) -> (Mock, Bridge) {
+    let mock = mock("GET", path)
+        .match_header(
+            "x-request-id",
+            Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
+        )
+        .with_status(status_code)
+        .with_header("Location", redirect_to)
+        .with_body(body)
+        .create();
+
+    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let bridge = Bridge::builder().with_redirect_policy(policy).build(url);
 
     (mock, bridge)
 }
