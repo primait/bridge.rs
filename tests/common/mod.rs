@@ -1,7 +1,7 @@
 use mockito::{mock, BinaryBody, Matcher, Mock};
-use reqwest::{redirect::Policy, Url};
-
 use prima_bridge::prelude::*;
+use prima_bridge::redirect::Policy;
+use reqwest::Url;
 
 #[allow(unused)]
 pub fn enable_mockito_logging() {
