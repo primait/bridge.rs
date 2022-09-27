@@ -1,5 +1,5 @@
 use mockito::{mock, BinaryBody, Matcher, Mock};
-use reqwest::{Url, redirect::Policy};
+use reqwest::{redirect::Policy, Url};
 
 use prima_bridge::prelude::*;
 
@@ -155,7 +155,7 @@ pub fn create_bridge_with_redirect(
     body: &str,
     path: &str,
     redirect_to: &str,
-    policy: Policy
+    policy: Policy,
 ) -> (Mock, Bridge) {
     let mock = mock("GET", path)
         .match_header(
@@ -168,9 +168,7 @@ pub fn create_bridge_with_redirect(
         .create();
 
     let url = Url::parse(mockito::server_url().as_str()).unwrap();
-    let bridge = Bridge::builder()
-        .with_redirect_policy(policy)
-        .build(url);
+    let bridge = Bridge::builder().with_redirect_policy(policy).build(url);
 
     (mock, bridge)
 }

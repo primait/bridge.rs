@@ -1,4 +1,4 @@
-use reqwest::{Url, redirect::Policy};
+use reqwest::{redirect::Policy, Url};
 
 /// auth0 related functions
 #[cfg(feature = "auth0")]
@@ -39,10 +39,7 @@ impl BridgeBuilder {
     pub fn with_redirect_policy(self, policy: Policy) -> Self {
         let client_builder = self.client_builder.redirect(policy);
 
-        Self {
-            client_builder,
-            ..self
-        }
+        Self { client_builder, ..self }
     }
 
     // add auth0 capabilities to this bridge
