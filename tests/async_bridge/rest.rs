@@ -211,7 +211,7 @@ async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> 
 }
 
 #[tokio::test]
-async fn get_request_json_body() -> Result<(), Box<dyn Error>> {
+async fn get_body_returns_serialized_json_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
 
     let data = Data {
@@ -228,11 +228,10 @@ async fn get_request_json_body() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn get_request_raw_body() -> Result<(), Box<dyn Error>> {
+async fn get_body_returns_raw_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
 
     let data = b"Hello, world!".as_slice();
-
     let request = RestRequest::new(&bridge).raw_body(data);
     assert_eq!(request.get_body(), Some(data));
 
@@ -242,11 +241,10 @@ async fn get_request_raw_body() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn get_request_stream_body() -> Result<(), Box<dyn Error>> {
+async fn get_body_returns_none_when_body_is_stream() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
 
     let file = tokio::fs::File::open("tests/resources/howdy_world.txt").await?;
-
     let request = RestRequest::new(&bridge).raw_body(file);
     assert_eq!(request.get_body(), None);
 
@@ -256,9 +254,8 @@ async fn get_request_stream_body() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn get_request_multipart_body() -> Result<(), Box<dyn Error>> {
+async fn get_body_returns_none_when_request_is_multipart() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
-
     let data = RestMultipart::multiple(HashSet::from_iter([MultipartFormFileField::new(
         "file0",
         MultipartFile::new("Hello, world!")
@@ -275,7 +272,7 @@ async fn get_request_multipart_body() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn get_request_no_body() -> Result<(), Box<dyn Error>> {
+async fn get_body_returns_none_when_request_has_no_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
 
     let request = RestRequest::new(&bridge);
@@ -288,7 +285,7 @@ async fn get_request_no_body() -> Result<(), Box<dyn Error>> {
 
 #[cfg(feature = "gzip")]
 #[tokio::test]
-async fn gzip_compression() -> Result<(), Box<dyn Error>> {
+async fn decompresses_gzip_responses() -> Result<(), Box<dyn Error>> {
     use flate2::{write::GzEncoder, Compression};
     use std::io::prelude::*;
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
