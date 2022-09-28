@@ -100,11 +100,9 @@ async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
     let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"})).await;
-
     let data = Data {
         hello: "world".to_string(),
     };
-
     let result = RestRequest::new(&bridge).json_body(&data)?.send().await;
     assert!(result.is_ok());
     Ok(())
@@ -140,10 +138,7 @@ async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
 
     let (_m, bridge) = create_bridge_with_binary_body_matcher(body).await;
 
-    let request = RestRequest::new(&bridge).raw_body(body.to_vec());
-    assert_eq!(request.get_body(), Some(body.as_slice()));
-
-    let result = request.send().await?;
+    let result = RestRequest::new(&bridge).raw_body(body.to_vec()).send().await?;
     assert!(result.is_ok());
 
     assert_eq!(body, &result.raw_body()[..]);
