@@ -32,7 +32,8 @@ pub use self::{
 mod builder;
 mod errors;
 pub mod prelude;
-pub mod redirect;
+mod redirect;
+pub use redirect::*;
 mod request;
 mod response;
 

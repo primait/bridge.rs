@@ -6,7 +6,7 @@ use serde_json::json;
 
 use crate::common::*;
 use prima_bridge::prelude::*;
-use prima_bridge::redirect::Policy;
+use prima_bridge::RedirectPolicy;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
@@ -32,7 +32,7 @@ async fn request_with_redirect_policy_none() -> Result<(), Box<dyn Error>> {
 
     let redirect_to = format!("{}/destination", mockito::server_url());
     let body = "{\"before\": \"redirect\"}";
-    let (_m, bridge) = create_bridge_with_redirect(302, body, "/", &redirect_to, Policy::NoFollow);
+    let (_m, bridge) = create_bridge_with_redirect(302, body, "/", &redirect_to, RedirectPolicy::NoFollow);
 
     let result: Response = RestRequest::new(&bridge)
         .ignore_status_code()
@@ -58,7 +58,7 @@ async fn request_with_redirect_policy_follow() -> Result<(), Box<dyn Error>> {
 
     let redirect_to = format!("{}/destination", mockito::server_url());
     let body = "{\"before\": \"redirect\"}";
-    let (_m, bridge) = create_bridge_with_redirect(302, body, "/", &redirect_to, Policy::Limited(2));
+    let (_m, bridge) = create_bridge_with_redirect(302, body, "/", &redirect_to, RedirectPolicy::Limited(2));
 
     let result: Response = RestRequest::new(&bridge)
         .ignore_status_code()
