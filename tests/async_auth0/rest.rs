@@ -161,7 +161,7 @@ async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> 
 
 #[cfg(feature = "gzip")]
 #[tokio::test]
-async fn gzip_compression() -> Result<(), Box<dyn Error>> {
+async fn decompresses_gzip_responses() -> Result<(), Box<dyn Error>> {
     use flate2::{write::GzEncoder, Compression};
     use std::io::prelude::*;
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());

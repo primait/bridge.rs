@@ -1,4 +1,4 @@
-//! Stuff related to auth0
+//! Stuff used to provide JWT authentication via Auth0
 
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
