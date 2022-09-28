@@ -159,6 +159,37 @@ async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> 
     Ok(())
 }
 
+#[tokio::test]
+async fn get_request_json_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+
+    let data = Data {
+        hello: "world".to_string(),
+    };
+    let data_json = serde_json::to_string(&data)?;
+
+    let request = RestRequest::new(&bridge).json_body(&data)?;
+    assert_eq!(request.get_body(), Some(data_json.as_bytes()));
+
+    let result = request.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn get_request_raw_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+
+    let data = b"Hello, world!".as_slice();
+
+    let request = RestRequest::new(&bridge).raw_body(data);
+    assert_eq!(request.get_body(), Some(data));
+
+    let result = request.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
 #[cfg(feature = "gzip")]
 #[tokio::test]
 async fn gzip_compression() -> Result<(), Box<dyn Error>> {

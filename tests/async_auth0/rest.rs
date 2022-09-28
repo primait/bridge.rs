@@ -104,12 +104,8 @@ async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
     let data = Data {
         hello: "world".to_string(),
     };
-    let data_json = serde_json::to_string(&data)?;
 
-    let request = RestRequest::new(&bridge).json_body(&data)?;
-    assert_eq!(request.get_body(), Some(data_json.as_bytes()));
-
-    let result = request.send().await;
+    let result = RestRequest::new(&bridge).json_body(&data)?.send().await;
     assert!(result.is_ok());
     Ok(())
 }
