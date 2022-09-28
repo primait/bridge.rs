@@ -223,6 +223,18 @@ async fn get_request_multipart_body() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+#[tokio::test]
+async fn get_request_no_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+
+    let request = RestRequest::new(&bridge);
+    assert_eq!(request.get_body(), None);
+
+    let result = request.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
 #[cfg(feature = "gzip")]
 #[tokio::test]
 async fn gzip_compression() -> Result<(), Box<dyn Error>> {

@@ -154,6 +154,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     ///
     /// This will return `None` in the following cases:
     ///
+    /// - The request does not have a body
     /// - The request body is multipart form data
     /// - The request body is a stream (eg. a file) and therefore not in memory
     fn get_body(&self) -> Option<&[u8]>;
