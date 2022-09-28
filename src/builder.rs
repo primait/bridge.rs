@@ -3,7 +3,7 @@ use reqwest::Url;
 /// auth0 related functions
 #[cfg(feature = "auth0")]
 use crate::auth0;
-use crate::{redirect::Policy, Bridge};
+use crate::{Bridge, RedirectPolicy};
 
 /// A builder for creating [Bridge] instances.
 pub struct BridgeBuilder {
@@ -36,7 +36,7 @@ impl BridgeBuilder {
         builder
     }
 
-    pub fn with_redirect_policy(self, policy: Policy) -> Self {
+    pub fn with_redirect_policy(self, policy: RedirectPolicy) -> Self {
         let client_builder = self.client_builder.redirect(policy.into());
 
         #[cfg(not(feature = "auth0"))]

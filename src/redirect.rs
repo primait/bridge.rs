@@ -1,14 +1,14 @@
 use reqwest::redirect::Policy as ReqwestPolicy;
-pub enum Policy {
+pub enum RedirectPolicy {
     NoFollow,
     Limited(usize),
 }
 
-impl From<Policy> for ReqwestPolicy {
-    fn from(policy: Policy) -> Self {
+impl From<RedirectPolicy> for ReqwestPolicy {
+    fn from(policy: RedirectPolicy) -> Self {
         match policy {
-            Policy::NoFollow => ReqwestPolicy::none(),
-            Policy::Limited(max) => ReqwestPolicy::limited(max),
+            RedirectPolicy::NoFollow => ReqwestPolicy::none(),
+            RedirectPolicy::Limited(max) => ReqwestPolicy::limited(max),
         }
     }
 }
