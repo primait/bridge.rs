@@ -1,12 +1,12 @@
-use std::error::Error;
+use std::{collections::HashSet, error::Error};
 
 use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
+use prima_bridge::{prelude::*, MultipartFile, MultipartFormFileField, RedirectPolicy, RestMultipart};
+
 use crate::common::*;
-use prima_bridge::prelude::*;
-use prima_bridge::RedirectPolicy;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
@@ -207,6 +207,82 @@ async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> 
     let headers = req.get_custom_headers();
     assert_eq!(HeaderValue::from_str("value").ok().as_ref(), headers.get("x-test"));
 
+    Ok(())
+}
+
+#[tokio::test]
+async fn get_request_json_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+
+    let data = Data {
+        hello: "world".to_string(),
+    };
+    let data_json = serde_json::to_string(&data)?;
+
+    let request = RestRequest::new(&bridge).json_body(&data)?;
+    assert_eq!(request.get_body(), Some(data_json.as_bytes()));
+
+    let result = request.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn get_request_raw_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+
+    let data = b"Hello, world!".as_slice();
+
+    let request = RestRequest::new(&bridge).raw_body(data);
+    assert_eq!(request.get_body(), Some(data));
+
+    let result = request.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn get_request_stream_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+
+    let file = tokio::fs::File::open("tests/resources/howdy_world.txt").await?;
+
+    let request = RestRequest::new(&bridge).raw_body(file);
+    assert_eq!(request.get_body(), None);
+
+    let result = request.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn get_request_multipart_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+
+    let data = RestMultipart::multiple(HashSet::from_iter([MultipartFormFileField::new(
+        "file0",
+        MultipartFile::new("Hello, world!")
+            .with_name("hello_world.txt")
+            .with_mime_type("text/plain"),
+    )]));
+
+    let request = RestRequest::new(&bridge).multipart_body(data);
+    assert_eq!(request.get_body(), None);
+
+    let result = request.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn get_request_no_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+
+    let request = RestRequest::new(&bridge);
+    assert_eq!(request.get_body(), None);
+
+    let result = request.send().await;
+    assert!(result.is_ok());
     Ok(())
 }
 

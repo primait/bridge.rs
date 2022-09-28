@@ -184,6 +184,10 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         })
     }
 
+    fn get_body(&self) -> Option<&[u8]> {
+        self.body.as_bytes()
+    }
+
     fn get_request_type(&self) -> RequestType {
         RequestType::GraphQL
     }

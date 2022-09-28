@@ -33,6 +33,13 @@ impl Body {
         }
     }
 
+    /// Returns the raw bytes of the body, if it is in memory.
+    ///
+    /// This will return `None` for a body that is streaming from a file or other source, for example.
+    pub fn as_bytes(&self) -> Option<&[u8]> {
+        self.inner.as_bytes()
+    }
+
     #[cfg(test)]
     pub(crate) fn as_str(&self) -> Option<Cow<'_, str>> {
         self.inner.as_bytes().map(String::from_utf8_lossy)
