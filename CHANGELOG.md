@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Reintroduced `{RestRequest, GraphQLRequest}.get_body` for public use.  
+  The method was publicly accessible before 0.14.0 but was undocumented and meant only for internal use.
+- Added `BridgeBuilder.with_redirect_policy` to specify how the Bridge should handle HTTP redirects 
+
 ---
 
 ## [0.14.0] - 2022-09-26
