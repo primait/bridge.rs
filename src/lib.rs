@@ -21,6 +21,7 @@ use reqwest::Url;
 
 pub use self::{
     builder::BridgeBuilder,
+    redirect::RedirectPolicy,
     request::{
         Body, DeliverableRequest, GraphQLMultipart, GraphQLRequest, MultipartFile, MultipartFormFileField, Request,
         RestMultipart, RestRequest,
@@ -33,7 +34,6 @@ mod builder;
 mod errors;
 pub mod prelude;
 mod redirect;
-pub use redirect::*;
 mod request;
 mod response;
 
