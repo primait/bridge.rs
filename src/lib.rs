@@ -1,13 +1,13 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-//! This crate gives an high level API to execute external requests.
+//! This crate gives an high level API to execute external HTTP requests.
 //!
 //! It is supposed to give the basics building blocks for building bridges to other services
 //! while abstracting the low level stuff like adding custom headers and request tracing.
 //!
 //! It supports both REST and GraphQL requests.
 //!
-//! You should start by creating a [Bridge](struct.Bridge.html) instance.
+//! You should start by creating a [Bridge] instance.
 //! This instance should live for all the application lifetime.
 //!
 //! **Do not create a new bridge on every request!**
@@ -38,27 +38,28 @@ mod request;
 mod response;
 
 #[cfg(feature = "auth0")]
+#[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
 pub mod auth0;
 
-/// The bridge instance to issue external requests.
+/// A Bridge instance which can be used to issue HTTP requests to an external service.
 #[derive(Debug)]
 pub struct Bridge {
     client: reqwest::Client,
-    /// the url this bridge should call to
     endpoint: Url,
     #[cfg(feature = "auth0")]
     auth0_opt: Option<auth0::Auth0>,
 }
 
 impl Bridge {
-    /// create an instance of [BridgeBuilder]
+    /// Creates an instance of a [BridgeBuilder].
     pub fn builder() -> BridgeBuilder {
         BridgeBuilder::create()
     }
 
     #[cfg(feature = "auth0")]
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
-    pub fn token(&self) -> Option<crate::auth0::Token> {
+    /// Gets the JWT token used by the Bridge, if it has been configured with Auth0 authentication via [BridgeBuilder.with_auth0](BridgeBuilder#with_auth0).
+    pub fn token(&self) -> Option<auth0::Token> {
         self.auth0_opt.as_ref().map(|auth0| auth0.token())
     }
 }

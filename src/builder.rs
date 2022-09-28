@@ -1,6 +1,5 @@
 use reqwest::Url;
 
-/// auth0 related functions
 #[cfg(feature = "auth0")]
 use crate::auth0;
 use crate::{Bridge, RedirectPolicy};
@@ -48,7 +47,7 @@ impl BridgeBuilder {
         builder
     }
 
-    // add auth0 capabilities to this bridge
+    /// Adds Auth0 JWT authentication to the requests made by the [Bridge].
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
     #[cfg(feature = "auth0")]
     pub async fn with_auth0(self, config: auth0::Config) -> Self {
@@ -63,6 +62,9 @@ impl BridgeBuilder {
         }
     }
 
+    /// Creates a [Bridge] from this builder.
+    ///
+    /// The given endpoint will be the base URL of all the requests made by the Bridge.
     pub fn build(self, endpoint: Url) -> Bridge {
         Bridge {
             client: self.client_builder.build().expect("Unable to create Bridge"),
