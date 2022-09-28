@@ -1,10 +1,10 @@
-use std::error::Error;
+use std::{collections::HashSet, error::Error};
 
 use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use prima_bridge::prelude::*;
+use prima_bridge::{prelude::*, MultipartFile, MultipartFormFileField, RestMultipart};
 
 use crate::common::*;
 
@@ -184,6 +184,39 @@ async fn get_request_raw_body() -> Result<(), Box<dyn Error>> {
 
     let request = RestRequest::new(&bridge).raw_body(data);
     assert_eq!(request.get_body(), Some(data));
+
+    let result = request.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn get_request_stream_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+
+    let file = tokio::fs::File::open("tests/resources/howdy_world.txt").await?;
+
+    let request = RestRequest::new(&bridge).raw_body(file);
+    assert_eq!(request.get_body(), None);
+
+    let result = request.send().await;
+    assert!(result.is_ok());
+    Ok(())
+}
+
+#[tokio::test]
+async fn get_request_multipart_body() -> Result<(), Box<dyn Error>> {
+    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+
+    let data = RestMultipart::multiple(HashSet::from_iter([MultipartFormFileField::new(
+        "file0",
+        MultipartFile::new("Hello, world!")
+            .with_name("hello_world.txt")
+            .with_mime_type("text/plain"),
+    )]));
+
+    let request = RestRequest::new(&bridge).multipart_body(data);
+    assert_eq!(request.get_body(), None);
 
     let result = request.send().await;
     assert!(result.is_ok());
