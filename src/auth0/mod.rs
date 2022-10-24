@@ -69,7 +69,11 @@ async fn start(
 
         loop {
             ticker.tick().await;
-            let token: Token = read(&token_lock);
+
+            let token: Token = match cache.get_token().await? {
+                Some(token) => token,
+                None => read(&token_lock),
+            };
 
             if token.needs_refresh(&config) {
                 tracing::info!("Refreshing JWT and JWKS");
@@ -96,6 +100,8 @@ async fn start(
                     }
                     Err(error) => tracing::error!("Failed to fetch JWT. Reason: {:?}", error),
                 }
+            } else if (token.expire_date() > read(&token_lock).expire_date()) {
+                write(&token_lock, token);
             }
         }
     })
