@@ -47,6 +47,18 @@ impl BridgeBuilder {
         builder
     }
 
+    pub fn with_pool_max_idle_per_host(self, max: usize) -> Self {
+        let client_builder = self.client_builder.pool_max_idle_per_host(max);
+
+        #[cfg(not(feature = "auth0"))]
+        let builder = Self { client_builder };
+
+        #[cfg(feature = "auth0")]
+        let builder = Self { client_builder, ..self };
+
+        builder
+    }
+
     /// Adds Auth0 JWT authentication to the requests made by the [Bridge].
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
     #[cfg(feature = "auth0")]
