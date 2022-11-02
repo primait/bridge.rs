@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.14.3] - 2022-11-02
+
+### Added
+
+- Added method to customize `pool_max_idle_per_host` from the builder
+
 ## [0.14.2] - 2022-10-04
 
 ### Added
@@ -274,7 +280,9 @@ Request::rest(&bridge).send()
 The old API is still available but deprecated. It will be removed soon.
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.2...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.3...HEAD
+[0.14.3]: https://github.com/primait/bridge.rs/compare/0.14.2...0.14.3
 [0.14.2]: https://github.com/primait/bridge.rs/compare/0.14.1...0.14.2
 [0.14.1]: https://github.com/primait/bridge.rs/compare/0.14.0...0.14.1
 [0.14.0]: https://github.com/primait/bridge.rs/compare/0.13.1...0.14.0
