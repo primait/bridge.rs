@@ -21,42 +21,24 @@ impl BridgeBuilder {
     }
 
     pub fn with_user_agent(self, user_agent: impl Into<String>) -> Self {
-        #[cfg(not(feature = "auth0"))]
-        let builder = Self {
-            client_builder: self.client_builder.user_agent(user_agent.into().as_str()),
-        };
-
-        #[cfg(feature = "auth0")]
-        let builder = Self {
+        Self {
             client_builder: self.client_builder.user_agent(user_agent.into().as_str()),
             ..self
-        };
-
-        builder
+        }
     }
 
     pub fn with_redirect_policy(self, policy: RedirectPolicy) -> Self {
-        let client_builder = self.client_builder.redirect(policy.into());
-
-        #[cfg(not(feature = "auth0"))]
-        let builder = Self { client_builder };
-
-        #[cfg(feature = "auth0")]
-        let builder = Self { client_builder, ..self };
-
-        builder
+        Self {
+            client_builder: self.client_builder.redirect(policy.into()),
+            ..self
+        }
     }
 
     pub fn with_pool_max_idle_per_host(self, max: usize) -> Self {
-        let client_builder = self.client_builder.pool_max_idle_per_host(max);
-
-        #[cfg(not(feature = "auth0"))]
-        let builder = Self { client_builder };
-
-        #[cfg(feature = "auth0")]
-        let builder = Self { client_builder, ..self };
-
-        builder
+        Self {
+            client_builder: self.client_builder.pool_max_idle_per_host(max),
+            ..self
+        }
     }
 
     /// Adds Auth0 JWT authentication to the requests made by the [Bridge].
