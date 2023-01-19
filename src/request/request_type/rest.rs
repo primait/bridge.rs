@@ -13,13 +13,13 @@ use uuid::Uuid;
 
 use crate::errors::PrimaBridgeResult;
 use crate::request::{Body, DeliverableRequest, DeliverableRequestBody, MultipartFormFileField, RequestType};
-use crate::{Bridge, MultipartFile};
+use crate::{BridgeClient, BridgeImpl, MultipartFile};
 
 /// The RestRequest is a struct that represent a REST request to be done with a [Bridge].
 #[derive(Debug)]
-pub struct RestRequest<'a> {
+pub struct RestRequest<'a, Client: BridgeClient> {
     id: Uuid,
-    bridge: &'a Bridge,
+    bridge: &'a BridgeImpl<Client>,
     body: Option<Body>,
     method: Method,
     timeout: Duration,
@@ -30,11 +30,11 @@ pub struct RestRequest<'a> {
     multipart: Option<RestMultipart>,
 }
 
-impl<'a> RestRequest<'a> {
+impl<'a, Client: BridgeClient> RestRequest<'a, Client> {
     /// Creates a new RestRequest.
     ///
     /// It is recommended to use one of the methods on [Request](crate::Request) to create a new request more easily.
-    pub fn new(bridge: &'a Bridge) -> Self {
+    pub fn new(bridge: &'a BridgeImpl<Client>) -> Self {
         Self {
             id: Uuid::new_v4(),
             bridge,
@@ -59,7 +59,8 @@ impl<'a> RestRequest<'a> {
 }
 
 #[async_trait]
-impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
+impl<'a, Client: BridgeClient> DeliverableRequest<'a> for RestRequest<'a, Client> {
+    type Client = Client;
     fn raw_body(self, body: impl Into<Body>) -> Self {
         Self {
             body: Some(body.into()),
@@ -107,7 +108,7 @@ impl<'a> DeliverableRequest<'a> for RestRequest<'a> {
         self.id
     }
 
-    fn get_bridge(&self) -> &Bridge {
+    fn get_bridge(&self) -> &'a BridgeImpl<Client> {
         self.bridge
     }
 
