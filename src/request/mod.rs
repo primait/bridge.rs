@@ -12,7 +12,7 @@ pub use request_type::{GraphQLMultipart, GraphQLRequest, Request, RestMultipart,
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::sealed::Sealed;
-use crate::{BridgeClient, BridgeImpl, PrimaRequestBuilderInner, Response};
+use crate::{Bridge, BridgeClient, BridgeImpl, PrimaRequestBuilderInner, Response};
 
 mod body;
 mod request_type;
@@ -38,8 +38,6 @@ impl Default for DeliverableRequestBody {
 /// Represents a request that is ready to be delivered to the server.
 #[async_trait]
 pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
-    type Client: BridgeClient;
-
     /// sets the raw body for the request
     /// it will get delivered in the request as is.
     fn raw_body(self, body: impl Into<Body>) -> Self;
@@ -91,7 +89,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
     fn get_id(&self) -> Uuid;
 
     #[doc(hidden)]
-    fn get_bridge(&self) -> &BridgeImpl<Self::Client>;
+    fn get_bridge(&self) -> &Bridge;
 
     #[doc(hidden)]
     fn get_path(&self) -> Option<&str>;
@@ -162,9 +160,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
     /// - The request body is a stream (eg. a file) and therefore not in memory
     fn get_body(&self) -> Option<&[u8]>;
 
-    async fn send(
-        self,
-    ) -> Result<Response, <<Self::Client as BridgeClient>::Builder as PrimaRequestBuilderInner>::Error> {
+    async fn send(self) -> Result<Response, PrimaBridgeError> {
         use futures_util::future::TryFutureExt;
         let request_id = self.get_id();
         let url = self.get_url();

@@ -252,6 +252,6 @@ mod sealed {
     impl Sealed for reqwest_middleware::ClientWithMiddleware {}
     impl Sealed for reqwest_middleware::RequestBuilder {}
     impl Sealed for reqwest::RequestBuilder {}
-    impl<'a, Client: BridgeClient> Sealed for crate::request::RestRequest<'a, Client> {}
-    impl<'a, Client: BridgeClient> Sealed for crate::request::GraphQLRequest<'a, Client> {}
+    impl<'a> Sealed for crate::request::RestRequest<'a> {}
+    impl<'a> Sealed for crate::request::GraphQLRequest<'a> {}
 }

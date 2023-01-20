@@ -12,16 +12,16 @@ use uuid::Uuid;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::request::{Body, DeliverableRequest, DeliverableRequestBody, GraphQLBody, RequestType};
-use crate::{BridgeClient, BridgeImpl, MultipartFile};
+use crate::{Bridge, BridgeClient, BridgeImpl, MultipartFile};
 
 const VARIABLES: &str = "variables";
 const ZERO: &str = "0";
 
 /// The GraphQLRequest is a struct that represent a GraphQL request to be done with a [Bridge].
 #[allow(clippy::upper_case_acronyms)]
-pub struct GraphQLRequest<'a, Client: BridgeClient> {
+pub struct GraphQLRequest<'a> {
     id: Uuid,
-    bridge: &'a BridgeImpl<Client>,
+    bridge: &'a Bridge,
     body: Body,
     method: Method,
     timeout: Duration,
@@ -32,12 +32,9 @@ pub struct GraphQLRequest<'a, Client: BridgeClient> {
     multipart: Option<GraphQLMultipart>,
 }
 
-impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
+impl<'a> GraphQLRequest<'a> {
     /// Creates a new GraphQLRequest
-    pub fn new<S: Serialize>(
-        bridge: &'a BridgeImpl<Client>,
-        graphql_body: impl Into<GraphQLBody<S>>,
-    ) -> PrimaBridgeResult<Self> {
+    pub fn new<S: Serialize>(bridge: &'a Bridge, graphql_body: impl Into<GraphQLBody<S>>) -> PrimaBridgeResult<Self> {
         let mut custom_headers = HeaderMap::default();
         custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         Ok(Self {
@@ -55,7 +52,7 @@ impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
     }
 
     pub fn new_with_multipart<S: Serialize>(
-        bridge: &'a BridgeImpl<Client>,
+        bridge: &'a Bridge,
         graphql_body: impl Into<GraphQLBody<S>>,
         multipart: GraphQLMultipart,
     ) -> PrimaBridgeResult<Self> {
@@ -94,8 +91,7 @@ impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
 }
 
 #[async_trait]
-impl<'a, Client: BridgeClient> DeliverableRequest<'a> for GraphQLRequest<'a, Client> {
-    type Client = Client;
+impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
     fn raw_body(self, body: impl Into<Body>) -> Self {
         Self {
             body: body.into(),
@@ -140,7 +136,7 @@ impl<'a, Client: BridgeClient> DeliverableRequest<'a> for GraphQLRequest<'a, Cli
         self.id
     }
 
-    fn get_bridge(&self) -> &BridgeImpl<Client> {
+    fn get_bridge(&self) -> &Bridge {
         self.bridge
     }
 
