@@ -328,12 +328,12 @@ async fn get_body_returns_none_when_request_has_no_body() -> Result<(), Box<dyn 
 
 #[cfg(feature = "gzip")]
 #[tokio::test]
-async fn decompresses_gzip_responses() -> Result<(), Box<dyn Error>> {
+async fn decompresses_gzip_responses() {
     use flate2::{write::GzEncoder, Compression};
     use std::io::prelude::*;
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-    encoder.write_all(b"{\"hello\": \"world!\"}")?;
-    let body = encoder.finish()?;
+    encoder.write_all(b"{\"hello\": \"world!\"}").unwrap();
+    let body = encoder.finish().unwrap();
 
     let mut server = mockito::Server::new_async().await;
     let _mock = server
@@ -341,12 +341,11 @@ async fn decompresses_gzip_responses() -> Result<(), Box<dyn Error>> {
         .with_status(200)
         .with_header("Content-Encoding", "gzip")
         .with_body(body)
-        .create_async();
+        .create_async()
+        .await;
 
     let bridge = Bridge::builder().build(server.url().parse().unwrap());
 
-    let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
+    let result: String = RestRequest::new(&bridge).send().await.unwrap().get_data(&["hello"]).unwrap();
     assert_eq!(result, "world!");
-
-    Ok(())
 }
