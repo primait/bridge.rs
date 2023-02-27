@@ -1,4 +1,4 @@
-use mockito::{mock, Matcher};
+use mockito::{Matcher, Server};
 use prima_bridge::prelude::*;
 use prima_bridge::{MultipartFile, MultipartFormFileField, RestMultipart};
 use std::collections::HashSet;
@@ -6,16 +6,18 @@ use std::error::Error;
 
 #[tokio::test]
 async fn multipart_rest_single_file() -> Result<(), Box<dyn Error>> {
-    let _mock = mock("POST", "/")
+    let mut server = Server::new_async().await;
+
+    let _mock = server.mock("POST", "/")
         .with_status(200)
         .with_body("{\"hello\": \"world!\"}")
         .match_header("Content-Type", Matcher::Regex(r#"^multipart/form-data"#.to_string()))
         .match_body(Matcher::Regex(
             r#"Content-Disposition: form-data; name="my_single_file"; filename="hello_world\.txt"\s+Content-Type: text/plain\s+Hello, world!"#.to_string()
         ))
-        .create();
+        .create_async().await;
 
-    let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
+    let bridge = Bridge::builder().build(server.url().parse().unwrap());
 
     let multipart = RestMultipart::single(
         "my_single_file",
@@ -39,7 +41,10 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
     let re_first_file = r#"Content-Disposition: form-data; name="first_file"; filename="hello_world\.txt"\s+Content-Type: text/plain\s+Hello, world!"#;
     let re_second_file = r#"Content-Disposition: form-data; name="second_file"; filename="goodbye_world\.dat"\s+Content-Type: application/octet-stream\s+Goodbye, world!"#;
 
-    let _mock = mock("POST", "/")
+    let mut server = Server::new_async().await;
+
+    let _mock = server
+        .mock("POST", "/")
         .with_status(200)
         .with_body("{\"hello\": \"world!\"}")
         .match_header("Content-Type", Matcher::Regex(r#"^multipart/form-data"#.to_string()))
@@ -49,9 +54,10 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
             Matcher::Regex(re_first_file.to_string()),
             Matcher::Regex(re_second_file.to_string()),
         ]))
-        .create();
+        .create_async()
+        .await;
 
-    let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
+    let bridge = Bridge::builder().build(server.url().parse().unwrap());
 
     let multipart = RestMultipart::multiple(HashSet::from_iter(
         [
@@ -82,15 +88,17 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
 }
 
 #[tokio::test]
-async fn multipart_rest_single_file_stream() -> Result<(), Box<dyn Error>> {
-    let _mock = mock("POST", "/")
+async fn multipart_rest_single_file_stream() {
+    let mut server = Server::new_async().await;
+
+    let _mock = server.mock("POST", "/")
         .with_status(200)
         .with_body("{\"hello\": \"world!\"}")
         .match_header("Content-Type", Matcher::Regex(r#"^multipart/form-data"#.to_string()))
         .match_body(Matcher::Regex(r#"Content-Disposition: form-data; name="my_streamed_file"; filename="howdy_world\.txt"\s+Content-Type: text/plain\s+Howdy, world!"#.to_string()))
-        .create();
+        .create_async().await;
 
-    let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
+    let bridge = Bridge::builder().build(server.url().parse().unwrap());
 
     let multipart = RestMultipart::single(
         "my_streamed_file",
@@ -102,9 +110,9 @@ async fn multipart_rest_single_file_stream() -> Result<(), Box<dyn Error>> {
     let result: String = Request::post(&bridge)
         .multipart_body(multipart)
         .send()
-        .await?
-        .get_data(&["hello"])?;
+        .await
+        .unwrap()
+        .get_data(&["hello"])
+        .unwrap();
     assert_eq!(result, "world!");
-
-    Ok(())
 }

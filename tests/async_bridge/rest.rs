@@ -15,7 +15,8 @@ struct Data {
 
 #[tokio::test]
 async fn simple_request() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge(200, "{\"hello\": \"world!\"}").await;
     let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
 
     assert_eq!("world!", result.as_str());
@@ -25,14 +26,20 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_redirect_policy_none() -> Result<(), Box<dyn Error>> {
-    let _destination_mock = mockito::mock("GET", "/destination")
+    let mut server = mockito::Server::new_async().await;
+
+    let _destination_mock = server
+        .mock("GET", "/destination")
         .with_status(200)
         .with_body("{\"after\": \"redirect\"}")
-        .create();
+        .create_async()
+        .await;
 
-    let redirect_to = format!("{}/destination", mockito::server_url());
+    let redirect_to = format!("{}/destination", server.url());
     let body = "{\"before\": \"redirect\"}";
-    let (_m, bridge) = create_bridge_with_redirect(302, body, "/", &redirect_to, RedirectPolicy::NoFollow);
+    let (_m, bridge) = server
+        .create_bridge_with_redirect(302, body, "/", &redirect_to, RedirectPolicy::NoFollow)
+        .await;
 
     let result: Response = RestRequest::new(&bridge)
         .ignore_status_code()
@@ -51,14 +58,20 @@ async fn request_with_redirect_policy_none() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_redirect_policy_follow() -> Result<(), Box<dyn Error>> {
-    let _destination_mock = mockito::mock("GET", "/destination")
+    let mut server = mockito::Server::new_async().await;
+
+    let _destination_mock = server
+        .mock("GET", "/destination")
         .with_status(200)
         .with_body("{\"after\": \"redirect\"}")
-        .create();
+        .create_async()
+        .await;
 
-    let redirect_to = format!("{}/destination", mockito::server_url());
+    let redirect_to = format!("{}/destination", server.url());
     let body = "{\"before\": \"redirect\"}";
-    let (_m, bridge) = create_bridge_with_redirect(302, body, "/", &redirect_to, RedirectPolicy::Limited(2));
+    let (_m, bridge) = server
+        .create_bridge_with_redirect(302, body, "/", &redirect_to, RedirectPolicy::Limited(2))
+        .await;
 
     let result: Response = RestRequest::new(&bridge)
         .ignore_status_code()
@@ -76,7 +89,8 @@ async fn request_with_redirect_policy_follow() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn unserializable_response() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge(200, "{\"hello\": \"world!\"}").await;
 
     let result: PrimaBridgeResult<Response> = RestRequest::new(&bridge).send().await;
     assert!(result.is_ok());
@@ -90,7 +104,11 @@ async fn unserializable_response() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn simple_request_with_custom_path_and_base_path() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server
+        .create_bridge_with_base_and_path(200, "{\"hello\": \"world!\"}", "api", "test_path")
+        .await;
+
     let result: String = RestRequest::new(&bridge)
         .to("test_path")
         .send()
@@ -107,7 +125,11 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let header = ("header", "custom");
     let path = "/test_path/simple_request_with_custom_headers";
 
-    let (_m, bridge) = create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header);
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server
+        .create_bridge_with_path_and_header(200, "{\"hello\": \"world!\"}", path, header)
+        .await;
+
     let response = RestRequest::new(&bridge).to(path).send().await?;
 
     let custom = response
@@ -127,7 +149,9 @@ async fn simple_request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(403, "{\"hello\": \"world!\"}");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge(403, "{\"hello\": \"world!\"}").await;
+
     let result: String = RestRequest::new(&bridge)
         .ignore_status_code()
         .send()
@@ -141,7 +165,8 @@ async fn simple_request_with_wrong_status_code() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_raw_body_matcher("abcde");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge_with_raw_body_matcher("abcde").await;
 
     let result = RestRequest::new(&bridge).raw_body("abcde").send().await;
     assert!(result.is_ok());
@@ -150,7 +175,10 @@ async fn request_with_custom_body() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server
+        .create_bridge_with_json_body_matcher(json!({"hello": "world"}))
+        .await;
     let data = Data {
         hello: "world".to_string(),
     };
@@ -161,7 +189,10 @@ async fn request_with_custom_json_body() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_header_matcher(("x-prima", "test-value"));
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server
+        .create_bridge_with_header_matcher(("x-prima", "test-value"))
+        .await;
 
     let result = RestRequest::new(&bridge)
         .with_custom_headers(vec![(
@@ -176,7 +207,8 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_user_agent("test");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge_with_user_agent("test").await;
 
     let result = RestRequest::new(&bridge).send().await;
     assert!(result.is_ok());
@@ -187,7 +219,8 @@ async fn request_with_custom_user_agent() -> Result<(), Box<dyn Error>> {
 async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
     let body = b"abcde";
 
-    let (_m, bridge) = create_bridge_with_binary_body_matcher(body);
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge_with_binary_body_matcher(body).await;
 
     let result = RestRequest::new(&bridge).raw_body(body.to_vec()).send().await?;
     assert!(result.is_ok());
@@ -198,7 +231,9 @@ async fn request_with_binary_body_response() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge(200, "{\"hello\": \"world!\"}").await;
+
     let req = RestRequest::new(&bridge).with_custom_headers(vec![
         (HeaderName::from_static("x-test"), HeaderValue::from_static("value")),
         (HeaderName::from_static("x-test"), HeaderValue::from_static("value")),
@@ -212,7 +247,10 @@ async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> 
 
 #[tokio::test]
 async fn get_body_returns_serialized_json_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge_with_json_body_matcher(json!({"hello": "world"}));
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server
+        .create_bridge_with_json_body_matcher(json!({"hello": "world"}))
+        .await;
 
     let data = Data {
         hello: "world".to_string(),
@@ -229,7 +267,8 @@ async fn get_body_returns_serialized_json_body() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn get_body_returns_raw_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge(200, "{\"hello\": \"world!\"}").await;
 
     let data = b"Hello, world!".as_slice();
     let request = RestRequest::new(&bridge).raw_body(data);
@@ -242,7 +281,8 @@ async fn get_body_returns_raw_body() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn get_body_returns_none_when_body_is_stream() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge(200, "{\"hello\": \"world!\"}").await;
 
     let file = tokio::fs::File::open("tests/resources/howdy_world.txt").await?;
     let request = RestRequest::new(&bridge).raw_body(file);
@@ -255,7 +295,9 @@ async fn get_body_returns_none_when_body_is_stream() -> Result<(), Box<dyn Error
 
 #[tokio::test]
 async fn get_body_returns_none_when_request_is_multipart() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge(200, "{\"hello\": \"world!\"}").await;
+
     let data = RestMultipart::multiple(HashSet::from_iter([MultipartFormFileField::new(
         "file0",
         MultipartFile::new("Hello, world!")
@@ -273,7 +315,8 @@ async fn get_body_returns_none_when_request_is_multipart() -> Result<(), Box<dyn
 
 #[tokio::test]
 async fn get_body_returns_none_when_request_has_no_body() -> Result<(), Box<dyn Error>> {
-    let (_m, bridge) = create_bridge(200, "{\"hello\": \"world!\"}");
+    let mut server = mockito::Server::new_async().await;
+    let (_m, bridge) = server.create_bridge(200, "{\"hello\": \"world!\"}").await;
 
     let request = RestRequest::new(&bridge);
     assert_eq!(request.get_body(), None);
@@ -291,13 +334,16 @@ async fn decompresses_gzip_responses() -> Result<(), Box<dyn Error>> {
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
     encoder.write_all(b"{\"hello\": \"world!\"}")?;
     let body = encoder.finish()?;
-    let _mock = mockito::mock("GET", "/")
+
+    let mut server = mockito::Server::new_async().await;
+    let _mock = server
+        .mock("GET", "/")
         .with_status(200)
         .with_header("Content-Encoding", "gzip")
         .with_body(body)
-        .create();
+        .create_async();
 
-    let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
+    let bridge = Bridge::builder().build(server.url().parse().unwrap());
 
     let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
     assert_eq!(result, "world!");
