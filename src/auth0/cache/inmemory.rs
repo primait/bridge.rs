@@ -64,7 +64,8 @@ mod tests {
 
     #[tokio::test]
     async fn inmemory_cache_get_set_values() {
-        let cache = InMemoryCache::new(&Config::test_config()).await.unwrap();
+        let server = mockito::Server::new_async().await;
+        let cache = InMemoryCache::new(&Config::test_config(&server)).await.unwrap();
 
         let result: Option<Token> = cache.get_token().await.unwrap();
         assert!(result.is_none());

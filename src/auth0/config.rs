@@ -78,11 +78,11 @@ impl Config {
     }
 
     #[cfg(test)]
-    pub fn test_config() -> Config {
+    pub fn test_config(server: &mockito::Server) -> Config {
         use std::str::FromStr;
         Config {
-            token_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap(),
-            jwks_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "jwks")).unwrap(),
+            token_url: Url::from_str(&format!("{}/{}", server.url().as_str(), "token")).unwrap(),
+            jwks_url: Url::from_str(&format!("{}/{}", server.url().as_str(), "jwks")).unwrap(),
             caller: "caller".to_string(),
             audience: "audience".to_string(),
             cache_type: CacheType::Inmemory,
@@ -96,7 +96,7 @@ impl Config {
 }
 
 // Eg. `Redis("redis://{host}:{port}?{ParamKey1}={ParamKey2}")` or `Inmemory` for inmemory cache
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum CacheType {
     Redis(String),
     Inmemory,

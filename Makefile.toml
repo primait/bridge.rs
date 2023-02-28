@@ -17,17 +17,17 @@ dependencies = ["test-base", "test-auth0"]
 
 [tasks.test-base]
 command = "cargo"
-args = ["test", "--features", "gzip"]
+args = ["test", "--features", "gzip", "${@}"]
 dependencies = ["build"]
 
 [tasks.test-auth0]
 command = "cargo"
-args = ["test", "--features=auth0,gzip"]
+args = ["test", "--features=auth0,gzip", "${@}"]
 dependencies = ["build"]
 
 [tasks.clippy]
 command = "cargo"
-args = ["clippy", "--all-features", "--", "-D", "warnings"]
+args = ["clippy", "--all-features", "--all-targets", "--", "-D", "warnings"]
 
 ### with cargo-limit installed
 [tasks.lbuild]

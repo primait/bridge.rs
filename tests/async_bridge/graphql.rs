@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fs;
 
-use mockito::{mock, Matcher, Mock};
+use mockito::{Matcher, Mock, Server};
 use reqwest::header::{HeaderName, HeaderValue};
 use reqwest::Url;
 use serde::Deserialize;
@@ -18,7 +18,14 @@ struct Person {
 #[tokio::test]
 async fn simple_request() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(200, query, "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}");
+    let mut server = Server::new_async().await;
+    let (_m, bridge) = create_gql_bridge(
+        &mut server,
+        200,
+        query,
+        "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
+    )
+    .await;
     let variables: Option<String> = None;
 
     let result: Person = Request::graphql(&bridge, (query, variables))?
@@ -39,7 +46,14 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     let query = "query { hello }";
-    let (_m, bridge) = create_gql_bridge(200, query, "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}");
+    let mut server = Server::new_async().await;
+    let (_m, bridge) = create_gql_bridge(
+        &mut server,
+        200,
+        query,
+        "{\"data\": {\"person\": {\"name\": \"Pippo\"}}}",
+    )
+    .await;
 
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query, variables))?
@@ -79,11 +93,14 @@ struct Friend {
 #[tokio::test]
 async fn error_response_parser() -> Result<(), Box<dyn Error>> {
     let query = file_content("graphql/hero.graphql");
+    let mut server = Server::new_async().await;
     let (_m, bridge) = create_gql_bridge(
+        &mut server,
         200,
         query.as_str(),
         file_content("graphql/error_with_data.json").as_str(),
-    );
+    )
+    .await;
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
@@ -100,11 +117,14 @@ async fn error_response_parser() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Error>> {
     let query = file_content("graphql/hero.graphql");
+    let mut server = Server::new_async().await;
     let (_m, bridge) = create_gql_bridge(
+        &mut server,
         200,
         query.as_str(),
         file_content("graphql/error_non_null_response.json").as_str(),
-    );
+    )
+    .await;
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
@@ -121,7 +141,14 @@ async fn error_response_parser_with_non_null_element() -> Result<(), Box<dyn Err
 #[tokio::test]
 async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
     let query = file_content("graphql/hero.graphql");
-    let (_m, bridge) = create_gql_bridge(200, query.as_str(), file_content("graphql/error.json").as_str());
+    let mut server = Server::new_async().await;
+    let (_m, bridge) = create_gql_bridge(
+        &mut server,
+        200,
+        query.as_str(),
+        file_content("graphql/error.json").as_str(),
+    )
+    .await;
     let variables: Option<String> = None;
     let response = GraphQLRequest::new(&bridge, (query.as_str(), variables))?
         .send()
@@ -135,15 +162,17 @@ async fn error_response_parser_with_error() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn create_gql_bridge(status_code: usize, query: &str, body: &str) -> (Mock, Bridge) {
-    let mock = mock("POST", "/")
+async fn create_gql_bridge(server: &mut Server, status_code: usize, query: &str, body: &str) -> (Mock, Bridge) {
+    let mock = server
+        .mock("POST", "/")
         .match_header("content-type", "application/json")
         .match_body(Matcher::Json(json!({ "query": query })))
         .with_status(status_code)
         .with_body(body)
-        .create();
+        .create_async()
+        .await;
 
-    let url = Url::parse(mockito::server_url().as_str()).unwrap();
+    let url = Url::parse(server.url().as_str()).unwrap();
     let bridge = Bridge::builder().build(url);
 
     (mock, bridge)

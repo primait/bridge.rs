@@ -1,4 +1,4 @@
-use mockito::{mock, Matcher};
+use mockito::{Matcher, Server};
 use prima_bridge::{Bridge, DeliverableRequest, GraphQLMultipart, GraphQLRequest, MultipartFile};
 use std::collections::HashMap;
 use std::error::Error;
@@ -11,7 +11,8 @@ const SINGLE_UPLOAD_QUERY: &str = r#"mutation($file: Upload!) {
 
 #[tokio::test]
 async fn multipart_graphql_single_file() -> Result<(), Box<dyn Error>> {
-    let _mock = mock("POST", "/")
+    let mut server = Server::new_async().await;
+    let _mock = server.mock("POST", "/")
         .match_header("Content-Type", Matcher::Regex("^multipart/form-data".to_string()))
         .match_body(Matcher::AllOf(vec![
             Matcher::Regex(r#"Content-Disposition: form-data; name="operations"\s+.+"variables":\{"file":null\}"#.into()),
@@ -20,9 +21,9 @@ async fn multipart_graphql_single_file() -> Result<(), Box<dyn Error>> {
         ]))
         .with_status(200)
         .with_body(r#"{"data": {}}"#)
-        .create();
+        .create_async().await;
 
-    let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
+    let bridge = Bridge::builder().build(server.url().parse().unwrap());
     let multipart_body = GraphQLMultipart::single(
         "variables.file",
         MultipartFile::new("Howdy!")
@@ -46,7 +47,9 @@ const MULTIPLE_UPLOAD_QUERY: &str = r#"mutation($files: [Upload]!) {
 
 #[tokio::test]
 async fn multipart_graphql_multiple_files() -> Result<(), Box<dyn Error>> {
-    let _mock = mock("POST", "/")
+    let mut server = Server::new_async().await;
+    let _mock = server
+        .mock("POST", "/")
         .match_header("Content-Type", Matcher::Regex("^multipart/form-data".to_string()))
         .match_body(Matcher::AllOf(vec![
             Matcher::Regex(
@@ -60,9 +63,10 @@ async fn multipart_graphql_multiple_files() -> Result<(), Box<dyn Error>> {
         ]))
         .with_status(200)
         .with_body(r#"{"data": {}}"#)
-        .create();
+        .create_async()
+        .await;
 
-    let bridge = Bridge::builder().build(mockito::server_url().parse().unwrap());
+    let bridge = Bridge::builder().build(server.url().parse().unwrap());
 
     let files = vec![
         MultipartFile::new("Howdy!")
