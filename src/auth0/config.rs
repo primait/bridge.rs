@@ -96,7 +96,7 @@ impl Config {
 }
 
 // Eg. `Redis("redis://{host}:{port}?{ParamKey1}={ParamKey2}")` or `Inmemory` for inmemory cache
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum CacheType {
     Redis(String),
     Inmemory,
