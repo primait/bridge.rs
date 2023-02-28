@@ -346,6 +346,11 @@ async fn decompresses_gzip_responses() {
 
     let bridge = Bridge::builder().build(server.url().parse().unwrap());
 
-    let result: String = RestRequest::new(&bridge).send().await.unwrap().get_data(&["hello"]).unwrap();
+    let result: String = RestRequest::new(&bridge)
+        .send()
+        .await
+        .unwrap()
+        .get_data(&["hello"])
+        .unwrap();
     assert_eq!(result, "world!");
 }

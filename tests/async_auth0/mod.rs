@@ -2,7 +2,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use jsonwebtoken::Algorithm;
-use mockito::{mock, Mock};
+use mockito::{Mock, Server};
 use reqwest::Url;
 
 use prima_bridge::auth0::{CacheType, Config, StalenessCheckPercentage};
@@ -11,10 +11,10 @@ mod builder;
 mod graphql;
 mod rest;
 
-fn config() -> Config {
+fn config(server: &Server) -> Config {
     Config {
-        token_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "token")).unwrap(),
-        jwks_url: Url::from_str(&format!("{}/{}", mockito::server_url().as_str(), "jwks")).unwrap(),
+        token_url: Url::from_str(&format!("{}/{}", server.url().as_str(), "token")).unwrap(),
+        jwks_url: Url::from_str(&format!("{}/{}", server.url().as_str(), "jwks")).unwrap(),
         caller: "caller".to_string(),
         audience: "audience".to_string(),
         cache_type: CacheType::Inmemory,
@@ -33,9 +33,14 @@ struct Auth0Mocks {
 }
 
 impl Auth0Mocks {
-    pub fn new() -> Self {
+    pub async fn new(server: &mut mockito::Server) -> Self {
         let content: String = std::fs::read_to_string("tests/resources/auth0/jwks.json").unwrap();
-        let jwks: Mock = mock("GET", "/jwks").with_status(200).with_body(content).create();
+        let jwks: Mock = server
+            .mock("GET", "/jwks")
+            .with_status(200)
+            .with_body(content)
+            .create_async()
+            .await;
 
         let claims: Claims = Claims::new("test".to_string());
         let object: FetchTokenResponse = FetchTokenResponse {
@@ -44,11 +49,13 @@ impl Auth0Mocks {
             expires_in: 86400,
             token_type: "ciao".to_string(),
         };
-        let token: Mock = mock("POST", "/token")
+        let token: Mock = server
+            .mock("POST", "/token")
             .match_header("content-type", "application/json")
             .with_status(200)
             .with_body(serde_json::to_string(&object).unwrap())
-            .create();
+            .create_async()
+            .await;
 
         Self {
             _jwks: jwks,
