@@ -27,7 +27,7 @@ dependencies = ["build"]
 
 [tasks.clippy]
 command = "cargo"
-args = ["clippy", "--all-features", "--", "-D", "warnings"]
+args = ["clippy", "--all-features", "--all-targets", "--", "-D", "warnings"]
 
 ### with cargo-limit installed
 [tasks.lbuild]

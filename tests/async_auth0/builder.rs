@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use mockito::{mock, Matcher, Server};
+use mockito::{Matcher, Server};
 use reqwest::Url;
 
 use prima_bridge::prelude::*;

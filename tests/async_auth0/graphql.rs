@@ -171,7 +171,7 @@ async fn create_gql_bridge(server: &mut Server, status_code: usize, query: &str,
     let mut mocks = Auth0Mocks::new(server).await;
 
     let url = Url::parse(&server.url()).unwrap();
-    let bridge: Bridge = Bridge::builder().with_auth0(config(&server)).await.build(url);
+    let bridge: Bridge = Bridge::builder().with_auth0(config(server)).await.build(url);
 
     let graphql_mock: Mock = server
         .mock("POST", "/")
