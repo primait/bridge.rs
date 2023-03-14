@@ -1,17 +1,21 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use reqwest::multipart::Form;
-use reqwest::{Method, Url};
+use reqwest::{
+    header::{HeaderMap, HeaderName, HeaderValue},
+    multipart::Form,
+    Method, Url,
+};
 use serde::Serialize;
 use uuid::Uuid;
 
 pub use body::{Body, GraphQLBody, MultipartFile, MultipartFormFileField};
 pub use request_type::{GraphQLMultipart, GraphQLRequest, Request, RestMultipart, RestRequest};
 
-use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
-use crate::{Bridge, Response};
+use crate::{
+    errors::{PrimaBridgeError, PrimaBridgeResult},
+    Bridge, Response,
+};
 
 mod body;
 mod request_type;

@@ -1,18 +1,24 @@
-use std::collections::{HashMap, VecDeque};
-use std::convert::TryInto;
-use std::time::Duration;
+use std::{
+    collections::{HashMap, VecDeque},
+    convert::TryInto,
+    time::Duration,
+};
 
 use async_trait::async_trait;
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE};
-use reqwest::multipart::{Form, Part};
-use reqwest::{Method, Url};
+use reqwest::{
+    header::{HeaderMap, HeaderValue, CONTENT_TYPE},
+    multipart::{Form, Part},
+    Method, Url,
+};
 use serde::Serialize;
 use serde_json::{Map, Value};
 use uuid::Uuid;
 
-use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
-use crate::request::{Body, DeliverableRequest, DeliverableRequestBody, GraphQLBody, RequestType};
-use crate::{Bridge, MultipartFile};
+use crate::{
+    errors::{PrimaBridgeError, PrimaBridgeResult},
+    request::{Body, DeliverableRequest, DeliverableRequestBody, GraphQLBody, RequestType},
+    Bridge, MultipartFile,
+};
 
 const VARIABLES: &str = "variables";
 const ZERO: &str = "0";

@@ -1,8 +1,6 @@
 //! Errors
 
-use std::convert::Infallible;
-use std::fmt::Debug;
-use std::str::Utf8Error;
+use std::{convert::Infallible, fmt::Debug, str::Utf8Error};
 
 use reqwest::{StatusCode, Url};
 use serde_json::Value;

@@ -5,8 +5,10 @@ use serde::Deserialize;
 use serde_json::Value;
 use uuid::Uuid;
 
-use crate::prelude::*;
-use crate::response::graphql::{ParsedGraphqlResponse, ParsedGraphqlResponseExt};
+use crate::{
+    prelude::*,
+    response::graphql::{ParsedGraphqlResponse, ParsedGraphqlResponseExt},
+};
 
 pub mod graphql;
 

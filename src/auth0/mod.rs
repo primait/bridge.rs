@@ -3,16 +3,14 @@
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
 use reqwest::Client;
-use tokio::task::JoinHandle;
-use tokio::time::Interval;
+use tokio::{task::JoinHandle, time::Interval};
 
 pub use config::{CacheType, Config, StalenessCheckPercentage};
 pub use errors::Auth0Error;
 use util::ResultExt;
 
-use crate::auth0::cache::Cache;
-use crate::auth0::keyset::JsonWebKeySet;
 pub use crate::auth0::token::Token;
+use crate::auth0::{cache::Cache, keyset::JsonWebKeySet};
 
 mod cache;
 mod config;

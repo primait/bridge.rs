@@ -2,8 +2,7 @@ use chrono::{DateTime, Duration, Utc};
 use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
 
-use crate::auth0::errors::Auth0Error;
-use crate::auth0::Config;
+use crate::auth0::{errors::Auth0Error, Config};
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Token {

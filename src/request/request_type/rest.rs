@@ -1,6 +1,4 @@
-use std::convert::TryInto;
-use std::time::Duration;
-use std::{borrow::Cow, collections::HashSet};
+use std::{borrow::Cow, collections::HashSet, convert::TryInto, time::Duration};
 
 use async_trait::async_trait;
 use reqwest::{
@@ -11,9 +9,11 @@ use reqwest::{
 use serde::Serialize;
 use uuid::Uuid;
 
-use crate::errors::PrimaBridgeResult;
-use crate::request::{Body, DeliverableRequest, DeliverableRequestBody, MultipartFormFileField, RequestType};
-use crate::{Bridge, MultipartFile};
+use crate::{
+    errors::PrimaBridgeResult,
+    request::{Body, DeliverableRequest, DeliverableRequestBody, MultipartFormFileField, RequestType},
+    Bridge, MultipartFile,
+};
 
 /// The RestRequest is a struct that represent a REST request to be done with a [Bridge].
 #[derive(Debug)]

@@ -1,12 +1,9 @@
-pub use graphql::GraphQLMultipart;
-pub use graphql::GraphQLRequest;
+pub use graphql::{GraphQLMultipart, GraphQLRequest};
 use reqwest::Method;
 pub use rest::{RestMultipart, RestRequest};
 use serde::Serialize;
 
-use crate::errors::PrimaBridgeResult;
-use crate::request::GraphQLBody;
-use crate::Bridge;
+use crate::{errors::PrimaBridgeResult, request::GraphQLBody, Bridge};
 
 use super::DeliverableRequest;
 

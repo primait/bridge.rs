@@ -1,7 +1,6 @@
 use mockito::{Matcher, Server};
 use prima_bridge::{Bridge, DeliverableRequest, GraphQLMultipart, GraphQLRequest, MultipartFile};
-use std::collections::HashMap;
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
 const SINGLE_UPLOAD_QUERY: &str = r#"mutation($file: Upload!) {
     upload(file: $file) {

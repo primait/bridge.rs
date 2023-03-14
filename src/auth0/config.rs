@@ -1,5 +1,4 @@
-use std::ops::RangeInclusive;
-use std::time::Duration;
+use std::{ops::RangeInclusive, time::Duration};
 
 use reqwest::Url;
 

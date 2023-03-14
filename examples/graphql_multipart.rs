@@ -12,8 +12,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use prima_bridge::prelude::*;
-use prima_bridge::{GraphQLMultipart, MultipartFile, ParsedGraphqlResponse};
+use prima_bridge::{prelude::*, GraphQLMultipart, MultipartFile, ParsedGraphqlResponse};
 
 const URL: &str = "https://api.graphql.jobs/";
 const QUERY: &str = "query($input:JobsInput!){jobs(input:$input) {\nid\n title\n applyUrl\n}}";

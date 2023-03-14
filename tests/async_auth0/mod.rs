@@ -1,5 +1,4 @@
-use std::str::FromStr;
-use std::time::Duration;
+use std::{str::FromStr, time::Duration};
 
 use jsonwebtoken::Algorithm;
 use mockito::{Mock, Server};

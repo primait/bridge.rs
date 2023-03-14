@@ -1,13 +1,14 @@
 use std::error::Error;
 
 use mockito::{Matcher, Mock, Server};
-use reqwest::header::{HeaderName, HeaderValue};
-use reqwest::Url;
+use reqwest::{
+    header::{HeaderName, HeaderValue},
+    Url,
+};
 use serde::Deserialize;
 use serde_json::json;
 
-use prima_bridge::prelude::*;
-use prima_bridge::ParsedGraphqlResponseExt;
+use prima_bridge::{prelude::*, ParsedGraphqlResponseExt};
 
 use crate::async_auth0::{config, Auth0Mocks};
 

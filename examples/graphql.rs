@@ -12,8 +12,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use prima_bridge::prelude::*;
-use prima_bridge::ParsedGraphqlResponse;
+use prima_bridge::{prelude::*, ParsedGraphqlResponse};
 
 const URL: &str = "https://api.graphql.jobs/";
 const QUERY: &str = "query($input:JobsInput!){jobs(input:$input) {\nid\n title\n applyUrl\n}}";

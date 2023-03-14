@@ -1,9 +1,7 @@
 pub use inmemory::InMemoryCache;
 pub use redis_impl::RedisCache;
 
-use crate::auth0::errors::Auth0Error;
-use crate::auth0::keyset::JsonWebKeySet;
-use crate::auth0::Token;
+use crate::auth0::{errors::Auth0Error, keyset::JsonWebKeySet, Token};
 
 mod crypto;
 mod inmemory;

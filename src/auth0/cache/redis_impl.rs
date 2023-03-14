@@ -1,10 +1,12 @@
 use redis::AsyncCommands;
 use serde::Deserialize;
 
-use crate::auth0::cache::{self, crypto, Cache};
-use crate::auth0::keyset::JsonWebKeySet;
-use crate::auth0::token::Token;
-use crate::auth0::{Auth0Error, Config};
+use crate::auth0::{
+    cache::{self, crypto, Cache},
+    keyset::JsonWebKeySet,
+    token::Token,
+    Auth0Error, Config,
+};
 
 #[derive(Clone, Debug)]
 pub struct RedisCache {

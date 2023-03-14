@@ -1,10 +1,12 @@
 use dashmap::DashMap;
 
-use crate::auth0::cache::{self, crypto};
-use crate::auth0::errors::Auth0Error;
-use crate::auth0::keyset::JsonWebKeySet;
-use crate::auth0::token::Token;
-use crate::auth0::{cache::Cache, Config};
+use crate::auth0::{
+    cache::{self, crypto, Cache},
+    errors::Auth0Error,
+    keyset::JsonWebKeySet,
+    token::Token,
+    Config,
+};
 
 #[derive(Clone, Debug)]
 pub struct InMemoryCache {

@@ -26,8 +26,10 @@ pub use self::{
         Body, DeliverableRequest, GraphQLMultipart, GraphQLRequest, MultipartFile, MultipartFormFileField, Request,
         RestMultipart, RestRequest,
     },
-    response::graphql::{Error, ParsedGraphqlResponse, ParsedGraphqlResponseExt, PossiblyParsedData},
-    response::Response,
+    response::{
+        graphql::{Error, ParsedGraphqlResponse, ParsedGraphqlResponseExt, PossiblyParsedData},
+        Response,
+    },
 };
 
 mod builder;

@@ -1,12 +1,9 @@
 // https://tools.ietf.org/id/draft-ietf-jose-json-web-key-00.html#rfc.section.3.1
 
 use reqwest::Client;
-use serde::Deserialize;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-use crate::auth0::errors::Auth0Error;
-use crate::auth0::token::Token;
-use crate::auth0::Config;
+use crate::auth0::{errors::Auth0Error, token::Token, Config};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JsonWebKeySet {
