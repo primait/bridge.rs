@@ -1,10 +1,9 @@
 use std::{collections::HashSet, error::Error};
 
+use prima_bridge::{prelude::*, MultipartFile, MultipartFormFileField, RedirectPolicy, RestMultipart};
 use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use prima_bridge::{prelude::*, MultipartFile, MultipartFormFileField, RedirectPolicy, RestMultipart};
 
 use crate::common::*;
 
@@ -329,8 +328,9 @@ async fn get_body_returns_none_when_request_has_no_body() -> Result<(), Box<dyn 
 #[cfg(feature = "gzip")]
 #[tokio::test]
 async fn decompresses_gzip_responses() {
-    use flate2::{write::GzEncoder, Compression};
     use std::io::prelude::*;
+
+    use flate2::{write::GzEncoder, Compression};
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
     encoder.write_all(b"{\"hello\": \"world!\"}").unwrap();
     let body = encoder.finish().unwrap();

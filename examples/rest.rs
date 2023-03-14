@@ -8,9 +8,8 @@
 //! ```shell
 //! cargo run --example graphql_multipart
 //! ```
-use serde::Deserialize;
-
 use prima_bridge::prelude::*;
+use serde::Deserialize;
 
 const URL: &str = "https://swapi.dev/api";
 

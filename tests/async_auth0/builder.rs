@@ -1,8 +1,7 @@
 use async_trait::async_trait;
 use mockito::{Matcher, Server};
-use reqwest::Url;
-
 use prima_bridge::prelude::*;
+use reqwest::Url;
 
 use crate::async_auth0::{config, Auth0Mocks};
 

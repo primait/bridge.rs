@@ -1,14 +1,13 @@
 use std::{error::Error, fs};
 
 use mockito::{Matcher, Mock, Server};
+use prima_bridge::{prelude::*, ParsedGraphqlResponseExt};
 use reqwest::{
     header::{HeaderName, HeaderValue},
     Url,
 };
 use serde::Deserialize;
 use serde_json::json;
-
-use prima_bridge::{prelude::*, ParsedGraphqlResponseExt};
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 struct Person {

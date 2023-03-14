@@ -2,11 +2,10 @@
 
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-use reqwest::Client;
-use tokio::{task::JoinHandle, time::Interval};
-
 pub use config::{CacheType, Config, StalenessCheckPercentage};
 pub use errors::Auth0Error;
+use reqwest::Client;
+use tokio::{task::JoinHandle, time::Interval};
 use util::ResultExt;
 
 pub use crate::auth0::token::Token;

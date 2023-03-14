@@ -333,10 +333,12 @@ fn craft_field(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::str::FromStr;
+
     use serde::Deserialize;
     use serde_json::{json, Value};
-    use std::str::FromStr;
+
+    use super::*;
 
     #[derive(Deserialize)]
     pub struct VariablesSingle {

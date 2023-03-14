@@ -1,11 +1,10 @@
 use std::error::Error;
 
 use mockito::Server;
+use prima_bridge::prelude::*;
 use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-
-use prima_bridge::prelude::*;
 
 use crate::async_auth0::builder::*;
 
@@ -182,8 +181,9 @@ async fn equal_headers_should_be_sent_only_once() -> Result<(), Box<dyn Error>> 
 #[cfg(feature = "gzip")]
 #[tokio::test]
 async fn decompresses_gzip_responses() -> Result<(), Box<dyn Error>> {
-    use flate2::{write::GzEncoder, Compression};
     use std::io::prelude::*;
+
+    use flate2::{write::GzEncoder, Compression};
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
     encoder.write_all(b"{\"hello\": \"world!\"}")?;
     let body = encoder.finish()?;

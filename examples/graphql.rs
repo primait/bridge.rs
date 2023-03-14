@@ -10,9 +10,8 @@
 //! cargo run --example graphql
 //! ```
 
-use serde::{Deserialize, Serialize};
-
 use prima_bridge::{prelude::*, ParsedGraphqlResponse};
+use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.graphql.jobs/";
 const QUERY: &str = "query($input:JobsInput!){jobs(input:$input) {\nid\n title\n applyUrl\n}}";

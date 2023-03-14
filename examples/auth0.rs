@@ -24,9 +24,8 @@
 //! cargo run --example auth0 --features auth0
 //! ```
 
-use serde::{Deserialize, Serialize};
-
 use prima_bridge::{prelude::*, ParsedGraphqlResponse};
+use serde::{Deserialize, Serialize};
 
 const URL: &str = "https://api.graphql.jobs/";
 const QUERY: &str = "query($input:JobsInput!){jobs(input:$input) {\nid\n title\n applyUrl\n}}";
@@ -115,8 +114,9 @@ mod auth0 {
     use prima_bridge::auth0::{CacheType, Config, StalenessCheckPercentage};
 
     pub fn config() -> Config {
-        use reqwest::Url;
         use std::str::FromStr;
+
+        use reqwest::Url;
 
         let token_url: String = std::env::var("TOKEN_URL").unwrap();
         let jwks_url: String = std::env::var("JWKS_URL").unwrap();

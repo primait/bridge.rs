@@ -2,9 +2,8 @@ use std::{str::FromStr, time::Duration};
 
 use jsonwebtoken::Algorithm;
 use mockito::{Mock, Server};
-use reqwest::Url;
-
 use prima_bridge::auth0::{CacheType, Config, StalenessCheckPercentage};
+use reqwest::Url;
 
 mod builder;
 mod graphql;

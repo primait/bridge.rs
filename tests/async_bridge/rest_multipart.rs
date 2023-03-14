@@ -1,6 +1,7 @@
+use std::{collections::HashSet, error::Error};
+
 use mockito::{Matcher, Server};
 use prima_bridge::{prelude::*, MultipartFile, MultipartFormFileField, RestMultipart};
-use std::{collections::HashSet, error::Error};
 
 #[tokio::test]
 async fn multipart_rest_single_file() -> Result<(), Box<dyn Error>> {

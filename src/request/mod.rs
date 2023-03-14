@@ -1,6 +1,8 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
+pub use body::{Body, GraphQLBody, MultipartFile, MultipartFormFileField};
+pub use request_type::{GraphQLMultipart, GraphQLRequest, Request, RestMultipart, RestRequest};
 use reqwest::{
     header::{HeaderMap, HeaderName, HeaderValue},
     multipart::Form,
@@ -8,9 +10,6 @@ use reqwest::{
 };
 use serde::Serialize;
 use uuid::Uuid;
-
-pub use body::{Body, GraphQLBody, MultipartFile, MultipartFormFileField};
-pub use request_type::{GraphQLMultipart, GraphQLRequest, Request, RestMultipart, RestRequest};
 
 use crate::{
     errors::{PrimaBridgeError, PrimaBridgeResult},
@@ -252,8 +251,9 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
     #[cfg(feature = "tracing_opentelemetry")]
     fn tracing_headers(&self) -> HeaderMap {
-        use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
         use std::collections::HashMap;
+
+        use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
         use tracing_opentelemetry::OpenTelemetrySpanExt;
 
         let context = tracing::Span::current().context();

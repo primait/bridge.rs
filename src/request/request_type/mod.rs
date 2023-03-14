@@ -3,9 +3,8 @@ use reqwest::Method;
 pub use rest::{RestMultipart, RestRequest};
 use serde::Serialize;
 
-use crate::{errors::PrimaBridgeResult, request::GraphQLBody, Bridge};
-
 use super::DeliverableRequest;
+use crate::{errors::PrimaBridgeResult, request::GraphQLBody, Bridge};
 
 mod graphql;
 mod rest;
