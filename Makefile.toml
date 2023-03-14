@@ -56,7 +56,7 @@ args = ["clean"]
 [tasks.format-ci]
 description = "Runs the cargo rustfmt plugin during CI."
 command = "cargo"
-args = ["fmt", "--all", "--", "--check"]
+args = ["+nightly", "fmt", "--all", "--", "--check"]
 
 [tasks.clippy-ci]
 command = "cargo"
