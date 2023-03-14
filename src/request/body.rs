@@ -113,7 +113,8 @@ impl<T: Serialize> From<(String, T)> for GraphQLBody<T> {
 }
 
 #[derive(Debug)]
-/// A multipart-form file, containing the file's desired name, its MIME type, and its contents as an in-memory buffer or stream.
+/// A multipart-form file, containing the file's desired name, its MIME type, and its contents as an in-memory buffer or
+/// stream.
 pub struct MultipartFile {
     pub(crate) content: Body,
     pub(crate) name_opt: Option<String>,

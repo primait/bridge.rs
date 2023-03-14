@@ -7,7 +7,8 @@ use serde_json::Value;
 /// graphql response types and parsers
 use crate::errors::PrimaBridgeError;
 
-/// A type returned from [parse_graphql_response](crate::Response#parse_graphql_response) function useful for getting full control of a GraphQL response.
+/// A type returned from [parse_graphql_response](crate::Response#parse_graphql_response) function useful for getting
+/// full control of a GraphQL response.
 pub type ParsedGraphqlResponse<T> = Result<T, PossiblyParsedData<T>>;
 
 pub trait ParsedGraphqlResponseExt<T>
@@ -99,7 +100,8 @@ pub enum PathSegment {
 /// An error type to represent all possible outcomes of a GraphQL response deserialization.
 #[derive(Debug)]
 pub enum PossiblyParsedData<T> {
-    /// a tuple type with the converted `T` type and a vector of [Error]. This could happen due to the fact that GraphQL can return null for a nullable type, even if there was an error while resolving the data.
+    /// a tuple type with the converted `T` type and a vector of [Error]. This could happen due to the fact that
+    /// GraphQL can return null for a nullable type, even if there was an error while resolving the data.
     ParsedData(T, Vec<Error>),
     /// a tuple with the [serde_json::Value] of the Response, and a vector of [Error]
     UnparsedData(Value, Vec<Error>),

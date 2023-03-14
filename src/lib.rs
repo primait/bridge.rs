@@ -58,7 +58,8 @@ impl Bridge {
 
     #[cfg(feature = "auth0")]
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
-    /// Gets the JWT token used by the Bridge, if it has been configured with Auth0 authentication via [BridgeBuilder.with_auth0](BridgeBuilder#with_auth0).
+    /// Gets the JWT token used by the Bridge, if it has been configured with Auth0 authentication via
+    /// [BridgeBuilder.with_auth0](BridgeBuilder#with_auth0).
     pub fn token(&self) -> Option<auth0::Token> {
         self.auth0_opt.as_ref().map(|auth0| auth0.token())
     }

@@ -19,9 +19,10 @@ pub struct Config {
     pub token_encryption_key: String,
     /// Every {check_interval} the `TokenDispenser` actor checks if token needs to be refreshed
     pub check_interval: Duration,
-    /// this is a time period in which the token should be considered stale. Expressed as a range that represent the whole lifespan of the token.
-    /// The lower bound means that from that from that moment onward the library will try to refresh the token at the scheduled time
-    /// the higher bound means that the library will try to refresh the token as soon as possible
+    /// this is a time period in which the token should be considered stale. Expressed as a range that represent the
+    /// whole lifespan of the token. The lower bound means that from that from that moment onward the library will
+    /// try to refresh the token at the scheduled time the higher bound means that the library will try to refresh
+    /// the token as soon as possible
     pub staleness_check_percentage: StalenessCheckPercentage,
     /// Auth0 client identifier. Every machine should share the same identifier
     pub client_id: String,
