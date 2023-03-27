@@ -252,7 +252,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
         use std::collections::HashMap;
         use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-        let context = tracing::Span::current().context();
+        let context: opentelemetry::Context = tracing::Span::current().context();
         let mut tracing_headers: HashMap<String, String> = HashMap::new();
         let extractor = opentelemetry::sdk::propagation::TraceContextPropagator::new();
         extractor.inject_context(&context, &mut tracing_headers);
