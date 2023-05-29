@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.14.4] - 2023-05-29
+
+### Changed
+
+- Updates Auth0 token refresh logic to reduce the number of token renewals (#122)
+
+---
+
 ## [0.14.3] - 2022-11-02
 
 ### Added
@@ -281,7 +289,9 @@ The old API is still available but deprecated. It will be removed soon.
 
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.3...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.4...HEAD
+[0.14.4]: https://github.com/primait/bridge.rs/compare/0.14.3...0.14.4
 [0.14.3]: https://github.com/primait/bridge.rs/compare/0.14.2...0.14.3
 [0.14.2]: https://github.com/primait/bridge.rs/compare/0.14.1...0.14.2
 [0.14.1]: https://github.com/primait/bridge.rs/compare/0.14.0...0.14.1
