@@ -14,6 +14,7 @@ use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
 
 mod body;
+mod otel;
 mod request_type;
 
 pub enum RequestType {
@@ -248,14 +249,10 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
     #[cfg(feature = "tracing_opentelemetry")]
     fn tracing_headers(&self) -> HeaderMap {
-        use opentelemetry::propagation::text_map_propagator::TextMapPropagator;
         use std::collections::HashMap;
-        use tracing_opentelemetry::OpenTelemetrySpanExt;
 
-        let context = tracing::Span::current().context();
         let mut tracing_headers: HashMap<String, String> = HashMap::new();
-        let extractor = opentelemetry::sdk::propagation::TraceContextPropagator::new();
-        extractor.inject_context(&context, &mut tracing_headers);
+        otel::inject_context(&mut tracing_headers);
 
         tracing_headers
             .iter()
