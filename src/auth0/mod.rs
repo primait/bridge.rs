@@ -40,7 +40,7 @@ impl Auth0 {
         let jwks_lock: Arc<RwLock<JsonWebKeySet>> = Arc::new(RwLock::new(jwks));
         let token_lock: Arc<RwLock<Token>> = Arc::new(RwLock::new(token));
 
-        let _handle: JoinHandle<()> = start(
+        start(
             jwks_lock.clone(),
             token_lock.clone(),
             client_ref.clone(),
