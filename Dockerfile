@@ -10,7 +10,6 @@ RUN groupadd -g 1000 app && \
     cargo install cargo-make && \
     rustup component add clippy rustfmt
 
-# Serve per avere l'owner dei file scritti dal container uguale all'utente Linux sull'host
 USER app
 
 ENTRYPOINT ["./entrypoint"]
