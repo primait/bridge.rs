@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.14.5] - 2023-08-23
+
+### Changed
+
+- Allow opentelemetry 0.20
+
+---
+
 ## [0.14.4] - 2023-05-29
 
 ### Changed
@@ -35,7 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Reintroduced `{RestRequest, GraphQLRequest}.get_body` for public use.  
   The method was publicly accessible before 0.14.0 but was undocumented and meant only for internal use.
-- Added `BridgeBuilder.with_redirect_policy` to specify how the Bridge should handle HTTP redirects 
+- Added `BridgeBuilder.with_redirect_policy` to specify how the Bridge should handle HTTP redirects
 
 ---
 
@@ -288,9 +296,8 @@ Request::rest(&bridge).send()
 The old API is still available but deprecated. It will be removed soon.
 
 
-
-
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.4...HEAD
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.5...HEAD
+[0.14.5]: https://github.com/primait/bridge.rs/compare/0.14.4...0.14.5
 [0.14.4]: https://github.com/primait/bridge.rs/compare/0.14.3...0.14.4
 [0.14.3]: https://github.com/primait/bridge.rs/compare/0.14.2...0.14.3
 [0.14.2]: https://github.com/primait/bridge.rs/compare/0.14.1...0.14.2
