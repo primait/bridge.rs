@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.14.6] - 2023-08-24
+
+### Changed
+
+- `otel` module is imported only if `tracing_opentelemetry` feature is defined
+
+---
+
 ## [0.14.5] - 2023-08-23
 
 ### Changed
@@ -296,7 +304,8 @@ Request::rest(&bridge).send()
 The old API is still available but deprecated. It will be removed soon.
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.5...HEAD
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.6...HEAD
+[0.14.6]: https://github.com/primait/bridge.rs/compare/0.14.5...0.14.6
 [0.14.5]: https://github.com/primait/bridge.rs/compare/0.14.4...0.14.5
 [0.14.4]: https://github.com/primait/bridge.rs/compare/0.14.3...0.14.4
 [0.14.3]: https://github.com/primait/bridge.rs/compare/0.14.2...0.14.3
