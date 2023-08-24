@@ -14,8 +14,10 @@ use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::{Bridge, Response};
 
 mod body;
-mod otel;
 mod request_type;
+
+#[cfg(feature = "tracing_opentelemetry")]
+mod otel;
 
 pub enum RequestType {
     Rest,
