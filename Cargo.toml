@@ -7,6 +7,7 @@ name = "prima_bridge"
 readme = "README.md"
 repository = "https://github.com/primait/bridge.rs"
 version = "0.14.6"
+rust-version = "1.72"
 
 [features]
 auth0 = ["rand", "redis", "jsonwebtoken", "chrono", "chrono-tz", "aes", "cbc", "dashmap", "tracing"]
@@ -37,6 +38,9 @@ tokio = {version = "1.16", features = ["macros", "rt-multi-thread", "fs"]}
 tracing = {version = "0.1", optional = true}
 tracing-opentelemetry = {version = ">=0.17, <=0.21", optional = true}
 uuid = {version = ">=0.7.0, <2.0.0", features = ["serde", "v4"]}
+
+reqwest-middleware = "0.2.3"
+http = "0.2.9"
 
 [dev-dependencies]
 env_logger = "0"
