@@ -33,42 +33,8 @@ pub enum PrimaBridgeError {
     InvalidMultipartFileMimeType(String),
     #[error("the response body id not valid utf-8. error: {source}")]
     Utf8Error { source: Utf8Error },
-}
-
-impl From<reqwest::Error> for PrimaBridgeError {
-    fn from(error: reqwest::Error) -> Self {
-        Self::HttpError {
-            url: error.url().cloned().unwrap_or_else(default_url),
-            source: error,
-        }
-    }
-}
-
-pub enum PrimaBridgeWithMiddlewareError {
-    Error(PrimaBridgeError),
+    #[error("some error occurred in a middleware layer")]
     MiddlewareError(reqwest_middleware::Error),
-}
-
-impl From<PrimaBridgeError> for PrimaBridgeWithMiddlewareError {
-    fn from(error: PrimaBridgeError) -> Self {
-        Self::Error(error)
-    }
-}
-
-impl From<reqwest_middleware::Error> for PrimaBridgeWithMiddlewareError {
-    fn from(error: reqwest_middleware::Error) -> Self {
-        match error {
-            reqwest_middleware::Error::Middleware(e) => Self::MiddlewareError(reqwest_middleware::Error::Middleware(e)),
-            reqwest_middleware::Error::Reqwest(e) => Self::Error(PrimaBridgeError::HttpError {
-                url: e.url().cloned().unwrap_or_else(default_url),
-                source: e,
-            }),
-        }
-    }
-}
-
-fn default_url() -> Url {
-    Url::parse("http://localhost:8080").unwrap()
 }
 
 impl PrimaBridgeError {

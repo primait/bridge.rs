@@ -12,7 +12,7 @@ pub use request_type::{GraphQLMultipart, GraphQLRequest, Request, RestMultipart,
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::sealed::Sealed;
-use crate::{BridgeClient, BridgeImpl, PrimaRequestBuilderInner, Response};
+use crate::{BridgeClient, BridgeImpl, Response};
 
 mod body;
 mod request_type;
@@ -161,9 +161,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
     /// - The request body is a stream (eg. a file) and therefore not in memory
     fn get_body(&self) -> Option<&[u8]>;
 
-    async fn send(
-        self,
-    ) -> Result<Response, <<Self::Client as BridgeClient>::Builder as PrimaRequestBuilderInner>::Error> {
+    async fn send(self) -> Result<Response, PrimaBridgeError> {
         use futures_util::future::TryFutureExt;
         let request_id = self.get_id();
         let url = self.get_url();
@@ -188,7 +186,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
 
         let status_code = response.status();
         if !ignore_status_code && !status_code.is_success() {
-            return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code).into());
+            return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
 
         let response_headers = response.headers().clone();

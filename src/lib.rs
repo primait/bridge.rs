@@ -17,7 +17,7 @@
 //!
 //! The bridge implement a type state pattern to build the external request.
 
-use errors::{PrimaBridgeError, PrimaBridgeWithMiddlewareError};
+use errors::PrimaBridgeError;
 use http::{header::HeaderName, HeaderValue, Method};
 use reqwest::{multipart::Form, Url};
 use sealed::Sealed;
@@ -70,7 +70,6 @@ pub trait BridgeClient: Sealed {
 #[doc(hidden)]
 #[async_trait::async_trait]
 pub trait PrimaRequestBuilderInner: Send + Sealed {
-    type Error: From<PrimaBridgeError>;
     fn timeout(self, timeout: std::time::Duration) -> Self;
     fn header<K, V>(self, key: K, value: V) -> Self
     where
@@ -82,7 +81,7 @@ pub trait PrimaRequestBuilderInner: Send + Sealed {
 
     fn body(self, body: impl Into<reqwest::Body>) -> Self;
     fn multipart(self, multipart: Form) -> Self;
-    async fn send(self, url: Url) -> Result<reqwest::Response, Self::Error>;
+    async fn send(self, url: Url) -> Result<reqwest::Response, PrimaBridgeError>;
 }
 
 /// A wrapper around a generic request builder
@@ -152,15 +151,13 @@ impl<T: PrimaRequestBuilderInner> PrimaRequestBuilder<T> {
         }
     }
 
-    async fn send(self) -> Result<reqwest::Response, <T as PrimaRequestBuilderInner>::Error> {
+    async fn send(self) -> Result<reqwest::Response, PrimaBridgeError> {
         self.inner.send(self.url).await
     }
 }
 
 #[async_trait::async_trait]
 impl PrimaRequestBuilderInner for reqwest::RequestBuilder {
-    type Error = PrimaBridgeError; // For backwards compatibility
-
     fn timeout(self, timeout: std::time::Duration) -> Self {
         self.timeout(timeout)
     }
@@ -184,15 +181,16 @@ impl PrimaRequestBuilderInner for reqwest::RequestBuilder {
     fn multipart(self, multipart: Form) -> Self {
         self.multipart(multipart)
     }
-    async fn send(self, url: Url) -> Result<reqwest::Response, Self::Error> {
-        self.send().await.map_err(|e| e.with_url(url).into())
+    async fn send(self, url: Url) -> Result<reqwest::Response, PrimaBridgeError> {
+        self.send().await.map_err(|e| PrimaBridgeError::HttpError {
+            source: e,
+            url: url.clone(),
+        })
     }
 }
 
 #[async_trait::async_trait]
 impl PrimaRequestBuilderInner for reqwest_middleware::RequestBuilder {
-    type Error = PrimaBridgeWithMiddlewareError;
-
     fn timeout(self, timeout: std::time::Duration) -> Self {
         self.timeout(timeout)
     }
@@ -218,13 +216,15 @@ impl PrimaRequestBuilderInner for reqwest_middleware::RequestBuilder {
         self.multipart(multipart)
     }
 
-    async fn send(self, url: Url) -> Result<reqwest::Response, Self::Error> {
-        self.send().await.map_err(|e| {
-            match e {
-                reqwest_middleware::Error::Reqwest(e) => reqwest_middleware::Error::Reqwest(e.with_url(url)),
-                reqwest_middleware::Error::Middleware(e) => reqwest_middleware::Error::Middleware(e),
+    async fn send(self, url: Url) -> Result<reqwest::Response, PrimaBridgeError> {
+        self.send().await.map_err(|e| match e {
+            reqwest_middleware::Error::Reqwest(e) => PrimaBridgeError::HttpError {
+                source: e,
+                url: url.clone(),
+            },
+            reqwest_middleware::Error::Middleware(e) => {
+                PrimaBridgeError::MiddlewareError(reqwest_middleware::Error::from(e))
             }
-            .into()
         })
     }
 }
