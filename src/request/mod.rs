@@ -161,7 +161,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
     /// - The request body is a stream (eg. a file) and therefore not in memory
     fn get_body(&self) -> Option<&[u8]>;
 
-    async fn send(self) -> Result<Response, PrimaBridgeError> {
+    async fn send(self) -> PrimaBridgeResult<Response> {
         use futures_util::future::TryFutureExt;
         let request_id = self.get_id();
         let url = self.get_url();
