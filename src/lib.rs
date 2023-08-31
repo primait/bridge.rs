@@ -95,14 +95,14 @@ pub struct PrimaRequestBuilder<T: PrimaRequestBuilderInner> {
 impl BridgeClient for reqwest::Client {
     type Builder = reqwest::RequestBuilder;
     fn request(&self, method: Method, url: Url) -> PrimaRequestBuilder<Self::Builder> {
-        PrimaRequestBuilder::new(url.clone(), self.request(method, url).into())
+        PrimaRequestBuilder::new(url.clone(), self.request(method, url))
     }
 }
 
 impl BridgeClient for reqwest_middleware::ClientWithMiddleware {
     type Builder = reqwest_middleware::RequestBuilder;
     fn request(&self, method: Method, url: Url) -> PrimaRequestBuilder<Self::Builder> {
-        PrimaRequestBuilder::new(url.clone(), self.request(method, url).into())
+        PrimaRequestBuilder::new(url.clone(), self.request(method, url))
     }
 }
 

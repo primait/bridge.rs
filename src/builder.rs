@@ -45,21 +45,18 @@ impl BridgeBuilderInner<reqwest::ClientBuilder> {
     pub fn with_user_agent(self, user_agent: impl Into<String>) -> Self {
         Self {
             inner: self.inner.user_agent(user_agent.into().as_str()),
-            ..self
         }
     }
 
     pub fn with_redirect_policy(self, policy: RedirectPolicy) -> Self {
         Self {
             inner: self.inner.redirect(policy.into()),
-            ..self
         }
     }
 
     pub fn with_pool_max_idle_per_host(self, max: usize) -> Self {
         Self {
             inner: self.inner.pool_max_idle_per_host(max),
-            ..self
         }
     }
 
@@ -89,14 +86,12 @@ impl BridgeBuilderInner<reqwest_middleware::ClientBuilder> {
     pub fn with(self, layer: impl Middleware) -> Self {
         Self {
             inner: self.inner.with(layer),
-            ..self
         }
     }
 
     pub fn with_arc(self, layer: Arc<dyn Middleware>) -> Self {
         Self {
             inner: self.inner.with_arc(layer),
-            ..self
         }
     }
 

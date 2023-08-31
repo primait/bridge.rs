@@ -68,11 +68,11 @@ impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
                 add_field(path, json_body, &Value::Null)?
             }
             GraphQLMultipart::Multiple(multiple) => {
-                multiple.map.iter().fold(Ok(json_body), |accumulator, (path, files)| {
+                multiple.map.iter().try_fold(json_body, |accumulator, (path, files)| {
                     let filler = Value::Array(vec![Value::Null; files.len()]);
-                    files.iter().fold(accumulator, |acc, _| {
+                    files.iter().try_fold(accumulator, |acc, _| {
                         let path_vec: VecDeque<&str> = path.split('.').collect();
-                        acc.and_then(|a| add_field(path_vec, a, &filler))
+                        add_field(path_vec, acc, &filler)
                     })
                 })?
             }

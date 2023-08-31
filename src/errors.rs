@@ -38,7 +38,7 @@ pub enum PrimaBridgeError {
 impl From<reqwest::Error> for PrimaBridgeError {
     fn from(error: reqwest::Error) -> Self {
         Self::HttpError {
-            url: error.url().map(|url| url.clone()).unwrap_or_else(default_url),
+            url: error.url().cloned().unwrap_or_else(default_url),
             source: error,
         }
     }
@@ -60,7 +60,7 @@ impl From<reqwest_middleware::Error> for PrimaBridgeWithMiddlewareError {
         match error {
             reqwest_middleware::Error::Middleware(e) => Self::MiddlewareError(reqwest_middleware::Error::Middleware(e)),
             reqwest_middleware::Error::Reqwest(e) => Self::Error(PrimaBridgeError::HttpError {
-                url: e.url().map(|url| url.clone()).unwrap_or_else(default_url),
+                url: e.url().cloned().unwrap_or_else(default_url),
                 source: e,
             }),
         }
