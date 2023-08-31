@@ -58,7 +58,7 @@ async fn request_with_custom_headers() -> Result<(), Box<dyn Error>> {
     .await;
 
     let variables: Option<String> = None;
-    let gql_request: GraphQLRequest = GraphQLRequest::new(&bridge, (query, variables))?.with_custom_headers(vec![(
+    let gql_request = GraphQLRequest::new(&bridge, (query, variables))?.with_custom_headers(vec![(
         HeaderName::from_static("x-prima"),
         HeaderValue::from_static("test-value"),
     )]);
