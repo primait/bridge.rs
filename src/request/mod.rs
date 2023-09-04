@@ -11,7 +11,8 @@ pub use body::{Body, GraphQLBody, MultipartFile, MultipartFormFileField};
 pub use request_type::{GraphQLMultipart, GraphQLRequest, Request, RestMultipart, RestRequest};
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
-use crate::{Bridge, Response};
+use crate::sealed::Sealed;
+use crate::{BridgeClient, BridgeImpl, Response};
 
 mod body;
 mod request_type;
@@ -25,21 +26,19 @@ pub enum RequestType {
     GraphQL,
 }
 
+#[derive(Default)]
 pub enum DeliverableRequestBody {
+    #[default]
     Empty,
     RawBody(Body),
     Multipart(Form),
 }
 
-impl Default for DeliverableRequestBody {
-    fn default() -> Self {
-        DeliverableRequestBody::Empty
-    }
-}
-
 /// Represents a request that is ready to be delivered to the server.
 #[async_trait]
-pub trait DeliverableRequest<'a>: Sized + 'a {
+pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
+    type Client: BridgeClient;
+
     /// sets the raw body for the request
     /// it will get delivered in the request as is.
     fn raw_body(self, body: impl Into<Body>) -> Self;
@@ -91,7 +90,7 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
     fn get_id(&self) -> Uuid;
 
     #[doc(hidden)]
-    fn get_bridge(&self) -> &Bridge;
+    fn get_bridge(&self) -> &BridgeImpl<Self::Client>;
 
     #[doc(hidden)]
     fn get_path(&self) -> Option<&str>;
@@ -171,8 +170,8 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
 
         let request_builder = self
             .get_bridge()
-            .client
-            .request(self.get_method(), url.as_str())
+            .inner_client
+            .request(self.get_method(), url.clone())
             .timeout(self.get_timeout())
             .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
             .headers(self.get_all_headers());
@@ -183,10 +182,6 @@ pub trait DeliverableRequest<'a>: Sized + 'a {
             DeliverableRequestBody::Multipart(form) => request_builder.multipart(form),
         }
         .send()
-        .map_err(|e| PrimaBridgeError::HttpError {
-            url: url.clone(),
-            source: e,
-        })
         .await?;
 
         let status_code = response.status();

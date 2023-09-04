@@ -17,7 +17,10 @@
 //!
 //! The bridge implement a type state pattern to build the external request.
 
-use reqwest::Url;
+use errors::PrimaBridgeError;
+use http::{header::HeaderName, HeaderValue, Method};
+use reqwest::{multipart::Form, Url};
+use sealed::Sealed;
 
 pub use self::{
     builder::BridgeBuilder,
@@ -41,13 +44,189 @@ mod response;
 #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
 pub mod auth0;
 
-/// A Bridge instance which can be used to issue HTTP requests to an external service.
+/// The basic Bridge type, using a [reqwest::Client](reqwest::Client) as the client.
+pub type Bridge = BridgeImpl<reqwest::Client>;
+
+/// A Bridge instance that's generic across the client. If the [bridge builder](crate::builder::BridgeBuilder) is used
+/// to construct a bridge with middleware, this type will be used to wrap the [reqwest_middleware::ClientWithMiddleware](reqwest_middleware::ClientWithMiddleware).
 #[derive(Debug)]
-pub struct Bridge {
-    client: reqwest::Client,
+pub struct BridgeImpl<T: BridgeClient> {
+    inner_client: T,
     endpoint: Url,
     #[cfg(feature = "auth0")]
     auth0_opt: Option<auth0::Auth0>,
+}
+
+/// A trait that abstracts the client used by the [BridgeImpl], such that both reqwest clients and reqwest
+/// clients with middleware can be used, more or less interchangeably.
+#[doc(hidden)]
+pub trait BridgeClient: Sealed {
+    type Builder: PrimaRequestBuilderInner;
+    fn request(&self, method: http::Method, url: Url) -> PrimaRequestBuilder<Self::Builder>;
+}
+
+/// A trait which abstracts across request builders, to allow for both reqwest and reqwest with middleware
+/// request builders to be used.
+#[doc(hidden)]
+#[async_trait::async_trait]
+pub trait PrimaRequestBuilderInner: Send + Sealed {
+    fn timeout(self, timeout: std::time::Duration) -> Self;
+    fn header<K, V>(self, key: K, value: V) -> Self
+    where
+        HeaderName: TryFrom<K>,
+        <HeaderName as TryFrom<K>>::Error: Into<http::Error>,
+        HeaderValue: TryFrom<V>,
+        <HeaderValue as TryFrom<V>>::Error: Into<http::Error>;
+    fn headers(self, headers: http::HeaderMap) -> Self;
+
+    fn body(self, body: impl Into<reqwest::Body>) -> Self;
+    fn multipart(self, multipart: Form) -> Self;
+    async fn send(self, url: Url) -> Result<reqwest::Response, PrimaBridgeError>;
+}
+
+/// A wrapper around a generic request builder
+#[doc(hidden)]
+pub struct PrimaRequestBuilder<T: PrimaRequestBuilderInner> {
+    url: Url,
+    inner: T,
+}
+
+impl BridgeClient for reqwest::Client {
+    type Builder = reqwest::RequestBuilder;
+    fn request(&self, method: Method, url: Url) -> PrimaRequestBuilder<Self::Builder> {
+        PrimaRequestBuilder::new(url.clone(), self.request(method, url))
+    }
+}
+
+impl BridgeClient for reqwest_middleware::ClientWithMiddleware {
+    type Builder = reqwest_middleware::RequestBuilder;
+    fn request(&self, method: Method, url: Url) -> PrimaRequestBuilder<Self::Builder> {
+        PrimaRequestBuilder::new(url.clone(), self.request(method, url))
+    }
+}
+
+impl<T: PrimaRequestBuilderInner> PrimaRequestBuilder<T> {
+    fn new(url: Url, inner: T) -> Self {
+        Self { url, inner }
+    }
+
+    fn timeout(self, timeout: std::time::Duration) -> Self {
+        Self {
+            inner: self.inner.timeout(timeout),
+            ..self
+        }
+    }
+
+    fn header<K, V>(self, key: K, value: V) -> Self
+    where
+        HeaderName: TryFrom<K>,
+        <HeaderName as TryFrom<K>>::Error: Into<http::Error>,
+        HeaderValue: TryFrom<V>,
+        <HeaderValue as TryFrom<V>>::Error: Into<http::Error>,
+    {
+        Self {
+            inner: self.inner.header(key, value),
+            ..self
+        }
+    }
+
+    fn headers(self, headers: http::HeaderMap) -> Self {
+        Self {
+            inner: self.inner.headers(headers),
+            ..self
+        }
+    }
+
+    fn body(self, body: impl Into<reqwest::Body>) -> Self {
+        Self {
+            inner: self.inner.body(body),
+            ..self
+        }
+    }
+
+    fn multipart(self, multipart: Form) -> Self {
+        Self {
+            inner: self.inner.multipart(multipart),
+            ..self
+        }
+    }
+
+    async fn send(self) -> Result<reqwest::Response, PrimaBridgeError> {
+        self.inner.send(self.url).await
+    }
+}
+
+#[async_trait::async_trait]
+impl PrimaRequestBuilderInner for reqwest::RequestBuilder {
+    fn timeout(self, timeout: std::time::Duration) -> Self {
+        self.timeout(timeout)
+    }
+
+    fn header<K, V>(self, key: K, value: V) -> Self
+    where
+        HeaderName: TryFrom<K>,
+        <HeaderName as TryFrom<K>>::Error: Into<http::Error>,
+        HeaderValue: TryFrom<V>,
+        <HeaderValue as TryFrom<V>>::Error: Into<http::Error>,
+    {
+        self.header(key, value)
+    }
+    fn headers(self, headers: http::HeaderMap) -> Self {
+        self.headers(headers)
+    }
+
+    fn body(self, body: impl Into<reqwest::Body>) -> Self {
+        self.body(body)
+    }
+    fn multipart(self, multipart: Form) -> Self {
+        self.multipart(multipart)
+    }
+    async fn send(self, url: Url) -> Result<reqwest::Response, PrimaBridgeError> {
+        self.send().await.map_err(|e| PrimaBridgeError::HttpError {
+            source: e,
+            url: url.clone(),
+        })
+    }
+}
+
+#[async_trait::async_trait]
+impl PrimaRequestBuilderInner for reqwest_middleware::RequestBuilder {
+    fn timeout(self, timeout: std::time::Duration) -> Self {
+        self.timeout(timeout)
+    }
+
+    fn header<K, V>(self, key: K, value: V) -> Self
+    where
+        HeaderName: TryFrom<K>,
+        <HeaderName as TryFrom<K>>::Error: Into<http::Error>,
+        HeaderValue: TryFrom<V>,
+        <HeaderValue as TryFrom<V>>::Error: Into<http::Error>,
+    {
+        self.header(key, value)
+    }
+    fn headers(self, headers: http::HeaderMap) -> Self {
+        self.headers(headers)
+    }
+
+    fn body(self, body: impl Into<reqwest::Body>) -> Self {
+        self.body(body)
+    }
+
+    fn multipart(self, multipart: Form) -> Self {
+        self.multipart(multipart)
+    }
+
+    async fn send(self, url: Url) -> Result<reqwest::Response, PrimaBridgeError> {
+        self.send().await.map_err(|e| match e {
+            reqwest_middleware::Error::Reqwest(e) => PrimaBridgeError::HttpError {
+                source: e,
+                url: url.clone(),
+            },
+            reqwest_middleware::Error::Middleware(e) => {
+                PrimaBridgeError::MiddlewareError(reqwest_middleware::Error::from(e))
+            }
+        })
+    }
 }
 
 impl Bridge {
@@ -62,4 +241,17 @@ impl Bridge {
     pub fn token(&self) -> Option<auth0::Token> {
         self.auth0_opt.as_ref().map(|auth0| auth0.token())
     }
+}
+
+mod sealed {
+    use crate::BridgeClient;
+
+    pub trait Sealed {}
+
+    impl Sealed for reqwest::Client {}
+    impl Sealed for reqwest_middleware::ClientWithMiddleware {}
+    impl Sealed for reqwest_middleware::RequestBuilder {}
+    impl Sealed for reqwest::RequestBuilder {}
+    impl<'a, Client: BridgeClient> Sealed for crate::request::RestRequest<'a, Client> {}
+    impl<'a, Client: BridgeClient> Sealed for crate::request::GraphQLRequest<'a, Client> {}
 }

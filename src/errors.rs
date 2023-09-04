@@ -33,6 +33,8 @@ pub enum PrimaBridgeError {
     InvalidMultipartFileMimeType(String),
     #[error("the response body id not valid utf-8. error: {source}")]
     Utf8Error { source: Utf8Error },
+    #[error("some error occurred in a middleware layer")]
+    MiddlewareError(reqwest_middleware::Error),
 }
 
 impl PrimaBridgeError {

@@ -12,16 +12,16 @@ use uuid::Uuid;
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::request::{Body, DeliverableRequest, DeliverableRequestBody, GraphQLBody, RequestType};
-use crate::{Bridge, MultipartFile};
+use crate::{BridgeClient, BridgeImpl, MultipartFile};
 
 const VARIABLES: &str = "variables";
 const ZERO: &str = "0";
 
 /// The GraphQLRequest is a struct that represent a GraphQL request to be done with a [Bridge].
 #[allow(clippy::upper_case_acronyms)]
-pub struct GraphQLRequest<'a> {
+pub struct GraphQLRequest<'a, Client: BridgeClient> {
     id: Uuid,
-    bridge: &'a Bridge,
+    bridge: &'a BridgeImpl<Client>,
     body: Body,
     method: Method,
     timeout: Duration,
@@ -32,9 +32,12 @@ pub struct GraphQLRequest<'a> {
     multipart: Option<GraphQLMultipart>,
 }
 
-impl<'a> GraphQLRequest<'a> {
+impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
     /// Creates a new GraphQLRequest
-    pub fn new<S: Serialize>(bridge: &'a Bridge, graphql_body: impl Into<GraphQLBody<S>>) -> PrimaBridgeResult<Self> {
+    pub fn new<S: Serialize>(
+        bridge: &'a BridgeImpl<Client>,
+        graphql_body: impl Into<GraphQLBody<S>>,
+    ) -> PrimaBridgeResult<Self> {
         let mut custom_headers = HeaderMap::default();
         custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         Ok(Self {
@@ -52,7 +55,7 @@ impl<'a> GraphQLRequest<'a> {
     }
 
     pub fn new_with_multipart<S: Serialize>(
-        bridge: &'a Bridge,
+        bridge: &'a BridgeImpl<Client>,
         graphql_body: impl Into<GraphQLBody<S>>,
         multipart: GraphQLMultipart,
     ) -> PrimaBridgeResult<Self> {
@@ -65,11 +68,11 @@ impl<'a> GraphQLRequest<'a> {
                 add_field(path, json_body, &Value::Null)?
             }
             GraphQLMultipart::Multiple(multiple) => {
-                multiple.map.iter().fold(Ok(json_body), |accumulator, (path, files)| {
+                multiple.map.iter().try_fold(json_body, |accumulator, (path, files)| {
                     let filler = Value::Array(vec![Value::Null; files.len()]);
-                    files.iter().fold(accumulator, |acc, _| {
+                    files.iter().try_fold(accumulator, |acc, _| {
                         let path_vec: VecDeque<&str> = path.split('.').collect();
-                        acc.and_then(|a| add_field(path_vec, a, &filler))
+                        add_field(path_vec, acc, &filler)
                     })
                 })?
             }
@@ -91,7 +94,8 @@ impl<'a> GraphQLRequest<'a> {
 }
 
 #[async_trait]
-impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
+impl<'a, Client: BridgeClient> DeliverableRequest<'a> for GraphQLRequest<'a, Client> {
+    type Client = Client;
     fn raw_body(self, body: impl Into<Body>) -> Self {
         Self {
             body: body.into(),
@@ -136,7 +140,7 @@ impl<'a> DeliverableRequest<'a> for GraphQLRequest<'a> {
         self.id
     }
 
-    fn get_bridge(&self) -> &Bridge {
+    fn get_bridge(&self) -> &BridgeImpl<Client> {
         self.bridge
     }
 
@@ -328,6 +332,7 @@ fn craft_field(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Bridge;
     use serde::Deserialize;
     use serde_json::{json, Value};
     use std::str::FromStr;
