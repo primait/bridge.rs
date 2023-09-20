@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.15.0] - 2023-09-20
+
+### Added
+- Support for reqwest_middleware
+
+### Changed
+- MSRV is 1.72, for https://github.com/rust-lang/rust/issues/107557
+---
+
 ## [0.14.6] - 2023-08-24
 
 ### Fixed
@@ -303,7 +312,9 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.14.6...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.15.0...HEAD
+[0.15.0]: https://github.com/primait/bridge.rs/compare/0.14.6...0.15.0
 [0.14.6]: https://github.com/primait/bridge.rs/compare/0.14.5...0.14.6
 [0.14.5]: https://github.com/primait/bridge.rs/compare/0.14.4...0.14.5
 [0.14.4]: https://github.com/primait/bridge.rs/compare/0.14.3...0.14.4
