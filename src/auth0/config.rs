@@ -30,6 +30,9 @@ pub struct Config {
     /// JWKS url
     /// This is the url that the bridge uses to fetch JWKS
     pub jwks_url: Url,
+    /// Scope
+    /// This is the scopes requested by the bridge when fetching tokens
+    pub scope: Option<String>,
 }
 
 impl Config {
@@ -91,6 +94,7 @@ impl Config {
             staleness_check_percentage: StalenessCheckPercentage::default(),
             client_id: "client_id".to_string(),
             client_secret: "client_secret".to_string(),
+            scope: None,
         }
     }
 }
