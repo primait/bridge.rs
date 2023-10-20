@@ -136,6 +136,7 @@ mod auth0 {
             staleness_check_percentage: StalenessCheckPercentage::new(0.1, 0.5),
             client_id,
             client_secret,
+            scope: Some("profile email".to_string()),
         }
     }
 }

@@ -8,6 +8,7 @@ use serde_json::json;
 use prima_bridge::prelude::*;
 
 use crate::async_auth0::builder::*;
+use crate::async_auth0::config;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
@@ -18,6 +19,28 @@ struct Data {
 async fn simple_request() -> Result<(), Box<dyn Error>> {
     let mut server = Server::new_async().await;
     let (_m, bridge) = server.create_bridge(200, "{\"hello\": \"world!\"}").await;
+    let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
+
+    assert_eq!("world!", result.as_str());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn simple_request_with_auth0_scope() -> Result<(), Box<dyn Error>> {
+    let mut server = Server::new_async().await;
+    let mut cfg = config(&server);
+    cfg.scope = Some("profile email".to_string());
+    let req_token_body = json!({
+        "client_id": cfg.client_id.clone(),
+        "client_secret": cfg.client_secret.clone(),
+        "audience": cfg.audience.clone(),
+        "grant_type": "client_credentials",
+        "scope": "profile email"
+    });
+    let (_m, bridge) = server
+        .create_bridge_with_auth0_get_token_match_body("{\"hello\": \"world!\"}", req_token_body, cfg)
+        .await;
     let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
 
     assert_eq!("world!", result.as_str());

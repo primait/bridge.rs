@@ -117,6 +117,7 @@ struct FetchTokenRequest {
     client_secret: String,
     audience: String,
     grant_type: String,
+    scope: Option<String>,
 }
 
 impl From<&Config> for FetchTokenRequest {
@@ -126,6 +127,7 @@ impl From<&Config> for FetchTokenRequest {
             client_secret: config.client_secret().to_string(),
             audience: config.audience().to_string(),
             grant_type: "client_credentials".to_string(),
+            scope: config.scope.clone(),
         }
     }
 }
