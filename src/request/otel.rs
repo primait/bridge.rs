@@ -1,5 +1,5 @@
 use opentelemetry::propagation::{Injector, TextMapPropagator};
-use opentelemtry_sdk::TraceContextPropagator;
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 pub fn inject_context(injector: &mut dyn Injector) {
