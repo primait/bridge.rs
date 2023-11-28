@@ -6,7 +6,6 @@ use reqwest::Url;
 #[allow(unused)]
 pub fn enable_mockito_logging() {
     std::env::set_var("RUST_LOG", "mockito=debug");
-    env_logger::init();
 }
 
 #[async_trait]

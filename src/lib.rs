@@ -44,11 +44,11 @@ mod response;
 #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
 pub mod auth0;
 
-/// The basic Bridge type, using a [reqwest::Client](reqwest::Client) as the client.
+/// The basic Bridge type, using a [reqwest::Client] as the client.
 pub type Bridge = BridgeImpl<reqwest::Client>;
 
-/// A Bridge instance that's generic across the client. If the [bridge builder](crate::builder::BridgeBuilder) is used
-/// to construct a bridge with middleware, this type will be used to wrap the [reqwest_middleware::ClientWithMiddleware](reqwest_middleware::ClientWithMiddleware).
+/// A Bridge instance that's generic across the client. If the [BridgeBuilder] is used
+/// to construct a bridge with middleware, this type will be used to wrap the [reqwest_middleware::ClientWithMiddleware].
 #[derive(Debug)]
 pub struct BridgeImpl<T: BridgeClient> {
     inner_client: T,
