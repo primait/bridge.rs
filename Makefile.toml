@@ -12,6 +12,11 @@ args = [
     "@@split(CARGO_MAKE_CARGO_BUILD_TEST_FLAGS, )",
 ]
 
+[tasks.fmt-check]
+description = "Runs the cargo rustfmt plugin."
+command = "cargo"
+args = ["fmt", "--", "--check"]
+
 [tasks.test]
 dependencies = ["test-base", "test-auth0"]
 
@@ -29,89 +34,13 @@ dependencies = ["build"]
 command = "cargo"
 args = ["clippy", "--all-features", "--all-targets", "--", "-D", "warnings"]
 
-### with cargo-limit installed
-[tasks.lbuild]
-description = "Runs the rust compiler."
-category = "Build"
-install_crate = false
-command = "cargo"
-args = [
-    "lbuild",
-    "@@remove-empty(CARGO_MAKE_CARGO_VERBOSE_FLAGS)",
-    "@@split(CARGO_MAKE_CARGO_BUILD_TEST_FLAGS, )",
-]
-
-[tasks.ltest]
-dependencies = ["ltest-async"]
-
-[tasks.ltest-async]
-command = "cargo"
-args = ["ltest"]
-dependencies = ["lbuild"]
-
-[tasks.clean]
-command = "cargo"
-args = ["clean"]
-
-[tasks.format-ci]
-description = "Runs the cargo rustfmt plugin during CI."
-command = "cargo"
-args = ["fmt", "--all", "--", "--check"]
-
-[tasks.clippy-ci]
-command = "cargo"
-args = ["clippy", "--all-features", "--all-targets", "--", "-D", "warnings"]
-
-[tasks.build-ci]
-description = "Build inside CI."
-command = "cargo"
-args = ["build", "-j", "2", "--all-features"]
-
-[tasks.cache-cleanup]
-description = "Clean CI cache"
-dependencies = ["cargo-prune", "sweep", "delete-artifacts"]
-
-[tasks.sweep]
-description = "Clean cargo cache with sweep"
-command = "cargo sweep -t 10"
-ignore_errors = true
-
-[tasks.cargo-prune]
-description = "Run cargo prune"
-command = "cargo"
-args = ["prune"]
-
-[tasks.delete-artifacts]
-description = "Remove non cachable artifacts"
-script = [
-    '''
-    #!/bin/bash
-    set -e
-    set -x
-    find ./target/debug -type f -maxdepth 1 -delete || true
-    rm -rfv ./target/{debug,release}/deps/{*prima_bridge*}
-    rm -rfv ./target/{debug,release}/.fingerprint/*prima_bridge*
-    '''
-]
-
-[tasks.sweep-start]
-description = "Start cargo sweep"
-command = "cargo"
-args = ["sweep", "-s"]
-
-[tasks.sweep-end]
-description = "Run cargo sweep cleanup"
-command = "cargo"
-args = ["sweep", "-f"]
-
-[tasks.print-stats]
-description = "Print cache size"
-command = "du"
-args = ["-sh", "target", ".cargo"]
-
-[tasks.docsrs]
+[tasks.docs]
 description = "Build docs as they are rendered on docs.rs"
-env = { RUSTDOCFLAGS = "--cfg docsrs" }
 command = "cargo"
-toolchain = "nightly"
-args = ["doc", "--all-features"]
+args = ["doc", "--document-private-items", "--all-features", "--no-deps"]
+env = { "RUSTDOCFLAGS" = "-Dwarnings" }
+
+[tasks.release]
+description = "Task to release the package to crates.io"
+command = "cargo"
+args = ["release", "publish", "--no-confirm", "--allow-branch \"*\"", "--all-features", "--execute"]

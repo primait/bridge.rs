@@ -15,7 +15,7 @@ use crate::errors::PrimaBridgeResult;
 use crate::request::{Body, DeliverableRequest, DeliverableRequestBody, MultipartFormFileField, RequestType};
 use crate::{BridgeClient, BridgeImpl, MultipartFile};
 
-/// The RestRequest is a struct that represent a REST request to be done with a [Bridge].
+/// The RestRequest is a struct that represent a REST request to be done with a [crate::Bridge].
 #[derive(Debug)]
 pub struct RestRequest<'a, Client: BridgeClient> {
     id: Uuid,

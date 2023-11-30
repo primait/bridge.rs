@@ -17,7 +17,7 @@ use crate::{BridgeClient, BridgeImpl, MultipartFile};
 const VARIABLES: &str = "variables";
 const ZERO: &str = "0";
 
-/// The GraphQLRequest is a struct that represent a GraphQL request to be done with a [Bridge].
+/// The GraphQLRequest is a struct that represent a GraphQL request to be done with a [crate::Bridge].
 #[allow(clippy::upper_case_acronyms)]
 pub struct GraphQLRequest<'a, Client: BridgeClient> {
     id: Uuid,
