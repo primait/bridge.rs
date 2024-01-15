@@ -53,7 +53,7 @@ impl Cache for RedisCache {
         let key: &str = &cache::token_key(&self.caller, &self.audience);
         let mut connection = self.client.get_async_connection().await?;
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
-        let expiration: usize = value_ref.lifetime_in_seconds();
+        let expiration: u64 = value_ref.lifetime_in_seconds();
         connection.set_ex(key, encrypted_value, expiration).await?;
         Ok(())
     }
@@ -63,11 +63,11 @@ impl Cache for RedisCache {
         self.get(key).await
     }
 
-    async fn put_jwks(&self, value_ref: &JsonWebKeySet, expiration: Option<usize>) -> Result<(), Auth0Error> {
+    async fn put_jwks(&self, value_ref: &JsonWebKeySet, expiration: Option<u64>) -> Result<(), Auth0Error> {
         let key: &str = &cache::jwks_key(&self.caller, &self.audience);
         let mut connection = self.client.get_async_connection().await?;
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
-        let expiration: usize = expiration.unwrap_or(86400);
+        let expiration: u64 = expiration.unwrap_or(86400);
         connection.set_ex(key, encrypted_value, expiration).await?;
         Ok(())
     }

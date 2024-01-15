@@ -88,8 +88,11 @@ impl Token {
         }
     }
 
-    pub fn lifetime_in_seconds(&self) -> usize {
-        (self.expire_date - self.issue_date).num_seconds() as usize
+    pub fn lifetime_in_seconds(&self) -> u64 {
+        (self.expire_date - self.issue_date)
+            .to_std()
+            .expect("expire_date should be greater than issue_date")
+            .as_secs()
     }
 
     // Check if the token remaining lifetime it's less than a randomized percentage that is between

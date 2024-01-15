@@ -20,7 +20,7 @@ pub trait Cache: Send + Sync + std::fmt::Debug {
 
     async fn get_jwks(&self) -> Result<Option<JsonWebKeySet>, Auth0Error>;
 
-    async fn put_jwks(&self, value_ref: &JsonWebKeySet, expiration: Option<usize>) -> Result<(), Auth0Error>;
+    async fn put_jwks(&self, value_ref: &JsonWebKeySet, expiration: Option<u64>) -> Result<(), Auth0Error>;
 }
 
 pub(in crate::auth0::cache) fn token_key(caller: &str, audience: &str) -> String {
