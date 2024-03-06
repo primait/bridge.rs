@@ -13,7 +13,7 @@ rust-version = "1.72"
 [features]
 default = ["tracing_opentelemetry"]
 
-auth0 = ["rand", "redis", "jsonwebtoken", "chrono", "chrono-tz", "aes", "cbc", "dashmap", "tracing"]
+auth0 = ["rand", "redis", "jsonwebtoken", "jwks_client_rs", "chrono", "chrono-tz", "aes", "cbc", "dashmap", "tracing"]
 gzip = ["reqwest/gzip"]
 redis-tls = ["redis/tls", "redis/tokio-native-tls-comp"]
 tracing_opentelemetry = [ "tracing_opentelemetry_0_21" ]
@@ -34,6 +34,7 @@ dashmap = {version = "5.1", optional = true}
 futures = "0.3"
 futures-util = "0.3"
 jsonwebtoken = {version = "9.0", optional = true}
+jwks_client_rs = {version = "0.5", optional = true}
 rand = {version = "0.8", optional = true}
 redis = {version = "0.23", features = ["tokio-comp"], optional = true}
 reqwest = {version = "0.11", features = ["json", "multipart", "stream"]}

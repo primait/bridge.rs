@@ -132,3 +132,9 @@ impl From<&Config> for FetchTokenRequest {
         }
     }
 }
+
+#[derive(Deserialize, Debug)]
+pub struct Claims {
+    #[serde(default)]
+    pub permissions: Vec<String>,
+}

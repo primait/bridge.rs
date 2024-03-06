@@ -2,7 +2,6 @@ use dashmap::DashMap;
 
 use crate::auth0::cache::{self, crypto};
 use crate::auth0::errors::Auth0Error;
-use crate::auth0::keyset::JsonWebKeySet;
 use crate::auth0::token::Token;
 use crate::auth0::{cache::Cache, Config};
 
@@ -40,20 +39,6 @@ impl Cache for InMemoryCache {
         let _ = self.key_value.insert(key, encrypted_value);
         Ok(())
     }
-
-    async fn get_jwks(&self) -> Result<Option<JsonWebKeySet>, Auth0Error> {
-        self.key_value
-            .get(&cache::jwks_key(&self.caller, &self.audience))
-            .map(|value| crypto::decrypt(self.encryption_key.as_str(), value.as_slice()))
-            .transpose()
-    }
-
-    async fn put_jwks(&self, value_ref: &JsonWebKeySet, _expiration: Option<usize>) -> Result<(), Auth0Error> {
-        let key: String = cache::jwks_key(&self.caller, &self.audience);
-        let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
-        let _ = self.key_value.insert(key, encrypted_value);
-        Ok(())
-    }
 }
 
 #[cfg(test)]
@@ -70,9 +55,6 @@ mod tests {
         let result: Option<Token> = cache.get_token().await.unwrap();
         assert!(result.is_none());
 
-        let result: Option<JsonWebKeySet> = cache.get_jwks().await.unwrap();
-        assert!(result.is_none());
-
         let token_str: &str = "token";
         let token: Token = Token::new(token_str.to_string(), Utc::now(), Utc::now());
         cache.put_token(&token).await.unwrap();
@@ -80,12 +62,5 @@ mod tests {
         let result: Option<Token> = cache.get_token().await.unwrap();
         assert!(result.is_some());
         assert_eq!(result.unwrap().as_str(), token_str);
-
-        let string: &str = "{\"keys\": []}";
-        let jwks: JsonWebKeySet = serde_json::from_str(string).unwrap();
-        cache.put_jwks(&jwks, None).await.unwrap();
-
-        let result: Option<JsonWebKeySet> = cache.get_jwks().await.unwrap();
-        assert!(result.is_some());
     }
 }
