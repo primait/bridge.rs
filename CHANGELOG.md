@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+### Added
+
+- Support for opentelemetry 0.21
+
+opentelemetry 0.20 support can be enabled by enabling the `tracing_opentelemetry_0_20` feature instead of tracing_opentelemetry
+
+- `tracing_opentelemetry_0_21` feature
+
 ## [0.15.1] - 2023-10-20
 
 ### Added
