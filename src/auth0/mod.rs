@@ -3,8 +3,8 @@
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::time::Duration;
 
-use jwks_client_rs::JwksClient;
 use jwks_client_rs::source::WebSource;
+use jwks_client_rs::JwksClient;
 use reqwest::Client;
 use tokio::task::JoinHandle;
 use tokio::time::Interval;
@@ -54,7 +54,7 @@ impl Auth0 {
             cache.clone(),
             config,
         )
-            .await;
+        .await;
 
         Ok(Self { token_lock })
     }
@@ -91,7 +91,10 @@ async fn start(
 
                 match Token::fetch(&client, &config).await {
                     Ok(token) => {
-                        let is_signed: bool = jwks_client.decode::<Claims>(token.as_str(), &[config.audience()]).await.is_ok();
+                        let is_signed: bool = jwks_client
+                            .decode::<Claims>(token.as_str(), &[config.audience()])
+                            .await
+                            .is_ok();
                         tracing::info!("is signed: {}", is_signed);
 
                         let _ = cache.put_token(&token).await.log_err("Error caching JWT");
