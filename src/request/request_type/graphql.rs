@@ -1,5 +1,5 @@
 use std::collections::{HashMap, VecDeque};
-use std::convert::TryInto;
+
 use std::time::Duration;
 
 use async_trait::async_trait;
@@ -43,7 +43,7 @@ impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
-            body: serde_json::to_string(&graphql_body.into())?.try_into()?,
+            body: Body::from(serde_json::to_string(&graphql_body.into())?),
             method: Method::POST,
             path: Default::default(),
             timeout: Duration::from_secs(60),
@@ -81,7 +81,7 @@ impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
-            body: serde_json::to_string(&body_with_injected_variables)?.try_into()?,
+            body: Body::from(serde_json::to_string(&body_with_injected_variables)?),
             method: Method::POST,
             path: Default::default(),
             timeout: Duration::from_secs(60),
@@ -105,7 +105,7 @@ impl<'a, Client: BridgeClient> DeliverableRequest<'a> for GraphQLRequest<'a, Cli
 
     fn json_body<B: Serialize>(self, body: &B) -> PrimaBridgeResult<Self> {
         Ok(Self {
-            body: serde_json::to_string(body)?.try_into()?,
+            body: Body::from(serde_json::to_string(body)?),
             ..self
         })
     }
@@ -334,7 +334,7 @@ mod tests {
     use super::*;
     use crate::Bridge;
     use serde::Deserialize;
-    use serde_json::{json, Value};
+    use serde_json::json;
     use std::str::FromStr;
 
     #[derive(Deserialize)]
