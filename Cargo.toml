@@ -15,7 +15,12 @@ auth0 = ["rand", "redis", "jsonwebtoken", "chrono", "chrono-tz", "aes", "cbc", "
 default = ["tracing_opentelemetry"]
 gzip = ["reqwest/gzip"]
 redis-tls = ["redis/tls", "redis/tokio-native-tls-comp"]
-tracing_opentelemetry = ["opentelemetry", "tracing", "tracing-opentelemetry"]
+tracing_opentelemetry = [ "tracing_opentelemetry_0_21" ]
+
+tracing_opentelemetry_0_20 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_21_pkg", "opentelemetry_0_20_pkg"]
+tracing_opentelemetry_0_21 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_22_pkg", "opentelemetry_0_21_pkg", "opentelemetry_sdk_0_21_pkg"]
+
+_any_otel_version = []
 
 [dependencies]
 aes = {version = "0.8", optional = true}
@@ -28,7 +33,6 @@ dashmap = {version = "5.1", optional = true}
 futures = "0.3"
 futures-util = "0.3"
 jsonwebtoken = {version = "9.0", optional = true}
-opentelemetry = {version = ">=0.17, <=0.20", optional = true}
 rand = {version = "0.8", optional = true}
 redis = {version = "0.23", features = ["tokio-comp"], optional = true}
 reqwest = {version = "0.11", features = ["json", "multipart", "stream"]}
@@ -37,11 +41,16 @@ serde_json = "1.0"
 thiserror = "1.0"
 tokio = {version = "1.16", features = ["macros", "rt-multi-thread", "fs"]}
 tracing = {version = "0.1", optional = true}
-tracing-opentelemetry = {version = ">=0.17, <=0.21", optional = true}
 uuid = {version = ">=0.7.0, <2.0.0", features = ["serde", "v4"]}
 
 reqwest-middleware = "0.2.3"
 http = "0.2.9"
+
+opentelemetry_0_20_pkg = { package = "opentelemetry", version = "0.20", optional = true }
+opentelemetry_0_21_pkg = { package = "opentelemetry", version = "0.21", optional = true }
+opentelemetry_sdk_0_21_pkg = { package = "opentelemetry_sdk", version = "0.21", optional = true }
+tracing-opentelemetry_0_21_pkg = { package = "tracing-opentelemetry", version = "0.21", optional = true }
+tracing-opentelemetry_0_22_pkg = { package = "tracing-opentelemetry", version = "0.22", optional = true }
 
 [dev-dependencies]
 flate2 = "1.0"

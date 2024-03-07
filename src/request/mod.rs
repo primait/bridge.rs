@@ -17,7 +17,7 @@ use crate::{BridgeClient, BridgeImpl, Response};
 mod body;
 mod request_type;
 
-#[cfg(feature = "tracing_opentelemetry")]
+#[cfg(feature = "_any_otel_version")]
 mod otel;
 
 pub enum RequestType {
@@ -139,7 +139,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
 
     fn get_all_headers(&self) -> HeaderMap {
         let mut additional_headers = self.get_custom_headers().clone();
-        #[cfg(feature = "tracing_opentelemetry")]
+        #[cfg(feature = "_any_otel_version")]
         additional_headers.extend(self.tracing_headers());
         #[cfg(feature = "auth0")]
         additional_headers.extend(self.get_auth0_headers());
@@ -244,7 +244,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
         })
     }
 
-    #[cfg(feature = "tracing_opentelemetry")]
+    #[cfg(feature = "_any_otel_version")]
     fn tracing_headers(&self) -> HeaderMap {
         use std::collections::HashMap;
 
@@ -266,7 +266,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
             .collect()
     }
 
-    #[cfg(not(feature = "tracing_opentelemetry"))]
+    #[cfg(not(feature = "_any_otel_version"))]
     fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
         vec![]
     }
