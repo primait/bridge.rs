@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for opentelemetry 0.21
-- `tracing_opentelemetry_0_21` and `tracing_opentelemetry_0_21` features
+- `tracing_opentelemetry_0_20` and `tracing_opentelemetry_0_21` features
 - `tracing_opentelemetry` is now an alias for the latest version of otel(so `tracing_opentelemetry_0_21`)
 
 Opentelemetry 0.20 support can be enabled by enabling the `tracing_opentelemetry_0_20` feature instead of tracing_opentelemetry.
