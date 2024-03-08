@@ -16,6 +16,17 @@
 //! pass around.
 //!
 //! The bridge implement a type state pattern to build the external request.
+//!
+//! ### Features
+//! * `auth0` - enable auth0 integration, allowing bridge.rs to retrieve tokens from auth0  for authentication
+//! * `gzip` - provides response body gzip decompression.
+//! * `redis-tls` - add support for connecting to redis with tls
+//! * `tracing-opentelemetry` adds support for integration with opentelemetry.
+//!     This feature is an alias for the `tracing_opentelemetry_0_21` feature.
+//!     `tracing_opentelemetry_0_20` is also available as to support the 0.20 opentelemetry
+//!     libraries.
+//!
+//!     We are going to support at least the last 3 versions of opentelemetry. After that we mightremove support for older otel version without it being a breaking change.
 
 use errors::PrimaBridgeError;
 use http::{header::HeaderName, HeaderValue, Method};

@@ -11,8 +11,9 @@ version = "0.15.1-rc.0"
 rust-version = "1.72"
 
 [features]
-auth0 = ["rand", "redis", "jsonwebtoken", "chrono", "chrono-tz", "aes", "cbc", "dashmap", "tracing"]
 default = ["tracing_opentelemetry"]
+
+auth0 = ["rand", "redis", "jsonwebtoken", "chrono", "chrono-tz", "aes", "cbc", "dashmap", "tracing"]
 gzip = ["reqwest/gzip"]
 redis-tls = ["redis/tls", "redis/tokio-native-tls-comp"]
 tracing_opentelemetry = [ "tracing_opentelemetry_0_21" ]
