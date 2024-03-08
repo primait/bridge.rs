@@ -1,3 +1,4 @@
+#[cfg(not(feature = "tracing_opentelemetry_0_21"))]
 #[cfg(feature = "tracing_opentelemetry_0_20")]
 mod otel_0_20 {
     pub use opentelemetry_0_20_pkg::{
