@@ -1,4 +1,3 @@
-use std::convert::TryInto;
 use std::time::Duration;
 use std::{borrow::Cow, collections::HashSet};
 
@@ -72,7 +71,7 @@ impl<'a, Client: BridgeClient> DeliverableRequest<'a> for RestRequest<'a, Client
         let mut custom_headers = self.custom_headers;
         custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         Ok(Self {
-            body: Some(serde_json::to_string(body)?.try_into()?),
+            body: Some(Body::from(serde_json::to_string(body)?)),
             custom_headers,
             ..self
         })

@@ -5,7 +5,7 @@
 //! ```shell
 //! cargo run --example rest_multipart
 //! ```
-use std::{collections::HashSet, iter::FromIterator};
+use std::collections::HashSet;
 
 use prima_bridge::{prelude::*, MultipartFile, MultipartFormFileField, RestMultipart};
 
