@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.16.0] - 2024-03-11
+
 ### Added
 
 - Support for opentelemetry 0.21
@@ -333,7 +337,9 @@ Request::rest(&bridge).send()
 The old API is still available but deprecated. It will be removed soon.
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.15.1...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.0...HEAD
+[0.16.0]: https://github.com/primait/bridge.rs/compare/0.15.1-rc.0...0.16.0
 [0.15.1]: https://github.com/primait/bridge.rs/compare/0.15.0...0.15.1
 [0.15.0]: https://github.com/primait/bridge.rs/compare/0.14.6...0.15.0
 [0.14.6]: https://github.com/primait/bridge.rs/compare/0.14.5...0.14.6
