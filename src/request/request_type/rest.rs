@@ -71,7 +71,7 @@ impl<'a, Client: BridgeClient> DeliverableRequest<'a> for RestRequest<'a, Client
         let mut custom_headers = self.custom_headers;
         custom_headers.append(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         Ok(Self {
-            body: Some(Body::from(serde_json::to_string(body)?)),
+            body: Some(serde_json::to_string(body)?.into()),
             custom_headers,
             ..self
         })
