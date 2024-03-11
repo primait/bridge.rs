@@ -1,5 +1,4 @@
 use std::collections::{HashMap, VecDeque};
-
 use std::time::Duration;
 
 use async_trait::async_trait;
@@ -43,7 +42,7 @@ impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
-            body: Body::from(serde_json::to_string(&graphql_body.into())?),
+            body: serde_json::to_string(&graphql_body.into())?.into(),
             method: Method::POST,
             path: Default::default(),
             timeout: Duration::from_secs(60),
@@ -81,7 +80,7 @@ impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
         Ok(Self {
             id: Uuid::new_v4(),
             bridge,
-            body: Body::from(serde_json::to_string(&body_with_injected_variables)?),
+            body: serde_json::to_string(&body_with_injected_variables)?.into(),
             method: Method::POST,
             path: Default::default(),
             timeout: Duration::from_secs(60),
@@ -105,7 +104,7 @@ impl<'a, Client: BridgeClient> DeliverableRequest<'a> for GraphQLRequest<'a, Cli
 
     fn json_body<B: Serialize>(self, body: &B) -> PrimaBridgeResult<Self> {
         Ok(Self {
-            body: Body::from(serde_json::to_string(body)?),
+            body: serde_json::to_string(body)?.into(),
             ..self
         })
     }

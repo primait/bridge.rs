@@ -1,6 +1,7 @@
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use reqwest::{Client, Response};
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 
 use crate::auth0::errors::Auth0Error;
 use crate::auth0::Config;
@@ -54,8 +55,7 @@ impl Token {
         // the exact issued_at (iat) and expiration (exp)
         // reference: https://www.iana.org/assignments/jwt/jwt.xhtml
         let issue_date: DateTime<Utc> = Utc::now();
-        let expire_date: DateTime<Utc> =
-            Utc::now() + Duration::try_seconds(response.expires_in as i64).unwrap_or(Duration::max_value());
+        let expire_date: DateTime<Utc> = Utc::now() + Duration::from_secs(response.expires_in as u64);
 
         Ok(Self {
             token: access_token,
@@ -131,4 +131,10 @@ impl From<&Config> for FetchTokenRequest {
             scope: config.scope.clone(),
         }
     }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Claims {
+    #[serde(default)]
+    pub permissions: Vec<String>,
 }

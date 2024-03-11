@@ -2,7 +2,6 @@ use redis::AsyncCommands;
 use serde::Deserialize;
 
 use crate::auth0::cache::{self, crypto, Cache};
-use crate::auth0::keyset::JsonWebKeySet;
 use crate::auth0::token::Token;
 use crate::auth0::{Auth0Error, Config};
 
@@ -54,20 +53,6 @@ impl Cache for RedisCache {
         let mut connection = self.client.get_async_connection().await?;
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
         let expiration: usize = value_ref.lifetime_in_seconds();
-        connection.set_ex(key, encrypted_value, expiration).await?;
-        Ok(())
-    }
-
-    async fn get_jwks(&self) -> Result<Option<JsonWebKeySet>, Auth0Error> {
-        let key: &str = &cache::jwks_key(&self.caller, &self.audience);
-        self.get(key).await
-    }
-
-    async fn put_jwks(&self, value_ref: &JsonWebKeySet, expiration: Option<usize>) -> Result<(), Auth0Error> {
-        let key: &str = &cache::jwks_key(&self.caller, &self.audience);
-        let mut connection = self.client.get_async_connection().await?;
-        let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
-        let expiration: usize = expiration.unwrap_or(86400);
         connection.set_ex(key, encrypted_value, expiration).await?;
         Ok(())
     }
