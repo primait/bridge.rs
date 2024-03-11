@@ -45,7 +45,7 @@ tracing = {version = "0.1", optional = true}
 uuid = {version = ">=0.7.0, <2.0.0", features = ["serde", "v4"]}
 
 reqwest-middleware = "0.2.3"
-http = "0.2.9"
+http = "1.1.0"
 
 opentelemetry_0_20_pkg = { package = "opentelemetry", version = "0.20", optional = true }
 opentelemetry_0_21_pkg = { package = "opentelemetry", version = "0.21", optional = true }
