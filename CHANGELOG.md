@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Added jwks_client_rs instead of reimplemnting it's functionality
+- Updated reqwest to 0.12, reqwest-middleware to 0.3 and http to 1.0
+
 ---
 
 ## [0.16.0] - 2024-03-11
