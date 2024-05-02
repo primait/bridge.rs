@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.16.1] - 2024-05-02
+
+### Changed
+
+- Added jwks_client_rs instead of reimplementing it's functionality
+- Updated reqwest to 0.12, reqwest-middleware to 0.3 and http to 1.0
+
+---
+
 ## [0.16.0] - 2024-03-11
 
 ### Added
@@ -338,7 +347,9 @@ The old API is still available but deprecated. It will be removed soon.
 
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.1...HEAD
+[0.16.1]: https://github.com/primait/bridge.rs/compare/0.16.0...0.16.1
 [0.16.0]: https://github.com/primait/bridge.rs/compare/0.15.1-rc.0...0.16.0
 [0.15.1]: https://github.com/primait/bridge.rs/compare/0.15.0...0.15.1
 [0.15.0]: https://github.com/primait/bridge.rs/compare/0.14.6...0.15.0
