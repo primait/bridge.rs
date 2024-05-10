@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.16.2] - 2024-05-10
+
+### Added
+
+- Support for opentelemetry 0.22
+- `tracing_opentelemetry_0_22` feature
+- `tracing_opentelemetry` is now an alias for the latest version of otel(so `tracing_opentelemetry_0_22`)
+
+Opentelemetry 0.20 or 0.21 support can be enabled by enabling the `tracing_opentelemetry_0_20` or `tracing_opentelemetry_0_21` features respectively instead of tracing_opentelemetry.
+
+---
+
 ## [0.16.1] - 2024-05-02
 
 ### Changed
@@ -348,7 +360,8 @@ The old API is still available but deprecated. It will be removed soon.
 
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.1...HEAD
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.2...HEAD
+[0.16.2]: https://github.com/primait/bridge.rs/compare/0.16.1...0.16.2
 [0.16.1]: https://github.com/primait/bridge.rs/compare/0.16.0...0.16.1
 [0.16.0]: https://github.com/primait/bridge.rs/compare/0.15.1-rc.0...0.16.0
 [0.15.1]: https://github.com/primait/bridge.rs/compare/0.15.0...0.15.1
