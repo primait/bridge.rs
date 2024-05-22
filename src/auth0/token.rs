@@ -104,10 +104,12 @@ impl Token {
     }
 }
 
+/// The successful response received from the authorization server containing the access token.
+/// Related [RFC](https://www.rfc-editor.org/rfc/rfc6749#section-5.1)
 #[derive(Deserialize, Serialize, Debug)]
 struct FetchTokenResponse {
     access_token: String,
-    scope: String,
+    scope: Option<String>,
     expires_in: i32,
     token_type: String,
 }
