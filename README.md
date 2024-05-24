@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/primait/bridge.rs/actions/workflows/ci.yml/badge.svg)](https://github.com/primait/bridge.rs)
+![Build Status](https://github.com/primait/bridge.rs/actions/workflows/ci.yml/badge.svg)
 
 # bridge.rs
 
