@@ -1,4 +1,4 @@
-[![Build Status](https://drone-1.prima.it/api/badges/primait/bridge.rs/status.svg)](https://drone-1.prima.it/primait/bridge.rs)
+[![Build Status](https://github.com/primait/bridge.rs/actions/workflows/ci.yml/badge.svg)](https://github.com/primait/bridge.rs)
 
 # bridge.rs
 
