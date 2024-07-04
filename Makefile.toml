@@ -19,11 +19,11 @@ args = ["fmt", "--", "--check"]
 
 [tasks.test]
 dependencies = [
-    "test-base", 
-    "test-auth0", 
-    "test-otel-0_20", 
-    "test-otel-0_21", 
-    "test-otel-0_22", 
+    "test-base",
+    "test-auth0",
+    "test-otel-0_20",
+    "test-otel-0_21",
+    "test-otel-0_22",
     "test-otel-0_23"
 ]
 
@@ -56,6 +56,34 @@ dependencies = ["build"]
 [tasks.clippy]
 command = "cargo"
 args = ["clippy", "--all-features", "--all-targets", "--", "-D", "warnings"]
+
+[tasks.deny-check]
+dependencies = [
+    "deny-check-otel-0_20",
+    "deny-check-otel-0_21",
+    "deny-check-otel-0_22",
+    "deny-check-otel-0_23"
+]
+
+[tasks.deny-check-otel-0_20]
+args = ["deny", "--no-default-features", "--features", "tracing_opentelemetry_0_20", "check"]
+command = "cargo"
+description = "Run cargo-deny with tracing_opentelemetry_0_20 feature"
+
+[tasks.deny-check-otel-0_21]
+args = ["deny", "--no-default-features", "--features", "tracing_opentelemetry_0_21", "check"]
+command = "cargo"
+description = "Run cargo-deny with tracing_opentelemetry_0_21 feature"
+
+[tasks.deny-check-otel-0_22]
+args = ["deny", "--no-default-features", "--features", "tracing_opentelemetry_0_22", "check"]
+command = "cargo"
+description = "Run cargo-deny with tracing_opentelemetry_0_22 feature"
+
+[tasks.deny-check-otel-0_23]
+args = ["deny", "--no-default-features", "--features", "tracing_opentelemetry_0_23", "check"]
+command = "cargo"
+description = "Run cargo-deny with tracing_opentelemetry_0_23 feature"
 
 [tasks.docs]
 description = "Build docs as they are rendered on docs.rs"

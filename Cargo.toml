@@ -11,12 +11,12 @@ version = "0.16.3"
 rust-version = "1.72"
 
 [features]
-default = ["tracing_opentelemetry"]
+default = []
 
 auth0 = ["rand", "redis", "jsonwebtoken", "jwks_client_rs", "chrono", "aes", "cbc", "dashmap", "tracing"]
 gzip = ["reqwest/gzip"]
 redis-tls = ["redis/tls", "redis/tokio-native-tls-comp"]
-tracing_opentelemetry = [ "tracing_opentelemetry_0_22" ]
+tracing_opentelemetry = [ "tracing_opentelemetry_0_23" ]
 
 tracing_opentelemetry_0_20 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_21_pkg", "opentelemetry_0_20_pkg"]
 tracing_opentelemetry_0_21 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_22_pkg", "opentelemetry_0_21_pkg", "opentelemetry_sdk_0_21_pkg"]
