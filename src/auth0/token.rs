@@ -137,6 +137,7 @@ impl From<&Config> for FetchTokenRequest {
 
 #[derive(Deserialize, Debug)]
 pub struct Claims {
+    #[allow(dead_code)]
     #[serde(default)]
     pub permissions: Vec<String>,
 }

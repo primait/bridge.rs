@@ -18,7 +18,14 @@ command = "cargo"
 args = ["fmt", "--", "--check"]
 
 [tasks.test]
-dependencies = ["test-base", "test-auth0", "test-otel-0_20", "test-otel-0_21", "test-otel-0_22"]
+dependencies = [
+    "test-base", 
+    "test-auth0", 
+    "test-otel-0_20", 
+    "test-otel-0_21", 
+    "test-otel-0_22", 
+    "test-otel-0_23"
+]
 
 [tasks.test-base]
 command = "cargo"
@@ -36,6 +43,10 @@ args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_
 [tasks.test-otel-0_22]
 command = "cargo"
 args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_22"]
+
+[tasks.test-otel-0_23]
+command = "cargo"
+args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_23"]
 
 [tasks.test-auth0]
 command = "cargo"

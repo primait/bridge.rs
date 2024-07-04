@@ -338,19 +338,23 @@ mod tests {
 
     #[derive(Deserialize)]
     pub struct VariablesSingle {
+        #[allow(dead_code)]
         pub input: InputSingle,
     }
 
     #[derive(Deserialize)]
     pub struct InputSingle {
+        #[allow(dead_code)]
         pub file: (),
     }
 
     #[derive(Deserialize)]
     pub struct VariablesMulti {
+        #[allow(dead_code)]
         pub input: InputMulti,
     }
 
+    #[allow(dead_code)]
     #[derive(Deserialize)]
     pub struct InputMulti {
         pub files: Vec<()>,
