@@ -3,9 +3,19 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+---
+
+## [0.16.4] - 2024-07-04
+
+### Added
+
+- Support for opentelemetry 0.23, now the default version.
+- `tracing_opentelemetry_0_23` feature
 
 ---
 
@@ -13,7 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- The authority server successful response might not include the `scope` field, that is now optional.
+- The authority server successful response might not include the `scope` field,
+  that is now optional.
 
 ---
 
@@ -23,9 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for opentelemetry 0.22
 - `tracing_opentelemetry_0_22` feature
-- `tracing_opentelemetry` is now an alias for the latest version of otel(so `tracing_opentelemetry_0_22`)
+- `tracing_opentelemetry` is now an alias for the latest version of otel(so
+  `tracing_opentelemetry_0_22`)
 
-Opentelemetry 0.20 or 0.21 support can be enabled by enabling the `tracing_opentelemetry_0_20` or `tracing_opentelemetry_0_21` features respectively instead of tracing_opentelemetry.
+Opentelemetry 0.20 or 0.21 support can be enabled by enabling the
+`tracing_opentelemetry_0_20` or `tracing_opentelemetry_0_21` features
+respectively instead of tracing_opentelemetry.
 
 ---
 
@@ -44,10 +58,13 @@ Opentelemetry 0.20 or 0.21 support can be enabled by enabling the `tracing_opent
 
 - Support for opentelemetry 0.21
 - `tracing_opentelemetry_0_20` and `tracing_opentelemetry_0_21` features
-- `tracing_opentelemetry` is now an alias for the latest version of otel(so `tracing_opentelemetry_0_21`)
+- `tracing_opentelemetry` is now an alias for the latest version of otel(so
+  `tracing_opentelemetry_0_21`)
 
-Opentelemetry 0.20 support can be enabled by enabling the `tracing_opentelemetry_0_20` feature instead of tracing_opentelemetry.
-We are going to support at least the last 3 versions of opentelemetry. After that we mightremove support for older otel version without it being a breaking change.
+Opentelemetry 0.20 support can be enabled by enabling the
+`tracing_opentelemetry_0_20` feature instead of tracing_opentelemetry. We are
+going to support at least the last 3 versions of opentelemetry. After that we
+mightremove support for older otel version without it being a breaking change.
 
 ---
 
@@ -55,7 +72,7 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### Added
 
-- `scope` for auth0 token request 
+- `scope` for auth0 token request
 
 ---
 
@@ -91,7 +108,8 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### Changed
 
-- Updates Auth0 token refresh logic to reduce the number of token renewals (#122)
+- Updates Auth0 token refresh logic to reduce the number of token renewals
+  (#122)
 
 ---
 
@@ -105,15 +123,18 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### Added
 
-- Introduced the new `redis-tls` feature that enables the tls authentication for the redis client
+- Introduced the new `redis-tls` feature that enables the tls authentication for
+  the redis client
 
 ## [0.14.1] - 2022-09-28
 
 ### Added
 
-- Reintroduced `{RestRequest, GraphQLRequest}.get_body` for public use.  
-  The method was publicly accessible before 0.14.0 but was undocumented and meant only for internal use.
-- Added `BridgeBuilder.with_redirect_policy` to specify how the Bridge should handle HTTP redirects
+- Reintroduced `{RestRequest, GraphQLRequest}.get_body` for public use.\
+  The method was publicly accessible before 0.14.0 but was undocumented and
+  meant only for internal use.
+- Added `BridgeBuilder.with_redirect_policy` to specify how the Bridge should
+  handle HTTP redirects
 
 ---
 
@@ -121,24 +142,35 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### Added
 
-- Added the ability to send files via REST multipart requests by using the new `RestRequest.multipart_body` method.  
+- Added the ability to send files via REST multipart requests by using the new
+  `RestRequest.multipart_body` method.\
   Refer to the example in the repository to see how to use the new APIs.
-- Added `{RestRequest, GraphQLRequest}.with_custom_header` to set a single custom header for a request
+- Added `{RestRequest, GraphQLRequest}.with_custom_header` to set a single
+  custom header for a request
 
 ### Changed
 
-- **(BREAKING)** `Multipart` has been renamed into `GraphQLMultipart` to avoid ambiguity with `RestMultipart`
-- `MultipartFile::new` now accepts anything that can be converted into a `Body` instead of just a `Vec<u8>`.  
-  This allows to provide the file content from a stream, which can be useful in case you want to send a file, but you don't want to load it in memory all at once.
-  - To better support this use case, a [tokio::fs::File](https://docs.rs/tokio/latest/tokio/fs/struct.File.html) can now be converted into a `Body` too
+- **(BREAKING)** `Multipart` has been renamed into `GraphQLMultipart` to avoid
+  ambiguity with `RestMultipart`
+- `MultipartFile::new` now accepts anything that can be converted into a `Body`
+  instead of just a `Vec<u8>`.\
+  This allows to provide the file content from a stream, which can be useful in
+  case you want to send a file, but you don't want to load it in memory all at
+  once.
+  - To better support this use case, a
+    [tokio::fs::File](https://docs.rs/tokio/latest/tokio/fs/struct.File.html)
+    can now be converted into a `Body` too
 - Reduced cloning and allocations throughout the library
 - Re-exported more types at the top level of the crate
 
 ### Removed
 
-- **(BREAKING)** `{RestRequest, GraphQLRequest}.add_custom_headers` and `set_custom_headers`: use `with_custom_headers` instead
-- `(GraphQL)Multipart.into_form`: it is a private API that wasn't meant to be exported publicly
-- `async` feature: it was enabled by default and disabling it caused compilation to break
+- **(BREAKING)** `{RestRequest, GraphQLRequest}.add_custom_headers` and
+  `set_custom_headers`: use `with_custom_headers` instead
+- `(GraphQL)Multipart.into_form`: it is a private API that wasn't meant to be
+  exported publicly
+- `async` feature: it was enabled by default and disabling it caused compilation
+  to break
 
 ---
 
@@ -154,7 +186,8 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### Changed
 
-- removed `block_modes` deprecated dependency in favour of the new `cbc` dependency
+- removed `block_modes` deprecated dependency in favour of the new `cbc`
+  dependency
 - broaden the dependency on uuid to support 1.x versions
 
 ---
@@ -163,19 +196,23 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### Removed
 
-- `blocking` feature. The library is now async only. (*breaking change*)
+- `blocking` feature. The library is now async only. (_breaking change_)
 - the old `new` and `with_user_agent` functions deprecated in 0.7.3
 
 ### Added
 
-- graphql multipart request as specified [here](https://github.com/jaydenseric/graphql-multipart-request-spec).
-- examples for rest, graphql, graphql multipart and generic request with auth0 authentication.
+- graphql multipart request as specified
+  [here](https://github.com/jaydenseric/graphql-multipart-request-spec).
+- examples for rest, graphql, graphql multipart and generic request with auth0
+  authentication.
 
 ---
 
 ## [0.11.0]
 
-- opentelemetry updated to version 0.17. **Careful!!!** The opentelemetry version in your project should match the one in this library (*breaking change*)
+- opentelemetry updated to version 0.17. **Careful!!!** The opentelemetry
+  version in your project should match the one in this library (_breaking
+  change_)
 - various dependency updates
 - removed log dependency, use tracing everywhere
 
@@ -210,14 +247,16 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ## [0.8.0]
 
-- added new function `with_auth0` in bridge builder. This enables jwt authentication to called endpoint.
+- added new function `with_auth0` in bridge builder. This enables jwt
+  authentication to called endpoint.
 
 ---
 
 ## [0.7.3]
 
 - deprecated the `new` and `with_user_agent` functions in favor of a builder
-- opentelemetry updated to version 0.16. **Careful!!!** The opentelemetry version in your project should match the one in this library
+- opentelemetry updated to version 0.16. **Careful!!!** The opentelemetry
+  version in your project should match the one in this library
 - several dependencies updated
 - docker file based on Rust 1.54
 
@@ -228,7 +267,8 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 ### features
 
 - fixes the double header issue (#17)
-- adds support for the ```gzip``` feature, which decompress the response content based on the content-type header
+- adds support for the `gzip` feature, which decompress the response content
+  based on the content-type header
 - proper handling of graphql errors with a new `ParsedGraphqlResponse` type
 - adds ability to specify a request timeout
 
@@ -238,7 +278,8 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### breaking change
 
-- opentelemetry updated to version 0.13. **Careful!!!** The opentelemetry version in your project should match the one in this library
+- opentelemetry updated to version 0.13. **Careful!!!** The opentelemetry
+  version in your project should match the one in this library
 - several dependencies updated
 - docker file based on Rust 1.51
 
@@ -248,7 +289,8 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### breaking change
 
-- opentelemetry updated to version 0.12. **Careful!!!** The opentelemetry version in your project should match the one in this library
+- opentelemetry updated to version 0.12. **Careful!!!** The opentelemetry
+  version in your project should match the one in this library
 - several dependencies updated
 
 ### bugfix
@@ -277,8 +319,11 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### breaking change
 
-- opentelemetry updated to version 0.11. **Careful!!!** The opentelemetry version in your project should match the one in this library
-- tracing-opentelemetry updated to version 0.10. **Careful!!!** The tracing-opentelemetry version in your project should match the one in this library
+- opentelemetry updated to version 0.11. **Careful!!!** The opentelemetry
+  version in your project should match the one in this library
+- tracing-opentelemetry updated to version 0.10. **Careful!!!** The
+  tracing-opentelemetry version in your project should match the one in this
+  library
 
 ---
 
@@ -294,7 +339,8 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### breaking change
 
-- opentelemetry updated to version 0.10.0. **Careful!!!** The opentelemetry version in your project should match the one in this library
+- opentelemetry updated to version 0.10.0. **Careful!!!** The opentelemetry
+  version in your project should match the one in this library
 
 ---
 
@@ -302,11 +348,13 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### features
 
-- adds support for raw body response ([PR #21](https://github.com/primait/bridge.rs/pull/21))
+- adds support for raw body response
+  ([PR #21](https://github.com/primait/bridge.rs/pull/21))
 
 ### breaking change
 
-- removed the bridge.request api (deprecated) in favor of `Request::get` or `RestRequest::new` and `GraphQLRequest::new` functions.
+- removed the bridge.request api (deprecated) in favor of `Request::get` or
+  `RestRequest::new` and `GraphQLRequest::new` functions.
 
 ---
 
@@ -346,7 +394,8 @@ We are going to support at least the last 3 versions of opentelemetry. After tha
 
 ### features
 
-- adds the ability to use a binary as the body of a request. The api has changed:
+- adds the ability to use a binary as the body of a request. The api has
+  changed:
 
 **before**
 
@@ -364,9 +413,6 @@ Request::rest(&bridge).send()
 ```
 
 The old API is still available but deprecated. It will be removed soon.
-
-
-
 
 [Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.3...HEAD
 [0.16.3]: https://github.com/primait/bridge.rs/compare/0.16.2...0.16.2
