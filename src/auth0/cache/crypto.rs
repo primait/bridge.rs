@@ -1,35 +1,37 @@
-use aes::{
-    cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit},
-    Aes256,
-};
-use cbc::{Decryptor, Encryptor};
+use chacha20poly1305::{aead::Aead, AeadCore, KeyInit, XChaCha20Poly1305};
+use rand::thread_rng;
 use serde::{Deserialize, Serialize};
 
 use crate::auth0::errors::Auth0Error;
 
-type Aes256Enc = Encryptor<Aes256>;
-type Aes256Dec = Decryptor<Aes256>;
-
-const IV: &str = "301a9e39735f4646";
+const NONCE_SIZE: usize = 24;
 
 pub fn encrypt<T: Serialize>(value_ref: &T, token_encryption_key_str: &str) -> Result<Vec<u8>, Auth0Error> {
     let json: String = serde_json::to_string(value_ref)?;
 
-    let ct = Aes256Enc::new(token_encryption_key_str.as_bytes().into(), IV.as_bytes().into())
-        .encrypt_padded_vec_mut::<Pkcs7>(json.as_bytes());
+    let enc = XChaCha20Poly1305::new_from_slice(token_encryption_key_str.as_bytes()).unwrap();
+    let nonce = XChaCha20Poly1305::generate_nonce(&mut thread_rng());
 
-    Ok(ct.to_vec())
+    let mut ciphertext = enc.encrypt(&nonce, json.as_bytes())?;
+    ciphertext.extend(nonce);
+
+    Ok(ciphertext)
 }
 
 pub fn decrypt<T>(token_encryption_key_str: &str, encrypted: &[u8]) -> Result<T, Auth0Error>
 where
     for<'de> T: Deserialize<'de>,
 {
-    // `unwrap` here is fine because `IV` is set here and the only error returned is: `InvalidKeyIvLength`
-    // and this must never happen
-    let pt = Aes256Dec::new(token_encryption_key_str.as_bytes().into(), IV.as_bytes().into())
-        .decrypt_padded_vec_mut::<Pkcs7>(encrypted)
-        .unwrap();
+    let dec = XChaCha20Poly1305::new_from_slice(token_encryption_key_str.as_bytes()).unwrap();
+    
+    let ciphertext = encrypted.get(..encrypted.len()-NONCE_SIZE);
+    let nonce = encrypted.get(encrypted.len()-NONCE_SIZE..);
 
-    Ok(serde_json::from_slice(&pt)?)
+    let (Some(ciphertext), Some(nonce)) = (ciphertext, nonce) else {
+        return Err(Auth0Error::CryptoError(chacha20poly1305::Error));
+    };
+
+    let nonce = chacha20poly1305::XNonce::from_slice(nonce);
+    let plaintext = dec.decrypt(nonce, ciphertext)?;
+    Ok(serde_json::from_slice(&plaintext)?)
 }

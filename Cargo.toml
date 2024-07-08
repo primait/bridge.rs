@@ -13,7 +13,7 @@ rust-version = "1.72"
 [features]
 default = ["tracing_opentelemetry"]
 
-auth0 = ["rand", "redis", "jsonwebtoken", "jwks_client_rs", "chrono", "aes", "cbc", "dashmap", "tracing"]
+auth0 = ["rand", "redis", "jsonwebtoken", "jwks_client_rs", "chrono", "chacha20poly1305", "dashmap", "tracing"]
 gzip = ["reqwest/gzip"]
 redis-tls = ["redis/tls", "redis/tokio-native-tls-comp"]
 tracing_opentelemetry = [ "tracing_opentelemetry_0_23" ]
@@ -26,10 +26,8 @@ tracing_opentelemetry_0_23 = ["_any_otel_version", "tracing", "tracing-opentelem
 _any_otel_version = []
 
 [dependencies]
-aes = {version = "0.8", optional = true}
 async-trait = "0.1"
 bytes = "1.2"
-cbc = {version = "0.1", features = ["std"], optional = true}
 chrono = {version = "0.4", default-features = false, features = ["clock", "std", "serde"], optional = true}
 dashmap = {version = "6.0", optional = true}
 futures = "0.3"
@@ -45,6 +43,7 @@ thiserror = "1.0"
 tokio = {version = "1.16", features = ["macros", "rt-multi-thread", "fs"]}
 tracing = {version = "0.1", optional = true}
 uuid = {version = ">=0.7.0, <2.0.0", features = ["serde", "v4"]}
+chacha20poly1305 = { version = "0.10.1", features = ["std"], optional = true }
 
 reqwest-middleware = { version = "0.3.0", features = ["json", "multipart"] }
 http = "1.0.0"
