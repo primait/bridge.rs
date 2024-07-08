@@ -23,9 +23,9 @@ where
     for<'de> T: Deserialize<'de>,
 {
     let dec = XChaCha20Poly1305::new_from_slice(token_encryption_key_str.as_bytes()).unwrap();
-    
-    let ciphertext = encrypted.get(..encrypted.len()-NONCE_SIZE);
-    let nonce = encrypted.get(encrypted.len()-NONCE_SIZE..);
+
+    let ciphertext = encrypted.get(..encrypted.len() - NONCE_SIZE);
+    let nonce = encrypted.get(encrypted.len() - NONCE_SIZE..);
 
     let (Some(ciphertext), Some(nonce)) = (ciphertext, nonce) else {
         return Err(Auth0Error::CryptoError(chacha20poly1305::Error));

@@ -53,7 +53,7 @@ impl Cache for RedisCache {
         let mut connection = self.client.get_async_connection().await?;
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
         let expiration: usize = value_ref.lifetime_in_seconds();
-        connection.set_ex(key, encrypted_value, expiration).await?;
+        let _: () = connection.set_ex(key, encrypted_value, expiration).await?;
         Ok(())
     }
 }
