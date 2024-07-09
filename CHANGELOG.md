@@ -12,7 +12,7 @@ and this project adheres to
 
 - Switched to using XChaCha20Poly1305 for the redis token cache encryption.
 
-This addresses many a few medium severity security issues with the tokens
+This addresses a few medium severity security issues with the tokens
 
 ---
 
