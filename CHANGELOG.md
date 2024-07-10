@@ -16,8 +16,8 @@ and this project adheres to
 
 - Switched to using XChaCha20Poly1305 for the redis token cache encryption.
 
-This addresses a few medium severity security issues with the tokens. 
-Note that this means the token cache is incompatible with old versions of the library.
+This addresses a few medium severity security issues with the tokens. Note that
+this means the token cache is incompatible with old versions of the library.
 
 ---
 
@@ -424,7 +424,6 @@ Request::rest(&bridge).send()
 ```
 
 The old API is still available but deprecated. It will be removed soon.
-
 
 [Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.5...HEAD
 [0.16.5]: https://github.com/primait/bridge.rs/compare/0.16.4...0.16.5
