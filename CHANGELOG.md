@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Security
+
+- Switched to using XChaCha20Poly1305 for the redis token cache encryption.
+
+This addresses a few medium severity security issues with the tokens
+
 ---
 
 ## [0.16.4] - 2024-07-04

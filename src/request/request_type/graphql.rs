@@ -60,7 +60,7 @@ impl<'a, Client: BridgeClient> GraphQLRequest<'a, Client> {
     ) -> PrimaBridgeResult<Self> {
         // No content-type here because Form set it at `multipart/form-data` with extra params for
         // disposition
-        let json_body = serde_json::to_value(&graphql_body.into())?;
+        let json_body = serde_json::to_value(graphql_body.into())?;
         let body_with_injected_variables = match &multipart {
             GraphQLMultipart::Single(single) => {
                 let path: VecDeque<&str> = single.path.split('.').collect();
