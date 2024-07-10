@@ -17,7 +17,7 @@ and this project adheres to
 - Switched to using XChaCha20Poly1305 for the redis token cache encryption.
 
 This addresses a few medium severity security issues with the tokens.
-Note that this means that this, and future versions of the library cannot be used at the same time as older verisons.
+Note that this means that this, and future versions of the library cannot be used at the same time as older versions.
 
 ---
 
