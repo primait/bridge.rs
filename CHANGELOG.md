@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Removed
+
+- The library no longer validates tokens after recieving them from auth0
+
+This was unneccessary, already wasn't done in some code paths, and as a bonus let us remove a dependency.
+
 ### Changed
 
 - When first creating the client if bridge.rs fails to decrypt a cached token a warning will be logged, and a new token will be fetched
