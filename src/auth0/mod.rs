@@ -14,7 +14,6 @@ pub use errors::Auth0Error;
 use util::ResultExt;
 
 use crate::auth0::cache::Cache;
-use crate::auth0::token::Claims;
 pub use crate::auth0::token::Token;
 
 mod cache;
@@ -89,15 +88,8 @@ async fn start(
             if token.needs_refresh(&config) {
                 tracing::info!("Refreshing JWT and JWKS");
 
-                match Token::fetch(&client, &config).await {
+                match fetch_and_update_token(&client, &cache, &config).await {
                     Ok(token) => {
-                        let is_signed: bool = jwks_client
-                            .decode::<Claims>(token.as_str(), &[config.audience()])
-                            .await
-                            .is_ok();
-                        tracing::info!("is signed: {}", is_signed);
-
-                        let _ = cache.put_token(&token).await.log_err("Error caching JWT");
                         write(&token_lock, token);
                     }
                     Err(error) => tracing::error!("Failed to fetch JWT. Reason: {:?}", error),
@@ -111,15 +103,27 @@ async fn start(
 
 // Try to fetch the token from cache. If it's found return it; fetch from auth0 and put in cache otherwise
 async fn get_token(client_ref: &Client, cache_ref: &Arc<dyn Cache>, config_ref: &Config) -> Result<Token, Auth0Error> {
-    match cache_ref.get_token().await? {
-        Some(token) => Ok(token),
-        None => {
-            let token: Token = Token::fetch(client_ref, config_ref).await?;
-            let _ = cache_ref.put_token(&token).await.log_err("JWT cache set failed");
-
-            Ok(token)
+    match cache_ref.get_token().await {
+        Ok(Some(token)) => Ok(token),
+        Ok(None) => fetch_and_update_token(client_ref, cache_ref, config_ref).await,
+        Err(Auth0Error::CryptoError(e)) => {
+            tracing::warn!("Crypto error({}) when attempting to decrypt cached token. Ignoring", e);
+            fetch_and_update_token(client_ref, cache_ref, config_ref).await
         }
+        Err(e) => Err(e),
     }
+}
+
+// Unconditionally fetch a new token and update the cache
+async fn fetch_and_update_token(
+    client_ref: &Client,
+    cache_ref: &Arc<dyn Cache>,
+    config_ref: &Config,
+) -> Result<Token, Auth0Error> {
+    let token: Token = Token::fetch(client_ref, config_ref).await?;
+    let _ = cache_ref.put_token(&token).await.log_err("JWT cache set failed");
+
+    Ok(token)
 }
 
 fn read<T: Clone>(lock_ref: &Arc<RwLock<T>>) -> T {
