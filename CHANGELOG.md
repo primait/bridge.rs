@@ -8,6 +8,18 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- The cache key now contains a cache version, allowing it's schema to be updated in the future
+
+From now on cache keys will use the following format:
+
+`auth0rs_tokens:{caller}:{token_version}:{audience}"`
+
+eg.
+
+`auth0rs_tokens:wingman:2:galactus"`
+
 ---
 
 ## [0.16.5] - 2024-07-10
