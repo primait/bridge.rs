@@ -1,10 +1,7 @@
 //! Stuff used to provide JWT authentication via Auth0
 
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::time::Duration;
 
-use jwks_client_rs::source::WebSource;
-use jwks_client_rs::JwksClient;
 use reqwest::Client;
 use tokio::task::JoinHandle;
 use tokio::time::Interval;
@@ -35,25 +32,10 @@ impl Auth0 {
             Arc::new(cache::RedisCache::new(&config).await?)
         };
 
-        let source: WebSource = WebSource::builder()
-            .with_timeout(Duration::from_secs(5))
-            .with_connect_timeout(Duration::from_secs(55))
-            .build(config.jwks_url().to_owned())
-            .map_err(|err| Auth0Error::JwksHttpError(config.token_url().as_str().to_string(), err))?;
-
-        let jwks_client = JwksClient::builder().build(source);
         let token: Token = get_token(client_ref, &cache, &config).await?;
-
         let token_lock: Arc<RwLock<Token>> = Arc::new(RwLock::new(token));
 
-        start(
-            token_lock.clone(),
-            jwks_client.clone(),
-            client_ref.clone(),
-            cache.clone(),
-            config,
-        )
-        .await;
+        start(token_lock.clone(), client_ref.clone(), cache.clone(), config).await;
 
         Ok(Self { token_lock })
     }
@@ -65,7 +47,6 @@ impl Auth0 {
 
 async fn start(
     token_lock: Arc<RwLock<Token>>,
-    jwks_client: JwksClient<WebSource>,
     client: Client,
     cache: Arc<dyn Cache>,
     config: Config,
