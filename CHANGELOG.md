@@ -10,6 +10,10 @@ and this project adheres to
 
 ### Changed
 
+- When first creating the client if bridge.rs fails to decrypt a cached token a warning will be logged, and a new token will be fetched
+
+This behavior matches what happens when a token is automatically refreshed during the applications runtime, and should help address issues that might come up in the future.
+
 - The cache key now contains a cache version, allowing it's schema to be updated in the future
 
 From now on cache keys will use the following format:
