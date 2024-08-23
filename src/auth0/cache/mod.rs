@@ -9,6 +9,8 @@ mod inmemory;
 mod redis_impl;
 
 const TOKEN_PREFIX: &str = "auth0rs_tokens";
+// The version of the token for backwards incompatible changes
+const TOKEN_VERSION: &str = "2";
 
 #[async_trait::async_trait]
 pub trait Cache: Send + Sync + std::fmt::Debug {
@@ -18,5 +20,5 @@ pub trait Cache: Send + Sync + std::fmt::Debug {
 }
 
 pub(in crate::auth0::cache) fn token_key(caller: &str, audience: &str) -> String {
-    format!("{}:{}:{}", TOKEN_PREFIX, caller, audience)
+    format!("{}:{}:{}:{}", TOKEN_PREFIX, caller, TOKEN_VERSION, audience)
 }

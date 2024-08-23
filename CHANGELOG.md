@@ -10,6 +10,32 @@ and this project adheres to
 
 ---
 
+## [0.16.6] - 2024-08-23
+
+### Removed
+
+- The library no longer validates tokens after recieving them from auth0
+
+This was unneccessary, already wasn't done in some code paths, and as a bonus let us remove a dependency.
+
+### Changed
+
+- When first creating the client if bridge.rs fails to decrypt a cached token a warning will be logged, and a new token will be fetched
+
+This behavior matches what happens when a token is automatically refreshed during the applications runtime, and should help address issues that might come up in the future.
+
+- The cache key now contains a cache version, allowing it's schema to be updated in the future
+
+From now on cache keys will use the following format:
+
+`auth0rs_tokens:{caller}:{token_version}:{audience}"`
+
+eg.
+
+`auth0rs_tokens:wingman:2:galactus"`
+
+---
+
 ## [0.16.5] - 2024-07-10
 
 ### Security
@@ -425,7 +451,9 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.5...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.6...HEAD
+[0.16.6]: https://github.com/primait/bridge.rs/compare/0.16.5...0.16.6
 [0.16.5]: https://github.com/primait/bridge.rs/compare/0.16.4...0.16.5
 [0.16.3]: https://github.com/primait/bridge.rs/compare/0.16.2...0.16.2
 [0.16.2]: https://github.com/primait/bridge.rs/compare/0.16.1...0.16.2

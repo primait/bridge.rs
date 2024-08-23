@@ -10,8 +10,6 @@ pub enum Auth0Error {
     JwtFetchError(u16, String, reqwest::Error),
     #[error("failed to deserialize jwt from {0}. {1}")]
     JwtFetchDeserializationError(String, reqwest::Error),
-    #[error(transparent)]
-    JwksClientError(#[from] jwks_client_rs::JwksClientError),
     #[error("failed to fetch jwt from {0}. Status code: {0}; error: {1}")]
     JwksHttpError(String, reqwest::Error),
     #[error("redis error: {0}")]
