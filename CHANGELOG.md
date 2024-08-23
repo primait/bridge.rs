@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+---
+
+## [0.16.6] - 2024-08-23
+
 ### Removed
 
 - The library no longer validates tokens after recieving them from auth0
@@ -447,7 +451,9 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.5...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.6...HEAD
+[0.16.6]: https://github.com/primait/bridge.rs/compare/0.16.5...0.16.6
 [0.16.5]: https://github.com/primait/bridge.rs/compare/0.16.4...0.16.5
 [0.16.3]: https://github.com/primait/bridge.rs/compare/0.16.2...0.16.2
 [0.16.2]: https://github.com/primait/bridge.rs/compare/0.16.1...0.16.2
