@@ -130,7 +130,7 @@ description = "Run cargo-deny with tracing_opentelemetry_0_23 feature"
 [tasks.docs]
 description = "Build docs as they are rendered on docs.rs"
 command = "cargo"
-args = ["doc", "--document-private-items", "--all-features", "--no-deps"]
+args = ["doc", "--document-private-items", "--features=auth0,gzip", "--no-deps"]
 env = { "RUSTDOCFLAGS" = "-Dwarnings" }
 
 [tasks.release]
