@@ -10,6 +10,14 @@ and this project adheres to
 
 ---
 
+## [0.16.6] - 2024-09-05
+
+### Added
+
+- Support for opentelemetry 0.24, now the default version.
+
+---
+
 ## [0.16.6] - 2024-08-23
 
 ### Removed
@@ -24,7 +32,7 @@ This was unneccessary, already wasn't done in some code paths, and as a bonus le
 
 This behavior matches what happens when a token is automatically refreshed during the applications runtime, and should help address issues that might come up in the future.
 
-- The cache key now contains a cache version, allowing it's schema to be updated in the future
+- The cache key now contains a cache version, allowing its schema to be updated in the future
 
 From now on cache keys will use the following format:
 
