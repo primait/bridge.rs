@@ -24,12 +24,18 @@ dependencies = [
     "test-otel-0_20",
     "test-otel-0_21",
     "test-otel-0_22",
-    "test-otel-0_23"
+    "test-otel-0_23",
+    "test-otel-0_24"
 ]
 
 [tasks.test-base]
 command = "cargo"
 args = ["test", "--features", "gzip", "${@}"]
+dependencies = ["build"]
+
+[tasks.test-auth0]
+command = "cargo"
+args = ["test", "--features=auth0,gzip", "${@}"]
 dependencies = ["build"]
 
 [tasks.test-otel-0_20]
@@ -48,14 +54,50 @@ args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_
 command = "cargo"
 args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_23"]
 
-[tasks.test-auth0]
+[tasks.test-otel-0_24]
 command = "cargo"
-args = ["test", "--features=auth0,gzip", "${@}"]
-dependencies = ["build"]
+args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_24"]
 
 [tasks.clippy]
+dependencies = [
+    "clippy-base",
+    "clippy-auth0",
+    "clippy-otel-0_20",
+    "clippy-otel-0_21",
+    "clippy-otel-0_22",
+    "clippy-otel-0_23",
+    "clippy-otel-0_24"
+]
+
+[tasks.clippy-base]
 command = "cargo"
-args = ["clippy", "--all-features", "--all-targets", "--", "-D", "warnings"]
+args = ["clippy", "--features", "gzip", "--all-targets", "--", "-D", "warnings"]
+dependencies = ["build"]
+
+[tasks.clippy-auth0]
+command = "cargo"
+args = ["clippy", "--features=auth0,gzip", "--all-targets", "--", "-D", "warnings"]
+dependencies = ["build"]
+
+[tasks.clippy-otel-0_20]
+command = "cargo"
+args = ["clippy", "--no-default-features", "--features", "tracing_opentelemetry_0_20", "--all-targets", "--", "-D", "warnings"]
+
+[tasks.clippy-otel-0_21]
+command = "cargo"
+args = ["clippy", "--no-default-features", "--features", "tracing_opentelemetry_0_21", "--all-targets", "--", "-D", "warnings"]
+
+[tasks.clippy-otel-0_22]
+command = "cargo"
+args = ["clippy", "--no-default-features", "--features", "tracing_opentelemetry_0_22", "--all-targets", "--", "-D", "warnings"]
+
+[tasks.clippy-otel-0_23]
+command = "cargo"
+args = ["clippy", "--no-default-features", "--features", "tracing_opentelemetry_0_23", "--all-targets", "--", "-D", "warnings"]
+
+[tasks.clippy-otel-0_24]
+command = "cargo"
+args = ["clippy", "--no-default-features", "--features", "tracing_opentelemetry_0_24", "--all-targets", "--", "-D", "warnings"]
 
 [tasks.deny-check]
 dependencies = [
@@ -88,7 +130,7 @@ description = "Run cargo-deny with tracing_opentelemetry_0_23 feature"
 [tasks.docs]
 description = "Build docs as they are rendered on docs.rs"
 command = "cargo"
-args = ["doc", "--document-private-items", "--all-features", "--no-deps"]
+args = ["doc", "--document-private-items", "--features=auth0,gzip", "--no-deps"]
 env = { "RUSTDOCFLAGS" = "-Dwarnings" }
 
 [tasks.release]

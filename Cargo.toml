@@ -6,7 +6,7 @@ license = "MIT"
 name = "prima_bridge"
 readme = "README.md"
 repository = "https://github.com/primait/bridge.rs"
-version = "0.16.6"
+version = "0.16.7"
 # See https://github.com/rust-lang/rust/issues/107557
 rust-version = "1.72"
 
@@ -16,12 +16,13 @@ default = ["tracing_opentelemetry"]
 auth0 = ["rand", "redis", "jsonwebtoken", "chrono", "chacha20poly1305", "dashmap", "tracing"]
 gzip = ["reqwest/gzip"]
 redis-tls = ["redis/tls", "redis/tokio-native-tls-comp"]
-tracing_opentelemetry = [ "tracing_opentelemetry_0_23" ]
+tracing_opentelemetry = [ "tracing_opentelemetry_0_24" ]
 
 tracing_opentelemetry_0_20 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_21_pkg", "opentelemetry_0_20_pkg"]
 tracing_opentelemetry_0_21 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_22_pkg", "opentelemetry_0_21_pkg", "opentelemetry_sdk_0_21_pkg"]
 tracing_opentelemetry_0_22 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_23_pkg", "opentelemetry_0_22_pkg", "opentelemetry_sdk_0_22_pkg"]
 tracing_opentelemetry_0_23 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_24_pkg", "opentelemetry_0_23_pkg", "opentelemetry_sdk_0_23_pkg"]
+tracing_opentelemetry_0_24 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_25_pkg", "opentelemetry_0_24_pkg", "opentelemetry_sdk_0_24_pkg"]
 
 _any_otel_version = []
 
@@ -51,13 +52,16 @@ opentelemetry_0_20_pkg = { package = "opentelemetry", version = "0.20", optional
 opentelemetry_0_21_pkg = { package = "opentelemetry", version = "0.21", optional = true }
 opentelemetry_0_22_pkg = { package = "opentelemetry", version = "0.22", optional = true }
 opentelemetry_0_23_pkg = { package = "opentelemetry", version = "0.23", optional = true }
+opentelemetry_0_24_pkg = { package = "opentelemetry", version = "0.24", optional = true }
 opentelemetry_sdk_0_21_pkg = { package = "opentelemetry_sdk", version = "0.21", optional = true }
 opentelemetry_sdk_0_22_pkg = { package = "opentelemetry_sdk", version = "0.22", optional = true }
 opentelemetry_sdk_0_23_pkg = { package = "opentelemetry_sdk", version = "0.23", optional = true }
+opentelemetry_sdk_0_24_pkg = { package = "opentelemetry_sdk", version = "0.24", optional = true }
 tracing-opentelemetry_0_21_pkg = { package = "tracing-opentelemetry", version = "0.21", optional = true }
 tracing-opentelemetry_0_22_pkg = { package = "tracing-opentelemetry", version = "0.22", optional = true }
 tracing-opentelemetry_0_23_pkg = { package = "tracing-opentelemetry", version = "0.23", optional = true }
 tracing-opentelemetry_0_24_pkg = { package = "tracing-opentelemetry", version = "0.24", optional = true }
+tracing-opentelemetry_0_25_pkg = { package = "tracing-opentelemetry", version = "0.25", optional = true }
 
 [dev-dependencies]
 flate2 = "1.0"
