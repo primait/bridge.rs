@@ -10,6 +10,14 @@ and this project adheres to
 
 ---
 
+## [0.17.0] - 2024-09-27
+
+### Added
+
+- Support for opentelemetry 0.25, now the default version.
+
+---
+
 ## [0.16.6] - 2024-09-05
 
 ### Added
@@ -460,7 +468,8 @@ Request::rest(&bridge).send()
 The old API is still available but deprecated. It will be removed soon.
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.16.6...HEAD
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.17.0...HEAD
+[0.17.0]: https://github.com/primait/bridge.rs/compare/0.16.6...0.17.0
 [0.16.6]: https://github.com/primait/bridge.rs/compare/0.16.5...0.16.6
 [0.16.5]: https://github.com/primait/bridge.rs/compare/0.16.4...0.16.5
 [0.16.3]: https://github.com/primait/bridge.rs/compare/0.16.2...0.16.2
