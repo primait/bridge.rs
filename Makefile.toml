@@ -25,7 +25,9 @@ dependencies = [
     "test-otel-0_21",
     "test-otel-0_22",
     "test-otel-0_23",
-    "test-otel-0_24"
+    "test-otel-0_24",
+    "test-otel-0_25",
+    "test-otel-0_26"
 ]
 
 [tasks.test-base]
@@ -57,6 +59,14 @@ args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_
 [tasks.test-otel-0_24]
 command = "cargo"
 args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_24"]
+
+[tasks.test-otel-0_25]
+command = "cargo"
+args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_25"]
+
+[tasks.test-otel-0_26]
+command = "cargo"
+args = ["test", "--no-default-features", "--features", "tracing_opentelemetry_0_26"]
 
 [tasks.clippy]
 dependencies = [
