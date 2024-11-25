@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+---
+
+## [0.19.0] - 2024-11-25
+
 ### Added
 
 - Support for the option `pool_idle_timeout` in the client builder
@@ -483,7 +487,9 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.18.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.19.0...HEAD
+[0.19.0]: https://github.com/primait/bridge.rs/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/primait/bridge.rs/compare/0.17.0...0.18.0
 [0.17.0]: https://github.com/primait/bridge.rs/compare/0.16.6...0.17.0
 [0.16.6]: https://github.com/primait/bridge.rs/compare/0.16.5...0.16.6
