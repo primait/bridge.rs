@@ -13,44 +13,90 @@ rust-version = "1.72"
 [features]
 default = ["tracing_opentelemetry"]
 
-auth0 = ["rand", "redis", "jsonwebtoken", "chrono", "chacha20poly1305", "dashmap", "tracing"]
+auth0 = [
+  "rand",
+  "redis",
+  "jsonwebtoken",
+  "chrono",
+  "chacha20poly1305",
+  "dashmap",
+  "tracing",
+]
 gzip = ["reqwest/gzip"]
 redis-tls = ["redis/tls", "redis/tokio-native-tls-comp"]
-tracing_opentelemetry = [ "tracing_opentelemetry_0_26" ]
+tracing_opentelemetry = ["tracing_opentelemetry_0_26"]
 
-tracing_opentelemetry_0_20 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_21_pkg", "opentelemetry_0_20_pkg"]
-tracing_opentelemetry_0_21 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_22_pkg", "opentelemetry_0_21_pkg", "opentelemetry_sdk_0_21_pkg"]
-tracing_opentelemetry_0_22 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_23_pkg", "opentelemetry_0_22_pkg", "opentelemetry_sdk_0_22_pkg"]
-tracing_opentelemetry_0_23 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_24_pkg", "opentelemetry_0_23_pkg", "opentelemetry_sdk_0_23_pkg"]
-tracing_opentelemetry_0_24 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_25_pkg", "opentelemetry_0_24_pkg", "opentelemetry_sdk_0_24_pkg"]
-tracing_opentelemetry_0_25 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_26_pkg", "opentelemetry_0_25_pkg", "opentelemetry_sdk_0_25_pkg"]
-tracing_opentelemetry_0_26 = ["_any_otel_version", "tracing", "tracing-opentelemetry_0_27_pkg", "opentelemetry_0_26_pkg", "opentelemetry_sdk_0_26_pkg"]
+tracing_opentelemetry_0_21 = [
+  "_any_otel_version",
+  "tracing",
+  "tracing-opentelemetry_0_22_pkg",
+  "opentelemetry_0_21_pkg",
+  "opentelemetry_sdk_0_21_pkg",
+]
+tracing_opentelemetry_0_22 = [
+  "_any_otel_version",
+  "tracing",
+  "tracing-opentelemetry_0_23_pkg",
+  "opentelemetry_0_22_pkg",
+  "opentelemetry_sdk_0_22_pkg",
+]
+tracing_opentelemetry_0_23 = [
+  "_any_otel_version",
+  "tracing",
+  "tracing-opentelemetry_0_24_pkg",
+  "opentelemetry_0_23_pkg",
+  "opentelemetry_sdk_0_23_pkg",
+]
+tracing_opentelemetry_0_24 = [
+  "_any_otel_version",
+  "tracing",
+  "tracing-opentelemetry_0_25_pkg",
+  "opentelemetry_0_24_pkg",
+  "opentelemetry_sdk_0_24_pkg",
+]
+tracing_opentelemetry_0_25 = [
+  "_any_otel_version",
+  "tracing",
+  "tracing-opentelemetry_0_26_pkg",
+  "opentelemetry_0_25_pkg",
+  "opentelemetry_sdk_0_25_pkg",
+]
+tracing_opentelemetry_0_26 = [
+  "_any_otel_version",
+  "tracing",
+  "tracing-opentelemetry_0_27_pkg",
+  "opentelemetry_0_26_pkg",
+  "opentelemetry_sdk_0_26_pkg",
+]
 
 _any_otel_version = []
 
 [dependencies]
 async-trait = "0.1"
 bytes = "1.2"
-chrono = {version = "0.4", default-features = false, features = ["clock", "std", "serde"], optional = true}
-dashmap = {version = "6.0", optional = true}
+chrono = { version = "0.4", default-features = false, features = [
+  "clock",
+  "std",
+  "serde",
+], optional = true }
+dashmap = { version = "6.0", optional = true }
 futures = "0.3"
 futures-util = "0.3"
-jsonwebtoken = {version = "9.0", optional = true}
-rand = {version = "0.8", optional = true}
-redis = {version = "0.27", features = ["tokio-comp"], optional = true}
-reqwest = {version = "0.12", features = ["json", "multipart", "stream"]}
-serde = {version = "1.0", features = ["derive"]}
+jsonwebtoken = { version = "9.0", optional = true }
+rand = { version = "0.8", optional = true }
+redis = { version = "0.27", features = ["tokio-comp"], optional = true }
+reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "1.0"
-tokio = {version = "1.16", features = ["macros", "rt-multi-thread", "fs"]}
-tracing = {version = "0.1", optional = true}
-uuid = {version = ">=0.7.0, <2.0.0", features = ["serde", "v4"]}
+tokio = { version = "1.16", features = ["macros", "rt-multi-thread", "fs"] }
+tracing = { version = "0.1", optional = true }
+uuid = { version = ">=0.7.0, <2.0.0", features = ["serde", "v4"] }
 chacha20poly1305 = { version = "0.10.1", features = ["std"], optional = true }
 
 reqwest-middleware = { version = "0.3.0", features = ["json", "multipart"] }
 http = "1.0.0"
 
-opentelemetry_0_20_pkg = { package = "opentelemetry", version = "0.20", optional = true }
 opentelemetry_0_21_pkg = { package = "opentelemetry", version = "0.21", optional = true }
 opentelemetry_0_22_pkg = { package = "opentelemetry", version = "0.22", optional = true }
 opentelemetry_0_23_pkg = { package = "opentelemetry", version = "0.23", optional = true }
@@ -74,7 +120,7 @@ tracing-opentelemetry_0_27_pkg = { package = "tracing-opentelemetry", version = 
 [dev-dependencies]
 flate2 = "1.0"
 mockito = "1.0"
-tokio = {version = "1.16", features = ["macros", "rt-multi-thread"]}
+tokio = { version = "1.16", features = ["macros", "rt-multi-thread"] }
 tokio-test = "0.4"
 
 [profile.release]
