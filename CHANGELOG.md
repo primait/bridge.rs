@@ -14,7 +14,7 @@ and this project adheres to
 
 ### Removed
 
-- Support for opentelemetry 0.20
+- Drop support for opentelemetry 0.20
 
 ---
 
