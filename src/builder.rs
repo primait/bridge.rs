@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use reqwest::Url;
 use reqwest_middleware::Middleware;
@@ -61,6 +61,19 @@ impl BridgeBuilderInner<reqwest::ClientBuilder> {
     pub fn with_pool_max_idle_per_host(self, max: usize) -> Self {
         Self {
             inner: self.inner.pool_max_idle_per_host(max),
+            #[cfg(feature = "auth0")]
+            auth0: self.auth0,
+        }
+    }
+
+    /// Set an optional timeout for idle sockets being kept-alive.
+    ///
+    /// Pass `None` to disable timeout.
+    ///
+    /// Default is 90 seconds.
+    pub fn with_pool_idle_timeout(self, max: Option<Duration>) -> Self {
+        Self {
+            inner: self.inner.pool_idle_timeout(max),
             #[cfg(feature = "auth0")]
             auth0: self.auth0,
         }
