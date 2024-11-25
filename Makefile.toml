@@ -97,7 +97,6 @@ args = [
 dependencies = [
   "clippy-base",
   "clippy-auth0",
-  "clippy-otel-0_20",
   "clippy-otel-0_21",
   "clippy-otel-0_22",
   "clippy-otel-0_23",
@@ -122,19 +121,6 @@ args = [
   "warnings",
 ]
 dependencies = ["build"]
-
-[tasks.clippy-otel-0_20]
-command = "cargo"
-args = [
-  "clippy",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_20",
-  "--all-targets",
-  "--",
-  "-D",
-  "warnings",
-]
 
 [tasks.clippy-otel-0_21]
 command = "cargo"
@@ -216,7 +202,6 @@ args = [
 
 [tasks.deny-check]
 dependencies = [
-  "deny-check-otel-0_20",
   "deny-check-otel-0_21",
   "deny-check-otel-0_22",
   "deny-check-otel-0_23",
