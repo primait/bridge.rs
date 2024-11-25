@@ -8,6 +8,14 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Support for the option `pool_idle_timeout` in the client builder
+
+### Removed
+
+- Drop support for opentelemetry 0.20
+
 ---
 
 ## [0.18.0] - 2024-10-22
@@ -145,7 +153,7 @@ mightremove support for older otel version without it being a breaking change.
 
 ### Changed
 
-- MSRV is 1.72, for https://github.com/rust-lang/rust/issues/107557
+- MSRV is 1.72, for <https://github.com/rust-lang/rust/issues/107557>
 
 ---
 
