@@ -94,4 +94,4 @@ pub use otel_0_25::inject_context;
 pub use otel_0_26::inject_context;
 
 #[cfg(feature = "tracing_opentelemetry_0_27")]
-pub use otel_0_26::inject_context;
+pub use otel_0_27::inject_context;
