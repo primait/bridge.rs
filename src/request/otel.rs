@@ -64,6 +64,17 @@ mod otel_0_26 {
     }
 }
 
+#[cfg(feature = "tracing_opentelemetry_0_27")]
+mod otel_0_26 {
+    pub use opentelemetry_0_27_pkg::propagation::{Injector, TextMapPropagator};
+    pub use opentelemetry_sdk_0_27_pkg::propagation::TraceContextPropagator;
+    pub use tracing_opentelemetry_0_28_pkg::OpenTelemetrySpanExt;
+
+    pub fn inject_context(injector: &mut dyn Injector) {
+        TraceContextPropagator::new().inject_context(&tracing::Span::current().context(), injector);
+    }
+}
+
 #[cfg(feature = "tracing_opentelemetry_0_21")]
 pub use otel_0_21::inject_context;
 
@@ -80,4 +91,7 @@ pub use otel_0_24::inject_context;
 pub use otel_0_25::inject_context;
 
 #[cfg(feature = "tracing_opentelemetry_0_26")]
+pub use otel_0_26::inject_context;
+
+#[cfg(feature = "tracing_opentelemetry_0_27")]
 pub use otel_0_26::inject_context;
