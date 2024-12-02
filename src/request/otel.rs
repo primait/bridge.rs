@@ -49,7 +49,9 @@ mod otel_crates {
 
 use otel_crates::*;
 
-use opentelemetry::propagation::{Injector, TextMapPropagator};
+pub use opentelemetry::propagation::Injector;
+
+use opentelemetry::propagation::TextMapPropagator;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 

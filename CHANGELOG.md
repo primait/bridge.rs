@@ -15,6 +15,7 @@ and this project adheres to
 ### Added
 
 - Support for opentelemetry 0.27, now the default version.
+- Added gRPC injector to help passing opentelemetry tracing context when doing gRPC calls.
 
 ---
 
