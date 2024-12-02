@@ -73,7 +73,7 @@ pub struct BridgeImpl<T: BridgeClient> {
 #[doc(hidden)]
 pub trait BridgeClient: Sealed {
     type Builder: PrimaRequestBuilderInner;
-    fn request(&self, method: http::Method, url: Url) -> PrimaRequestBuilder<Self::Builder>;
+    fn request(&self, method: Method, url: Url) -> PrimaRequestBuilder<Self::Builder>;
 }
 
 /// A trait which abstracts across request builders, to allow for both reqwest and reqwest with middleware
@@ -263,6 +263,6 @@ mod sealed {
     impl Sealed for reqwest_middleware::ClientWithMiddleware {}
     impl Sealed for reqwest_middleware::RequestBuilder {}
     impl Sealed for reqwest::RequestBuilder {}
-    impl<'a, Client: BridgeClient> Sealed for crate::request::RestRequest<'a, Client> {}
-    impl<'a, Client: BridgeClient> Sealed for crate::request::GraphQLRequest<'a, Client> {}
+    impl<Client: BridgeClient> Sealed for crate::request::RestRequest<'_, Client> {}
+    impl<Client: BridgeClient> Sealed for crate::request::GraphQLRequest<'_, Client> {}
 }
