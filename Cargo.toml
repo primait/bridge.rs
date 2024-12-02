@@ -118,7 +118,6 @@ opentelemetry_sdk_0_24_pkg = { package = "opentelemetry_sdk", version = "0.24", 
 opentelemetry_sdk_0_25_pkg = { package = "opentelemetry_sdk", version = "0.25", optional = true }
 opentelemetry_sdk_0_26_pkg = { package = "opentelemetry_sdk", version = "0.26", optional = true }
 opentelemetry_sdk_0_27_pkg = { package = "opentelemetry_sdk", version = "0.27", optional = true }
-tracing-opentelemetry_0_21_pkg = { package = "tracing-opentelemetry", version = "0.21", optional = true }
 tracing-opentelemetry_0_22_pkg = { package = "tracing-opentelemetry", version = "0.22", optional = true }
 tracing-opentelemetry_0_23_pkg = { package = "tracing-opentelemetry", version = "0.23", optional = true }
 tracing-opentelemetry_0_24_pkg = { package = "tracing-opentelemetry", version = "0.24", optional = true }
@@ -131,7 +130,6 @@ tracing-opentelemetry_0_28_pkg = { package = "tracing-opentelemetry", version = 
 flate2 = "1.0"
 mockito = "1.0"
 tokio = { version = "1.16", features = ["macros", "rt-multi-thread"] }
-tokio-test = "0.4"
 
 [profile.release]
 codegen-units = 1
