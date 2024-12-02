@@ -65,7 +65,7 @@ mod otel_0_26 {
 }
 
 #[cfg(feature = "tracing_opentelemetry_0_27")]
-mod otel_0_26 {
+mod otel_0_27 {
     pub use opentelemetry_0_27_pkg::propagation::{Injector, TextMapPropagator};
     pub use opentelemetry_sdk_0_27_pkg::propagation::TraceContextPropagator;
     pub use tracing_opentelemetry_0_28_pkg::OpenTelemetrySpanExt;
