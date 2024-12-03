@@ -1,6 +1,17 @@
 [config]
 skip_core_tasks = true
 
+[env]
+AVAILABLE_OTEL_FEATURES = [
+  "tracing_opentelemetry_0_21",
+  "tracing_opentelemetry_0_22",
+  "tracing_opentelemetry_0_23",
+  "tracing_opentelemetry_0_24",
+  "tracing_opentelemetry_0_25",
+  "tracing_opentelemetry_0_26",
+  "tracing_opentelemetry_0_27",
+]
+
 [tasks.build]
 description = "Runs the rust compiler."
 category = "Build"
@@ -21,12 +32,7 @@ args = ["fmt", "--", "--check"]
 dependencies = [
   "test-base",
   "test-auth0",
-  "test-otel-0_21",
-  "test-otel-0_22",
-  "test-otel-0_23",
-  "test-otel-0_24",
-  "test-otel-0_25",
-  "test-otel-0_26",
+  "test-all-otel-versions",
 ]
 
 [tasks.test-base]
@@ -39,70 +45,30 @@ command = "cargo"
 args = ["test", "--features=auth0,gzip", "${@}"]
 dependencies = ["build"]
 
-[tasks.test-otel-0_21]
-command = "cargo"
-args = [
-  "test",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_21",
-]
+[tasks.test-all-otel-versions]
+script = """#!@duckscript
 
-[tasks.test-otel-0_22]
-command = "cargo"
-args = [
-  "test",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_22",
-]
+available_otel_features = split ${AVAILABLE_OTEL_FEATURES} ";"
+for otel_feature in ${available_otel_features}
+  set_env otel_feature ${otel_feature}
+  cm_run_task "test-otel-version-from-env"
+end
+"""
 
-[tasks.test-otel-0_23]
+[tasks.test-otel-version-from-env]
 command = "cargo"
 args = [
   "test",
   "--no-default-features",
   "--features",
-  "tracing_opentelemetry_0_23",
-]
-
-[tasks.test-otel-0_24]
-command = "cargo"
-args = [
-  "test",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_24",
-]
-
-[tasks.test-otel-0_25]
-command = "cargo"
-args = [
-  "test",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_25",
-]
-
-[tasks.test-otel-0_26]
-command = "cargo"
-args = [
-  "test",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_26",
+  "${otel_feature}",
 ]
 
 [tasks.clippy]
 dependencies = [
   "clippy-base",
   "clippy-auth0",
-  "clippy-otel-0_21",
-  "clippy-otel-0_22",
-  "clippy-otel-0_23",
-  "clippy-otel-0_24",
-  "clippy-otel-0_25",
-  "clippy-otel-0_26",
+  "clippy-all-otel-versions",
 ]
 
 [tasks.clippy-base]
@@ -122,78 +88,23 @@ args = [
 ]
 dependencies = ["build"]
 
-[tasks.clippy-otel-0_21]
-command = "cargo"
-args = [
-  "clippy",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_21",
-  "--all-targets",
-  "--",
-  "-D",
-  "warnings",
-]
+[tasks.clippy-all-otel-versions]
+script = """#!@duckscript
 
-[tasks.clippy-otel-0_22]
-command = "cargo"
-args = [
-  "clippy",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_22",
-  "--all-targets",
-  "--",
-  "-D",
-  "warnings",
-]
+available_otel_features = split ${AVAILABLE_OTEL_FEATURES} ";"
+for otel_feature in ${available_otel_features}
+  set_env otel_feature ${otel_feature}
+  cm_run_task "clippy-otel-version-from-env"
+end
+"""
 
-[tasks.clippy-otel-0_23]
+[tasks.clippy-otel-version-from-env]
 command = "cargo"
 args = [
   "clippy",
   "--no-default-features",
   "--features",
-  "tracing_opentelemetry_0_23",
-  "--all-targets",
-  "--",
-  "-D",
-  "warnings",
-]
-
-[tasks.clippy-otel-0_24]
-command = "cargo"
-args = [
-  "clippy",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_24",
-  "--all-targets",
-  "--",
-  "-D",
-  "warnings",
-]
-
-[tasks.clippy-otel-0_25]
-command = "cargo"
-args = [
-  "clippy",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_25",
-  "--all-targets",
-  "--",
-  "-D",
-  "warnings",
-]
-
-[tasks.clippy-otel-0_26]
-command = "cargo"
-args = [
-  "clippy",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_26",
+  "${otel_feature}",
   "--all-targets",
   "--",
   "-D",
@@ -202,79 +113,29 @@ args = [
 
 [tasks.deny-check]
 dependencies = [
-  "deny-check-otel-0_21",
-  "deny-check-otel-0_22",
-  "deny-check-otel-0_23",
-  "deny-check-otel-0_24",
-  "deny-check-otel-0_25",
-  "deny-check-otel-0_26",
+  "deny-check-all-otel-versions",
 ]
 
-[tasks.deny-check-otel-0_21]
+[tasks.deny-check-all-otel-versions]
+script = """#!@duckscript
+
+available_otel_features = split ${AVAILABLE_OTEL_FEATURES} ";"
+for otel_feature in ${available_otel_features}
+  set_env otel_feature ${otel_feature}
+  cm_run_task "deny-check-otel-version-from-env"
+end
+"""
+
+[tasks.deny-check-otel-version-from-env]
+description = "Run cargo-deny with ${otel_feature} feature"
+command = "cargo"
 args = [
   "deny",
   "--no-default-features",
   "--features",
-  "tracing_opentelemetry_0_21",
+  "${otel_feature}",
   "check",
 ]
-command = "cargo"
-description = "Run cargo-deny with tracing_opentelemetry_0_21 feature"
-
-[tasks.deny-check-otel-0_22]
-args = [
-  "deny",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_22",
-  "check",
-]
-command = "cargo"
-description = "Run cargo-deny with tracing_opentelemetry_0_22 feature"
-
-[tasks.deny-check-otel-0_23]
-args = [
-  "deny",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_23",
-  "check",
-]
-command = "cargo"
-description = "Run cargo-deny with tracing_opentelemetry_0_23 feature"
-
-[tasks.deny-check-otel-0_24]
-args = [
-  "deny",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_24",
-  "check",
-]
-command = "cargo"
-description = "Run cargo-deny with tracing_opentelemetry_0_24 feature"
-
-[tasks.deny-check-otel-0_25]
-args = [
-  "deny",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_25",
-  "check",
-]
-command = "cargo"
-description = "Run cargo-deny with tracing_opentelemetry_0_25 feature"
-
-[tasks.deny-check-otel-0_26]
-args = [
-  "deny",
-  "--no-default-features",
-  "--features",
-  "tracing_opentelemetry_0_26",
-  "check",
-]
-command = "cargo"
-description = "Run cargo-deny with tracing_opentelemetry_0_26 feature"
 
 [tasks.docs]
 description = "Build docs as they are rendered on docs.rs"

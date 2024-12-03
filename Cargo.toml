@@ -6,7 +6,7 @@ license = "MIT"
 name = "prima_bridge"
 readme = "README.md"
 repository = "https://github.com/primait/bridge.rs"
-version = "0.19.0"
+version = "0.20.0"
 # See https://github.com/rust-lang/rust/issues/107557
 rust-version = "1.72"
 
@@ -24,7 +24,7 @@ auth0 = [
 ]
 gzip = ["reqwest/gzip"]
 redis-tls = ["redis/tls", "redis/tokio-native-tls-comp"]
-tracing_opentelemetry = ["tracing_opentelemetry_0_26"]
+tracing_opentelemetry = ["tracing_opentelemetry_0_27"]
 
 tracing_opentelemetry_0_21 = [
   "_any_otel_version",
@@ -68,6 +68,13 @@ tracing_opentelemetry_0_26 = [
   "opentelemetry_0_26_pkg",
   "opentelemetry_sdk_0_26_pkg",
 ]
+tracing_opentelemetry_0_27 = [
+  "_any_otel_version",
+  "tracing",
+  "tracing-opentelemetry_0_28_pkg",
+  "opentelemetry_0_27_pkg",
+  "opentelemetry_sdk_0_27_pkg",
+]
 
 _any_otel_version = []
 
@@ -88,7 +95,7 @@ redis = { version = "0.27", features = ["tokio-comp"], optional = true }
 reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-thiserror = "1.0"
+thiserror = "2"
 tokio = { version = "1.16", features = ["macros", "rt-multi-thread", "fs"] }
 tracing = { version = "0.1", optional = true }
 uuid = { version = ">=0.7.0, <2.0.0", features = ["serde", "v4"] }
@@ -103,25 +110,26 @@ opentelemetry_0_23_pkg = { package = "opentelemetry", version = "0.23", optional
 opentelemetry_0_24_pkg = { package = "opentelemetry", version = "0.24", optional = true }
 opentelemetry_0_25_pkg = { package = "opentelemetry", version = "0.25", optional = true }
 opentelemetry_0_26_pkg = { package = "opentelemetry", version = "0.26", optional = true }
+opentelemetry_0_27_pkg = { package = "opentelemetry", version = "0.27", optional = true }
 opentelemetry_sdk_0_21_pkg = { package = "opentelemetry_sdk", version = "0.21", optional = true }
 opentelemetry_sdk_0_22_pkg = { package = "opentelemetry_sdk", version = "0.22", optional = true }
 opentelemetry_sdk_0_23_pkg = { package = "opentelemetry_sdk", version = "0.23", optional = true }
 opentelemetry_sdk_0_24_pkg = { package = "opentelemetry_sdk", version = "0.24", optional = true }
 opentelemetry_sdk_0_25_pkg = { package = "opentelemetry_sdk", version = "0.25", optional = true }
 opentelemetry_sdk_0_26_pkg = { package = "opentelemetry_sdk", version = "0.26", optional = true }
-tracing-opentelemetry_0_21_pkg = { package = "tracing-opentelemetry", version = "0.21", optional = true }
+opentelemetry_sdk_0_27_pkg = { package = "opentelemetry_sdk", version = "0.27", optional = true }
 tracing-opentelemetry_0_22_pkg = { package = "tracing-opentelemetry", version = "0.22", optional = true }
 tracing-opentelemetry_0_23_pkg = { package = "tracing-opentelemetry", version = "0.23", optional = true }
 tracing-opentelemetry_0_24_pkg = { package = "tracing-opentelemetry", version = "0.24", optional = true }
 tracing-opentelemetry_0_25_pkg = { package = "tracing-opentelemetry", version = "0.25", optional = true }
 tracing-opentelemetry_0_26_pkg = { package = "tracing-opentelemetry", version = "0.26", optional = true }
 tracing-opentelemetry_0_27_pkg = { package = "tracing-opentelemetry", version = "0.27", optional = true }
+tracing-opentelemetry_0_28_pkg = { package = "tracing-opentelemetry", version = "0.28", optional = true }
 
 [dev-dependencies]
 flate2 = "1.0"
 mockito = "1.0"
 tokio = { version = "1.16", features = ["macros", "rt-multi-thread"] }
-tokio-test = "0.4"
 
 [profile.release]
 codegen-units = 1
