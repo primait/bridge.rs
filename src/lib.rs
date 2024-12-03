@@ -1,6 +1,6 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-//! This crate gives an high level API to execute external HTTP requests.
+//! This crate gives a high level API to execute external HTTP requests.
 //!
 //! It is supposed to give the basics building blocks for building bridges to other services
 //! while abstracting the low level stuff like adding custom headers and request tracing.
@@ -21,12 +21,11 @@
 //! * `auth0` - enable auth0 integration, allowing bridge.rs to retrieve tokens from auth0  for authentication
 //! * `gzip` - provides response body gzip decompression.
 //! * `redis-tls` - add support for connecting to redis with tls
-//! * `tracing-opentelemetry` adds support for integration with opentelemetry.
-//!     This feature is an alias for the `tracing_opentelemetry_0_21` feature.
-//!     `tracing_opentelemetry_0_20` is also available as to support the 0.20 opentelemetry
-//!     libraries.
-//!
-//!     We are going to support at least the last 3 versions of opentelemetry. After that we mightremove support for older otel version without it being a breaking change.
+//! * `grpc` - provides the [GrpcOtelInterceptor] for adding the opentelemetry context to the gRPC requests
+//! * `tracing_opentelemetry` - adds support for integration with opentelemetry.
+//!     This feature is an alias for the latest `tracing_opentelemetry_x_xx` feature.
+//! * `tracing_opentelemetry_x_xx` (e.g. `tracing_opentelemetry_0_27`) - adds support for integration with a particular opentelemetry version.
+//!     We are going to support at least the last 3 versions of opentelemetry. After that we might remove support for older otel version without it being a breaking change.
 
 use errors::PrimaBridgeError;
 use http::{header::HeaderName, HeaderValue, Method};
@@ -43,6 +42,8 @@ pub use self::{
     response::graphql::{Error, ParsedGraphqlResponse, ParsedGraphqlResponseExt, PossiblyParsedData},
     response::Response,
 };
+#[cfg(all(feature = "grpc", feature = "_any_otel_version"))]
+pub use request::grpc::{GrpcOtelInterceptedService, GrpcOtelInterceptor};
 
 mod builder;
 mod errors;

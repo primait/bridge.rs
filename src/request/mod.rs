@@ -17,6 +17,8 @@ use crate::{BridgeClient, BridgeImpl, Response};
 mod body;
 mod request_type;
 
+#[cfg(all(feature = "grpc", feature = "_any_otel_version"))]
+pub mod grpc;
 #[cfg(feature = "_any_otel_version")]
 mod otel;
 
