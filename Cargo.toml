@@ -26,7 +26,7 @@ auth0 = [
   "dashmap",
   "tracing",
 ]
-grpc = ["tonic"]
+grpc = [ "_any_otel_version", "tonic"]
 gzip = ["reqwest/gzip"]
 redis-tls = [ "redis", "redis/tls", "redis/tokio-native-tls-comp"]
 tracing_opentelemetry = ["tracing_opentelemetry_0_27"]
