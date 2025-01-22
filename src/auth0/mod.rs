@@ -19,7 +19,7 @@ mod errors;
 mod token;
 mod util;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Auth0 {
     token_lock: Arc<RwLock<Token>>,
 }

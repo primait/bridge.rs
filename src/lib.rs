@@ -61,7 +61,7 @@ pub type Bridge = BridgeImpl<reqwest::Client>;
 
 /// A Bridge instance that's generic across the client. If the [BridgeBuilder] is used
 /// to construct a bridge with middleware, this type will be used to wrap the [reqwest_middleware::ClientWithMiddleware].
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BridgeImpl<T: BridgeClient> {
     inner_client: T,
     endpoint: Url,
@@ -72,7 +72,7 @@ pub struct BridgeImpl<T: BridgeClient> {
 /// A trait that abstracts the client used by the [BridgeImpl], such that both reqwest clients and reqwest
 /// clients with middleware can be used, more or less interchangeably.
 #[doc(hidden)]
-pub trait BridgeClient: Sealed {
+pub trait BridgeClient: Sealed + Clone {
     type Builder: PrimaRequestBuilderInner;
     fn request(&self, method: Method, url: Url) -> PrimaRequestBuilder<Self::Builder>;
 }
