@@ -1,6 +1,5 @@
 //! Stuff used to provide JWT authentication via Auth0
 
-use refresh::RefreshingToken;
 use reqwest::Client;
 
 mod cache;
@@ -16,12 +15,13 @@ pub use config::{CacheType, Config};
 pub use errors::Auth0Error;
 pub use token::Token;
 pub use util::StalenessCheckPercentage;
+pub use refresh::RefreshingToken;
 
-#[deprecated(since = "0.21.0", note = "please use refreshing token")]
 #[derive(Clone, Debug)]
 pub struct Auth0(RefreshingToken);
 
 impl Auth0 {
+    #[deprecated(since = "0.21.0", note = "please use refreshing token")]
     pub async fn new(client: &Client, config: Config) -> Result<Self, Auth0Error> {
         let cache: Box<dyn Cache> = if config.is_inmemory_cache() {
             Box::new(cache::InMemoryCache::new(&config).await?)
@@ -43,6 +43,10 @@ impl Auth0 {
     }
 
     pub fn token(&self) -> Token {
-        self.0.read().clone()
+        self.0.token().clone()
+    }
+
+    pub fn refreshing_token(self) -> RefreshingToken {
+        self.0
     }
 }

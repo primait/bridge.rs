@@ -27,6 +27,7 @@
 //! * `tracing_opentelemetry_x_xx` (e.g. `tracing_opentelemetry_0_27`) - adds support for integration with a particular opentelemetry version.
 //!     We are going to support at least the last 3 versions of opentelemetry. After that we might remove support for older otel version without it being a breaking change.
 
+use auth0::RefreshingToken;
 use errors::PrimaBridgeError;
 use http::{header::HeaderName, HeaderValue, Method};
 use reqwest::{multipart::Form, Url};
@@ -66,7 +67,7 @@ pub struct BridgeImpl<T: BridgeClient> {
     inner_client: T,
     endpoint: Url,
     #[cfg(feature = "auth0")]
-    auth0_opt: Option<auth0::Auth0>,
+    auth0_opt: Option<RefreshingToken>,
 }
 
 /// A trait that abstracts the client used by the [BridgeImpl], such that both reqwest clients and reqwest
@@ -251,7 +252,7 @@ impl Bridge {
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
     /// Gets the JWT token used by the Bridge, if it has been configured with Auth0 authentication via [BridgeBuilder.with_auth0](BridgeBuilder#with_auth0).
     pub fn token(&self) -> Option<auth0::Token> {
-        self.auth0_opt.as_ref().map(|auth0| auth0.token())
+        self.auth0_opt.as_ref().map(|auth0| auth0.token().clone())
     }
 }
 

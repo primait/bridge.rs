@@ -176,7 +176,7 @@ impl<'a, Client: BridgeClient> DeliverableRequest<'a> for GraphQLRequest<'a, Cli
     }
 
     #[cfg(feature = "auth0")]
-    fn get_auth0(&self) -> &Option<crate::auth0::Auth0> {
+    fn get_auth0(&self) -> &Option<crate::auth0::RefreshingToken> {
         &self.bridge.auth0_opt
     }
 
