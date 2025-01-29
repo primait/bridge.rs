@@ -31,7 +31,6 @@ impl Token {
             client.clone(),
             config.client_id().to_string(),
             config.client_secret().to_string(),
-            config.jwks_url().clone(),
         )
         .fetch_token(config.audience(), config.scope.as_deref())
         .await

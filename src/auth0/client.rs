@@ -39,7 +39,6 @@ pub struct Auth0Client {
     client: Client,
     client_id: String,
     client_secret: String,
-    jwks_url: Url,
 }
 
 impl Auth0Client {
@@ -48,15 +47,12 @@ impl Auth0Client {
         client: Client,
         client_id: String,
         client_secret: String,
-        jwks_url: impl Into<Url>,
     ) -> Self {
-        let jwks_url = jwks_url.into();
         Self {
             token_url,
             client,
             client_id,
             client_secret,
-            jwks_url,
         }
     }
 
@@ -66,7 +62,6 @@ impl Auth0Client {
             client.clone(),
             config.client_id().to_string(),
             config.client_secret().to_string(),
-            config.jwks_url().clone(),
         )
     }
 
