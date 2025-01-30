@@ -1,25 +1,23 @@
 use dashmap::DashMap;
 
-use crate::auth0::cache::{self, crypto};
+use crate::auth0::cache;
 use crate::auth0::errors::Auth0Error;
 use crate::auth0::token::Token;
-use crate::auth0::{cache::Cache, Config};
+use crate::auth0::cache::Cache;
 
 #[derive(Clone, Debug)]
 pub struct InMemoryCache {
-    key_value: DashMap<String, Vec<u8>>,
-    encryption_key: String,
+    key_value: DashMap<String, Token>,
     caller: String,
     audience: String,
 }
 
 impl InMemoryCache {
-    pub async fn new(config_ref: &Config) -> Result<Self, Auth0Error> {
+    pub async fn new(caller: String, audience: String) -> Result<Self, Auth0Error> {
         Ok(InMemoryCache {
             key_value: DashMap::new(),
-            encryption_key: config_ref.token_encryption_key().to_string(),
-            caller: config_ref.caller().to_string(),
-            audience: config_ref.audience().to_string(),
+            caller,
+            audience,
         })
     }
 }
@@ -27,16 +25,16 @@ impl InMemoryCache {
 #[async_trait::async_trait]
 impl Cache for InMemoryCache {
     async fn get_token(&self) -> Result<Option<Token>, Auth0Error> {
-        self.key_value
+        let token = self
+            .key_value
             .get(&cache::token_key(&self.caller, &self.audience))
-            .map(|value| crypto::decrypt(self.encryption_key.as_str(), value.as_slice()))
-            .transpose()
+            .map(|v| v.to_owned());
+        Ok(token)
     }
 
-    async fn put_token(&self, value_ref: &Token) -> Result<(), Auth0Error> {
+    async fn put_token(&self, token: &Token) -> Result<(), Auth0Error> {
         let key: String = cache::token_key(&self.caller, &self.audience);
-        let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
-        let _ = self.key_value.insert(key, encrypted_value);
+        let _ = self.key_value.insert(key, token.clone());
         Ok(())
     }
 }
@@ -50,7 +48,9 @@ mod tests {
     #[tokio::test]
     async fn inmemory_cache_get_set_values() {
         let server = mockito::Server::new_async().await;
-        let cache = InMemoryCache::new(&Config::test_config(&server)).await.unwrap();
+        let cache = InMemoryCache::new("caller".to_string(), "audience".to_string())
+            .await
+            .unwrap();
 
         let result: Option<Token> = cache.get_token().await.unwrap();
         assert!(result.is_none());

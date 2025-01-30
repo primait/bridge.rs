@@ -2,7 +2,7 @@
 
 use reqwest::Client;
 
-mod cache;
+pub mod cache;
 mod client;
 mod config;
 mod errors;
@@ -11,11 +11,12 @@ mod token;
 mod util;
 
 use cache::Cache;
+pub use client::Auth0Client;
 pub use config::{CacheType, Config};
 pub use errors::Auth0Error;
+pub use refresh::RefreshingToken;
 pub use token::Token;
 pub use util::StalenessCheckPercentage;
-pub use refresh::RefreshingToken;
 
 #[derive(Clone, Debug)]
 pub struct Auth0(RefreshingToken);
@@ -24,7 +25,7 @@ impl Auth0 {
     #[deprecated(since = "0.21.0", note = "please use refreshing token")]
     pub async fn new(client: &Client, config: Config) -> Result<Self, Auth0Error> {
         let cache: Box<dyn Cache> = if config.is_inmemory_cache() {
-            Box::new(cache::InMemoryCache::new(&config).await?)
+            Box::new(cache::InMemoryCache::new(config.caller.clone(), config.audience.clone()).await?)
         } else {
             Box::new(cache::RedisCache::new(&config).await?)
         };

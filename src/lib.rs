@@ -46,7 +46,7 @@ pub use self::{
 #[cfg(all(feature = "grpc", feature = "_any_otel_version"))]
 pub use request::grpc::{GrpcOtelInterceptedService, GrpcOtelInterceptor};
 
-mod builder;
+pub mod builder;
 mod errors;
 pub mod prelude;
 mod redirect;
