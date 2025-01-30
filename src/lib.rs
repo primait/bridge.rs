@@ -23,9 +23,9 @@
 //! * `redis-tls` - add support for connecting to redis with tls
 //! * `grpc` - provides the [GrpcOtelInterceptor] for adding the opentelemetry context to the gRPC requests
 //! * `tracing_opentelemetry` - adds support for integration with opentelemetry.
-//!     This feature is an alias for the latest `tracing_opentelemetry_x_xx` feature.
+//!   This feature is an alias for the latest `tracing_opentelemetry_x_xx` feature.
 //! * `tracing_opentelemetry_x_xx` (e.g. `tracing_opentelemetry_0_27`) - adds support for integration with a particular opentelemetry version.
-//!     We are going to support at least the last 3 versions of opentelemetry. After that we might remove support for older otel version without it being a breaking change.
+//!   We are going to support at least the last 3 versions of opentelemetry. After that we might remove support for older otel version without it being a breaking change.
 
 use auth0::RefreshingToken;
 use errors::PrimaBridgeError;
