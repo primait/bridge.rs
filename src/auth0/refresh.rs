@@ -80,7 +80,7 @@ impl RefreshWorker {
     }
 
     async fn check_refresh_token(&self, cur_token: Token) -> Result<Token, Auth0Error> {
-        let cached_token = match self.cache.get_token().await {
+        let cached_token = match self.cache.get_token(self.client.client_id(), &self.audience).await {
             Ok(v) => v,
             Err(e) => {
                 tracing::error!("Error reading cached JWT. Reason: {:?}", e);
@@ -98,7 +98,9 @@ impl RefreshWorker {
             Some(cached_token) if cached_token.expire_date() > cur_token.expire_date() => Ok(cached_token),
             None => {
                 tracing::debug!("New token expiry_date is lower current token. Not refreshing and trying to replace");
-                self.cache.put_token(&cur_token).await?;
+                self.cache
+                    .put_token(&self.client.client_id(), &self.audience, &cur_token)
+                    .await?;
                 Ok(cur_token)
             }
             _ => Ok(cur_token),
@@ -109,7 +111,11 @@ impl RefreshWorker {
     async fn fetch_and_update_token(&self) -> Result<Token, Auth0Error> {
         let token: Token = self.client.fetch_token(&self.audience, self.scope.as_deref()).await?;
 
-        if let Err(e) = self.cache.put_token(&token).await {
+        if let Err(e) = self
+            .cache
+            .put_token(self.client.client_id(), &self.audience, &token)
+            .await
+        {
             tracing::error!(error = ?e, "JWT cache set failed: {e}");
         };
 

@@ -25,9 +25,11 @@ impl Auth0 {
     #[deprecated(since = "0.21.0", note = "please use refreshing token")]
     pub async fn new(client: &Client, config: Config) -> Result<Self, Auth0Error> {
         let cache: Box<dyn Cache> = if config.is_inmemory_cache() {
-            Box::new(cache::InMemoryCache::new(config.caller.clone(), config.audience.clone()).await?)
+            Box::new(cache::InMemoryCache::default())
         } else {
-            Box::new(cache::RedisCache::new(&config).await?)
+            let redis_conn = config.cache_type().redis_connection_url().to_string();
+            let encryption_key = config.token_encryption_key().to_string();
+            Box::new(cache::RedisCache::new(redis_conn, encryption_key).await?)
         };
 
         let client = client::Auth0Client::from_config(&config, client);

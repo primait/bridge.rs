@@ -42,12 +42,7 @@ pub struct Auth0Client {
 }
 
 impl Auth0Client {
-    pub fn new(
-        token_url: Url,
-        client: Client,
-        client_id: String,
-        client_secret: String,
-    ) -> Self {
+    pub fn new(token_url: Url, client: Client, client_id: String, client_secret: String) -> Self {
         Self {
             token_url,
             client,
@@ -113,5 +108,9 @@ impl Auth0Client {
         let expire_date: DateTime<Utc> = Utc::now() + Duration::from_secs(expires_in as u64);
 
         Ok(Token::new(access_token, issue_date, expire_date))
+    }
+
+    pub fn client_id(&self) -> &str {
+        &self.client_id
     }
 }
