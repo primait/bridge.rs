@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased]
 
+- Fixed docs.rs not building the documentation
+
 ---
 
 ## [0.20.0] - 2024-12-02

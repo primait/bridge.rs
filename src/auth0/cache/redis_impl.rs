@@ -3,27 +3,24 @@ use serde::Deserialize;
 
 use crate::auth0::cache::{self, crypto, Cache};
 use crate::auth0::token::Token;
-use crate::auth0::{Auth0Error, Config};
+use crate::auth0::Auth0Error;
 
 #[derive(Clone, Debug)]
 pub struct RedisCache {
     client: redis::Client,
     encryption_key: String,
-    caller: String,
-    audience: String,
 }
 
 impl RedisCache {
-    pub async fn new(config_ref: &Config) -> Result<Self, Auth0Error> {
-        let client: redis::Client = redis::Client::open(config_ref.cache_type().redis_connection_url())?;
+    /// Redis connection string(eg. `"redis://{host}:{port}?{ParamKey1}={ParamKey2}"`)
+    pub async fn new(redis_connection_url: String, token_encryption_key: String) -> Result<Self, Auth0Error> {
+        let client: redis::Client = redis::Client::open(redis_connection_url)?;
         // Ensure connection is fine. Should fail otherwise
         let _ = client.get_multiplexed_async_connection().await?;
 
         Ok(RedisCache {
             client,
-            encryption_key: config_ref.token_encryption_key().to_string(),
-            caller: config_ref.caller().to_string(),
-            audience: config_ref.audience().to_string(),
+            encryption_key: token_encryption_key,
         })
     }
 
@@ -43,13 +40,14 @@ impl RedisCache {
 
 #[async_trait::async_trait]
 impl Cache for RedisCache {
-    async fn get_token(&self) -> Result<Option<Token>, Auth0Error> {
-        let key: &str = &cache::token_key(&self.caller, &self.audience);
+    async fn get_token(&self, client_id: &str, audience: &str) -> Result<Option<Token>, Auth0Error> {
+        let key: &str = &cache::token_key(client_id, audience);
         self.get(key).await
     }
 
-    async fn put_token(&self, value_ref: &Token) -> Result<(), Auth0Error> {
-        let key: &str = &cache::token_key(&self.caller, &self.audience);
+    async fn put_token(&self, client_id: &str, audience: &str, value_ref: &Token) -> Result<(), Auth0Error> {
+        let key: &str = &cache::token_key(client_id, audience);
+
         let mut connection = self.client.get_multiplexed_async_connection().await?;
         let encrypted_value: Vec<u8> = crypto::encrypt(value_ref, self.encryption_key.as_str())?;
         let expiration = value_ref.lifetime_in_seconds();

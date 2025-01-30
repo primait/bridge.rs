@@ -1,4 +1,4 @@
-use std::ops::RangeInclusive;
+pub use super::StalenessCheckPercentage;
 use std::time::Duration;
 
 use reqwest::Url;
@@ -114,35 +114,5 @@ impl CacheType {
                 panic!("Something went wrong getting Redis connection string")
             }
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct StalenessCheckPercentage(RangeInclusive<f64>);
-
-impl StalenessCheckPercentage {
-    pub fn new(min: f64, max: f64) -> Self {
-        assert!((0.0..=1.0).contains(&min));
-        assert!((0.0..=1.0).contains(&max));
-        assert!(min <= max);
-
-        Self(min..=max)
-    }
-
-    pub fn random_value_between(&self) -> f64 {
-        use rand::Rng;
-        rand::thread_rng().gen_range(self.0.clone())
-    }
-}
-
-impl Default for StalenessCheckPercentage {
-    fn default() -> Self {
-        Self(0.6..=0.9)
-    }
-}
-
-impl From<RangeInclusive<f64>> for StalenessCheckPercentage {
-    fn from(range: RangeInclusive<f64>) -> Self {
-        Self::new(*range.start(), *range.end())
     }
 }

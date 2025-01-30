@@ -14,9 +14,9 @@ const TOKEN_VERSION: &str = "2";
 
 #[async_trait::async_trait]
 pub trait Cache: Send + Sync + std::fmt::Debug {
-    async fn get_token(&self) -> Result<Option<Token>, Auth0Error>;
+    async fn get_token(&self, client_id: &str, aud: &str) -> Result<Option<Token>, Auth0Error>;
 
-    async fn put_token(&self, value_ref: &Token) -> Result<(), Auth0Error>;
+    async fn put_token(&self, client_id: &str, aud: &str, token: &Token) -> Result<(), Auth0Error>;
 }
 
 pub(in crate::auth0::cache) fn token_key(caller: &str, audience: &str) -> String {
