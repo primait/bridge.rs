@@ -27,6 +27,7 @@
 //! * `tracing_opentelemetry_x_xx` (e.g. `tracing_opentelemetry_0_27`) - adds support for integration with a particular opentelemetry version.
 //!   We are going to support at least the last 3 versions of opentelemetry. After that we might remove support for older otel version without it being a breaking change.
 
+#[cfg(feature = "auth0")]
 use auth0::RefreshingToken;
 use errors::PrimaBridgeError;
 use http::{header::HeaderName, HeaderValue, Method};
