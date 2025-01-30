@@ -99,7 +99,7 @@ impl RefreshWorker {
             None => {
                 tracing::debug!("New token expiry_date is lower current token. Not refreshing and trying to replace");
                 self.cache
-                    .put_token(&self.client.client_id(), &self.audience, &cur_token)
+                    .put_token(self.client.client_id(), &self.audience, &cur_token)
                     .await?;
                 Ok(cur_token)
             }
