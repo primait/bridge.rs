@@ -3,9 +3,7 @@ use std::time::Duration;
 use jsonwebtoken::Algorithm;
 use mockito::{Matcher, Mock, Server};
 
-use prima_bridge::auth0::{
-    cache::InMemoryCache, Auth0Client, RefreshingToken, StalenessCheckPercentage,
-};
+use prima_bridge::auth0::{cache::InMemoryCache, Auth0Client, RefreshingToken, StalenessCheckPercentage};
 
 mod builder;
 mod graphql;

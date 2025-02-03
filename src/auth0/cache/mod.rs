@@ -5,9 +5,9 @@ use crate::auth0::errors::Auth0Error;
 use crate::auth0::Token;
 
 mod crypto;
+mod dynamodb;
 mod inmemory;
 mod redis_impl;
-mod dynamodb;
 
 const TOKEN_PREFIX: &str = "auth0rs_tokens";
 // The version of the token for backwards incompatible changes

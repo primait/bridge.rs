@@ -47,8 +47,8 @@ async fn simple_request_with_auth0_scope() -> Result<(), Box<dyn Error>> {
     let auth0_client = Auth0Client::new(
         token_url,
         reqwest::Client::default(),
-        client_id.to_string(), 
-        client_secret.to_string()
+        client_id.to_string(),
+        client_secret.to_string(),
     );
 
     let token = RefreshingToken::new(
@@ -71,11 +71,7 @@ async fn simple_request_with_auth0_scope() -> Result<(), Box<dyn Error>> {
     });
 
     let (_m, bridge) = server
-        .create_bridge_with_auth0_get_token_match_body(
-            json!({"hello": "world!"}),
-            req_token_body,
-            token,
-        )
+        .create_bridge_with_auth0_get_token_match_body(json!({"hello": "world!"}), req_token_body, token)
         .await;
     let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
 
