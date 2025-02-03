@@ -32,13 +32,17 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 
 #[tokio::test]
 async fn simple_request_with_auth0_scope() -> Result<(), Box<dyn Error>> {
+    let mut auth0_server = Server::new_async().await;
+    auth0_server.create_bridge(200, "{}").await;
+
     let mut server = Server::new_async().await;
+
     let client_id = "client_id";
     let client_secret = "client_secret";
     let audience = "audience";
     let scope = "profile email";
 
-    let token_url = format!("{}/token", server.url().as_str()).parse().unwrap();
+    let token_url = format!("{}/token", auth0_server.url().as_str()).parse().unwrap();
 
     let auth0_client = Auth0Client::new(
         token_url,
