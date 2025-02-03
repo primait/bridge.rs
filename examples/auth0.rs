@@ -35,7 +35,7 @@ const QUERY: &str = "query($input:JobsInput!){jobs(input:$input) {\nid\n title\n
 #[tokio::main]
 async fn main() {
     let bridge: Bridge = Bridge::builder()
-        .with_auth0(auth0::config())
+        .with_refreshing_token(auth0::refreshing_token().await)
         .await
         .build(URL.parse().unwrap());
 
@@ -113,30 +113,30 @@ pub struct Job {
 mod auth0 {
     use std::time::Duration;
 
-    use prima_bridge::auth0::{CacheType, Config, StalenessCheckPercentage};
+    use prima_bridge::auth0::{cache::InMemoryCache, Auth0Client, RefreshingToken, StalenessCheckPercentage};
 
-    pub fn config() -> Config {
-        use reqwest::Url;
-        use std::str::FromStr;
-
+    pub async fn refreshing_token() -> RefreshingToken {
         let token_url: String = std::env::var("TOKEN_URL").unwrap();
-        let jwks_url: String = std::env::var("JWKS_URL").unwrap();
         let client_id: String = std::env::var("CLIENT_ID").unwrap();
         let client_secret: String = std::env::var("CLIENT_SECRET").unwrap();
         let audience: String = std::env::var("AUDIENCE").unwrap();
 
-        Config {
-            token_url: Url::from_str(token_url.as_str()).unwrap(),
-            jwks_url: Url::from_str(jwks_url.as_str()).unwrap(),
-            caller: "paperboy".to_string(),
-            audience,
-            cache_type: CacheType::Inmemory,
-            token_encryption_key: "32char_long_token_encryption_key".to_string(),
-            check_interval: Duration::from_secs(2),
-            staleness_check_percentage: StalenessCheckPercentage::new(0.1, 0.5),
+        let auth0_client = Auth0Client::new(
+            token_url.parse().unwrap(),
+            reqwest::Client::default(),
             client_id,
             client_secret,
-            scope: Some("profile email".to_string()),
-        }
+        );
+
+        RefreshingToken::new(
+            auth0_client,
+            Duration::from_secs(10),
+            StalenessCheckPercentage::default(),
+            Box::new(InMemoryCache::default()),
+            audience,
+            None,
+        )
+        .await
+        .unwrap()
     }
 }

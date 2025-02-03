@@ -39,7 +39,6 @@ impl<T> BridgeBuilderInner<T> {
 
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
     #[cfg(feature = "auth0")]
-    #[deprecated(since = "0.21.0", note = "please use with_refreshing_token instead")]
     pub async fn with_refreshing_token(self, refreshing_token: RefreshingToken) -> Self {
         Self {
             auth0: Some(refreshing_token),

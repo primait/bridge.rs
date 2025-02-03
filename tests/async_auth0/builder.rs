@@ -2,9 +2,11 @@ use async_trait::async_trait;
 use mockito::{Matcher, Server};
 use reqwest::Url;
 
-use crate::async_auth0::{config, Auth0Mocks};
-use prima_bridge::auth0::Config;
+use crate::async_auth0::Auth0Mocks;
+use prima_bridge::auth0::RefreshingToken;
 use prima_bridge::prelude::*;
+
+use super::refreshing_token;
 
 #[async_trait]
 pub(in crate::async_auth0) trait Auth0MocksExt {
@@ -34,9 +36,9 @@ pub(in crate::async_auth0) trait Auth0MocksExt {
     async fn create_bridge_with_binary_body_matcher(&mut self, body: &[u8]) -> (Auth0Mocks, Bridge);
     async fn create_bridge_with_auth0_get_token_match_body(
         &mut self,
-        body: &str,
+        body: serde_json::Value,
         req_token_body: serde_json::Value,
-        config: Config,
+        token: RefreshingToken,
     ) -> (Auth0Mocks, Bridge);
 }
 
@@ -56,7 +58,10 @@ impl Auth0MocksExt for Server {
         let base_url = format!("{}/{}", self.url(), base);
         let url = Url::parse(base_url.as_str()).unwrap();
         let mut mocks: Auth0Mocks = Auth0Mocks::new(self).await;
-        let bridge = Bridge::builder().with_auth0(config(self)).await.build(url);
+        let bridge = Bridge::builder()
+            .with_refreshing_token(refreshing_token(self).await)
+            .await
+            .build(url);
 
         let mock = self
             .mock("GET", format!("/{}/{}", base, path).as_str())
@@ -80,13 +85,13 @@ impl Auth0MocksExt for Server {
 
     async fn create_bridge_with_auth0_get_token_match_body(
         &mut self,
-        body: &str,
+        body: serde_json::Value,
         req_token_body: serde_json::Value,
-        config: Config,
+        token: RefreshingToken,
     ) -> (Auth0Mocks, Bridge) {
         let url = Url::parse(self.url().as_str()).unwrap();
         let mut mocks: Auth0Mocks = Auth0Mocks::new_with_req_token_body_match(self, req_token_body).await;
-        let bridge = Bridge::builder().with_auth0(config).await.build(url);
+        let bridge = Bridge::builder().with_refreshing_token(token).await.build(url);
 
         let mock = self
             .mock("GET", "/")
@@ -99,7 +104,7 @@ impl Auth0MocksExt for Server {
                 bridge.token().unwrap().to_bearer().as_str(),
             )
             .with_status(200)
-            .with_body(body)
+            .with_body(body.to_string())
             .create_async()
             .await;
 
@@ -111,7 +116,10 @@ impl Auth0MocksExt for Server {
     async fn create_bridge_with_path(&mut self, status_code: usize, body: &str, path: &str) -> (Auth0Mocks, Bridge) {
         let url = Url::parse(self.url().as_str()).unwrap();
         let mut mocks: Auth0Mocks = Auth0Mocks::new(self).await;
-        let bridge = Bridge::builder().with_auth0(config(self)).await.build(url);
+        let bridge = Bridge::builder()
+            .with_refreshing_token(refreshing_token(self).await)
+            .await
+            .build(url);
 
         let mock = self
             .mock("GET", path)
@@ -142,7 +150,10 @@ impl Auth0MocksExt for Server {
     ) -> (Auth0Mocks, Bridge) {
         let url = Url::parse(self.url().as_str()).unwrap();
         let mut mocks: Auth0Mocks = Auth0Mocks::new(self).await;
-        let bridge = Bridge::builder().with_auth0(config(self)).await.build(url);
+        let bridge = Bridge::builder()
+            .with_refreshing_token(refreshing_token(self).await)
+            .await
+            .build(url);
 
         let mock = self
             .mock("GET", path)
@@ -168,7 +179,10 @@ impl Auth0MocksExt for Server {
     async fn create_bridge_with_raw_body_matcher(&mut self, body: &str) -> (Auth0Mocks, Bridge) {
         let url = Url::parse(self.url().as_str()).unwrap();
         let mut mocks: Auth0Mocks = Auth0Mocks::new(self).await;
-        let bridge = Bridge::builder().with_auth0(config(self)).await.build(url);
+        let bridge = Bridge::builder()
+            .with_refreshing_token(refreshing_token(self).await)
+            .await
+            .build(url);
 
         let mock = self
             .mock("GET", "/")
@@ -193,7 +207,10 @@ impl Auth0MocksExt for Server {
     async fn create_bridge_with_header_matcher(&mut self, (name, value): (&str, &str)) -> (Auth0Mocks, Bridge) {
         let url = Url::parse(self.url().as_str()).unwrap();
         let mut mocks: Auth0Mocks = Auth0Mocks::new(self).await;
-        let bridge = Bridge::builder().with_auth0(config(self)).await.build(url);
+        let bridge = Bridge::builder()
+            .with_refreshing_token(refreshing_token(self).await)
+            .await
+            .build(url);
 
         let mock = self
             .mock("GET", "/")
@@ -219,7 +236,7 @@ impl Auth0MocksExt for Server {
         let url = Url::parse(self.url().as_str()).unwrap();
         let mut mocks: Auth0Mocks = Auth0Mocks::new(self).await;
         let bridge = Bridge::builder()
-            .with_auth0(config(self))
+            .with_refreshing_token(refreshing_token(self).await)
             .await
             .with_user_agent(user_agent)
             .build(url);
@@ -247,7 +264,10 @@ impl Auth0MocksExt for Server {
     async fn create_bridge_with_json_body_matcher(&mut self, json: serde_json::Value) -> (Auth0Mocks, Bridge) {
         let url = Url::parse(self.url().as_str()).unwrap();
         let mut mocks: Auth0Mocks = Auth0Mocks::new(self).await;
-        let bridge = Bridge::builder().with_auth0(config(self)).await.build(url);
+        let bridge = Bridge::builder()
+            .with_refreshing_token(refreshing_token(self).await)
+            .await
+            .build(url);
 
         let mock = self
             .mock("GET", "/")
@@ -272,7 +292,10 @@ impl Auth0MocksExt for Server {
     async fn create_bridge_with_binary_body_matcher(&mut self, body: &[u8]) -> (Auth0Mocks, Bridge) {
         let url = Url::parse(self.url().as_str()).unwrap();
         let mut mocks: Auth0Mocks = Auth0Mocks::new(self).await;
-        let bridge = Bridge::builder().with_auth0(config(self)).await.build(url);
+        let bridge = Bridge::builder()
+            .with_refreshing_token(refreshing_token(self).await)
+            .await
+            .build(url);
 
         let mock = self
             .mock("GET", "/")

@@ -1,6 +1,11 @@
 use std::error::Error;
+use std::time::Duration;
 
 use mockito::Server;
+use prima_bridge::auth0::cache::InMemoryCache;
+use prima_bridge::auth0::Auth0Client;
+use prima_bridge::auth0::RefreshingToken;
+use prima_bridge::auth0::StalenessCheckPercentage;
 use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -8,7 +13,6 @@ use serde_json::json;
 use prima_bridge::prelude::*;
 
 use crate::async_auth0::builder::*;
-use crate::async_auth0::config;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 struct Data {
@@ -29,17 +33,45 @@ async fn simple_request() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn simple_request_with_auth0_scope() -> Result<(), Box<dyn Error>> {
     let mut server = Server::new_async().await;
-    let mut cfg = config(&server);
-    cfg.scope = Some("profile email".to_string());
+    let client_id = "client_id";
+    let client_secret = "client_secret";
+    let audience = "audience";
+    let scope = "profile email";
+
+    let token_url = format!("{}/token", server.url().as_str()).parse().unwrap();
+
+    let auth0_client = Auth0Client::new(
+        token_url,
+        reqwest::Client::default(),
+        client_id.to_string(), 
+        client_secret.to_string()
+    );
+
+    let token = RefreshingToken::new(
+        auth0_client,
+        Duration::from_secs(10),
+        StalenessCheckPercentage::default(),
+        Box::new(InMemoryCache::default()),
+        audience.to_string(),
+        Some(scope.to_string()),
+    )
+    .await
+    .unwrap();
+
     let req_token_body = json!({
-        "client_id": cfg.client_id.clone(),
-        "client_secret": cfg.client_secret.clone(),
-        "audience": cfg.audience.clone(),
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "audience": audience,
         "grant_type": "client_credentials",
-        "scope": "profile email"
+        "scope": scope,
     });
+
     let (_m, bridge) = server
-        .create_bridge_with_auth0_get_token_match_body("{\"hello\": \"world!\"}", req_token_body, cfg)
+        .create_bridge_with_auth0_get_token_match_body(
+            json!({"hello": "world!"}),
+            req_token_body,
+            token,
+        )
         .await;
     let result: String = RestRequest::new(&bridge).send().await?.get_data(&["hello"])?;
 
@@ -222,9 +254,10 @@ async fn decompresses_gzip_responses() -> Result<(), Box<dyn Error>> {
         .await;
 
     let _mocks = crate::async_auth0::Auth0Mocks::new(&mut server).await;
+    let token = crate::async_auth0::refreshing_token(&server).await;
 
     let bridge = Bridge::builder()
-        .with_auth0(crate::async_auth0::config(&server))
+        .with_refreshing_token(token)
         .await
         .build(server.url().parse().unwrap());
 

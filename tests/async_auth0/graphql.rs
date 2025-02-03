@@ -9,7 +9,9 @@ use serde_json::json;
 use prima_bridge::prelude::*;
 use prima_bridge::ParsedGraphqlResponseExt;
 
-use crate::async_auth0::{config, Auth0Mocks};
+use crate::async_auth0::Auth0Mocks;
+
+use super::refreshing_token;
 
 #[derive(Deserialize, Clone, Debug, PartialEq)]
 struct Person {
@@ -171,7 +173,7 @@ async fn create_gql_bridge(server: &mut Server, status_code: usize, query: &str,
     let mut mocks = Auth0Mocks::new(server).await;
 
     let url = Url::parse(&server.url()).unwrap();
-    let bridge: Bridge = Bridge::builder().with_auth0(config(server)).await.build(url);
+    let bridge: Bridge = Bridge::builder().with_refreshing_token(refreshing_token(server).await).await.build(url);
 
     let graphql_mock: Mock = server
         .mock("POST", "/")

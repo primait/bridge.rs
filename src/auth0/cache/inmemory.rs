@@ -35,8 +35,6 @@ mod tests {
 
     #[tokio::test]
     async fn inmemory_cache_get_set_values() {
-        let server = mockito::Server::new_async().await;
-
         let client_id = "caller".to_string();
         let audience = "audience".to_string();
 
