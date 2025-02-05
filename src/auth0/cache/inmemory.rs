@@ -2,8 +2,9 @@ use dashmap::DashMap;
 
 use crate::auth0::cache;
 use crate::auth0::cache::Cache;
-use crate::auth0::errors::Auth0Error;
 use crate::auth0::token::Token;
+
+use super::CacheError;
 
 #[derive(Default, Clone, Debug)]
 pub struct InMemoryCache {
@@ -12,7 +13,7 @@ pub struct InMemoryCache {
 
 #[async_trait::async_trait]
 impl Cache for InMemoryCache {
-    async fn get_token(&self, client_id: &str, aud: &str) -> Result<Option<Token>, Auth0Error> {
+    async fn get_token(&self, client_id: &str, aud: &str) -> Result<Option<Token>, CacheError> {
         let token = self
             .key_value
             .get(&cache::token_key(client_id, aud))
@@ -20,7 +21,7 @@ impl Cache for InMemoryCache {
         Ok(token)
     }
 
-    async fn put_token(&self, client_id: &str, aud: &str, token: &Token) -> Result<(), Auth0Error> {
+    async fn put_token(&self, client_id: &str, aud: &str, token: &Token) -> Result<(), CacheError> {
         let key: String = cache::token_key(client_id, aud);
         let _ = self.key_value.insert(key, token.clone());
         Ok(())

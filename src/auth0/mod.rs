@@ -10,7 +10,7 @@ mod refresh;
 mod token;
 mod util;
 
-use cache::Cache;
+use cache::{Cache, CacheError};
 pub use client::Auth0Client;
 pub use config::{CacheType, Config};
 pub use errors::Auth0Error;
@@ -29,7 +29,11 @@ impl Auth0 {
         } else {
             let redis_conn = config.cache_type().redis_connection_url().to_string();
             let encryption_key = config.token_encryption_key().to_string();
-            Box::new(cache::RedisCache::new(redis_conn, encryption_key).await?)
+            Box::new(
+                cache::RedisCache::new(redis_conn, encryption_key)
+                    .await
+                    .map_err(Into::<CacheError>::into)?,
+            )
         };
 
         let client = client::Auth0Client::from_config(&config, client);
