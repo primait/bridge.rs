@@ -27,6 +27,7 @@ impl From<DynamoDBCacheError> for super::CacheError {
     }
 }
 
+/// A cache using the AWS DynamoDB
 #[derive(Debug)]
 pub struct DynamoDBCache {
     table_name: String,
@@ -37,10 +38,13 @@ impl DynamoDBCache {
     /// Construct a DynamoDBCache instance which uses a given table name and client
     ///
     /// Note: this method doesn't currectly check whether a table with the given name exists during creation.
+    /// If needed you can call [DynamoDBCache::create_table_if_not_exists], instead.
+    /// DynamoDBCache expects client to have full aws permissions on the table_name table.
     pub fn new(client: aws_sdk_dynamodb::Client, table_name: String) -> Self {
         Self { client, table_name }
     }
 
+    /// Create table if one does not exist
     pub async fn create_table_if_not_exists(&self) -> Result<(), DynamoDBCacheError> {
         match self
             .client
