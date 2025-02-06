@@ -8,7 +8,7 @@ readme = "README.md"
 repository = "https://github.com/primait/bridge.rs"
 version = "0.20.0"
 # See https://github.com/rust-lang/rust/issues/107557
-rust-version = "1.72"
+rust-version = "1.81"
 
 [features]
 default = ["tracing_opentelemetry"]
@@ -137,6 +137,7 @@ tracing-opentelemetry_0_27_pkg = { package = "tracing-opentelemetry", version = 
 tracing-opentelemetry_0_28_pkg = { package = "tracing-opentelemetry", version = "0.28", optional = true }
 
 [dev-dependencies]
+aws-config = { version = "1.5.16", features = ["behavior-version-latest"] }
 flate2 = "1.0"
 mockito = "1.0"
 tokio = { version = "1.16", features = ["macros", "rt-multi-thread"] }

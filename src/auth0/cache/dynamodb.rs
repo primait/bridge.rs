@@ -4,7 +4,9 @@ pub use aws_sdk_dynamodb;
 use aws_sdk_dynamodb::{
     client::Waiters,
     operation::describe_table::DescribeTableError,
-    types::{AttributeDefinition, AttributeValue, TimeToLiveSpecification},
+    types::{
+        AttributeDefinition, AttributeValue, KeySchemaElement, KeyType, ProvisionedThroughput, TimeToLiveSpecification,
+    },
 };
 
 use crate::auth0::Token;
@@ -64,10 +66,17 @@ impl DynamoDBCache {
                     // Unwraps here are fine, will be caught by tests
                     .unwrap(),
             )
-            .attribute_definitions(
-                AttributeDefinition::builder()
-                    .attribute_name("expiration".to_string())
-                    .attribute_type(aws_sdk_dynamodb::types::ScalarAttributeType::N)
+            .key_schema(
+                KeySchemaElement::builder()
+                    .attribute_name("key")
+                    .key_type(KeyType::Hash)
+                    .build()
+                    .unwrap(),
+            )
+            .provisioned_throughput(
+                ProvisionedThroughput::builder()
+                    .read_capacity_units(4)
+                    .write_capacity_units(1)
                     .build()
                     .unwrap(),
             )
@@ -144,5 +153,38 @@ impl Cache for DynamoDBCache {
             .map_err(|e| DynamoDBCacheError::Aws(Box::new(e)))?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::Utc;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn dynamodb_cache_get_set_values() {
+        let aws_config = aws_config::from_env().load().await;
+        let client = aws_sdk_dynamodb::Client::new(&aws_config);
+        let table = "test_table".to_string();
+
+        client.delete_table().table_name(table.clone()).send().await.ok();
+
+        let cache = DynamoDBCache::new(client, table);
+        cache.create_table_if_not_exists().await.unwrap();
+
+        let client_id = "caller".to_string();
+        let audience = "audience".to_string();
+
+        let result: Option<Token> = cache.get_token(&client_id, &audience).await.unwrap();
+        assert!(result.is_none());
+
+        let token_str: &str = "token";
+        let token: Token = Token::new(token_str.to_string(), Utc::now(), Utc::now());
+        cache.put_token(&client_id, &audience, &token).await.unwrap();
+
+        let result: Option<Token> = cache.get_token(&client_id, &audience).await.unwrap();
+        assert!(result.is_some());
+        assert_eq!(result.unwrap().as_str(), token_str);
     }
 }
