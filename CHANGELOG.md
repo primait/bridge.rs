@@ -8,7 +8,17 @@ and this project adheres to
 
 ## [Unreleased]
 
+# Fixed
+
 - Fixed docs.rs not building the documentation
+
+# Deprecated
+
+- Deprecated a lot of old auth0 APIs. See the docs for alternatives to use.
+
+# Added 
+
+- DynamoDB cache provider
 
 ---
 
