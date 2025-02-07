@@ -80,7 +80,7 @@ dependencies = ["build"]
 command = "cargo"
 args = [
   "clippy",
-  "--features=auth0,gzip",
+  "--features=auth0,cache-dynamodb,gzip",
   "--all-targets",
   "--",
   "-D",

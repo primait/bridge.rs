@@ -28,6 +28,7 @@
 //!   We are going to support at least the last 3 versions of opentelemetry. After that we might remove support for older otel version without it being a breaking change.
 
 #[cfg(feature = "auth0")]
+#[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
 use auth0::RefreshingToken;
 use errors::PrimaBridgeError;
 use http::{header::HeaderName, HeaderValue, Method};
@@ -45,6 +46,7 @@ pub use self::{
     response::Response,
 };
 #[cfg(all(feature = "grpc", feature = "_any_otel_version"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "grpc")))]
 pub use request::grpc::{GrpcOtelInterceptedService, GrpcOtelInterceptor};
 
 pub mod builder;

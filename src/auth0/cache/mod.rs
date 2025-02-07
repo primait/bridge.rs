@@ -1,4 +1,7 @@
+#[cfg(feature = "cache-dynamodb")]
+#[cfg_attr(docsrs, doc(cfg(feature = "cache-dynamodb")))]
 pub use dynamodb::DynamoDBCache;
+
 pub use inmemory::InMemoryCache;
 pub use redis_impl::RedisCache;
 use std::error::Error;
@@ -6,6 +9,9 @@ use std::error::Error;
 use crate::auth0::Token;
 
 mod crypto;
+
+#[cfg(feature = "cache-dynamodb")]
+#[cfg_attr(docsrs, doc(cfg(feature = "cache-dynamodb")))]
 pub mod dynamodb;
 pub mod inmemory;
 pub mod redis_impl;
