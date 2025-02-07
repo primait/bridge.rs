@@ -38,14 +38,27 @@ impl DynamoDBCache {
     /// Construct a DynamoDBCache instance which uses a given table name and client
     ///
     /// Note: this method doesn't correctly check whether a table with the given name exists during creation.
-    /// If needed you can call [DynamoDBCache::create_table_if_not_exists], instead.
+    /// If needed you can call [DynamoDBCache::create_update_dynamo_table].
     /// DynamoDBCache expects client to have full aws permissions on the table_name table.
+    ///
+    /// To ensure the table is setup properly most users will want to call the
+    /// [DynamoDBCache::create_update_dynamo_table] function and let the library
+    /// do it for you.
+    ///
+    /// If you want to create the table yourself keep in mind that while schema changes
+    /// will be documented in the changelog, we do not consider the schema a part of semver's
+    /// guarantees and might alter it in patch/minor releases. If you disagree with this policy,
+    /// we are open to discussing it, open an issue.
+    ///
+    /// Currently bridge.rs expects a table with:
+    /// - one string key attribute, named `key` of type hash
+    /// - a time to live attribute named `expiration`
     pub fn new(client: aws_sdk_dynamodb::Client, table_name: String) -> Self {
         Self { client, table_name }
     }
 
-    /// Create table if one does not exist
-    pub async fn create_table_if_not_exists(&self) -> Result<(), DynamoDBCacheError> {
+    /// Create table or update the schema for a table created by a previous bridge.rs release.
+    pub async fn create_update_dynamo_table(&self) -> Result<(), DynamoDBCacheError> {
         match self
             .client
             .describe_table()
@@ -175,7 +188,7 @@ mod tests {
         client.delete_table().table_name(table.clone()).send().await.ok();
 
         let cache = DynamoDBCache::new(client, table);
-        cache.create_table_if_not_exists().await.unwrap();
+        cache.create_update_dynamo_table().await.unwrap();
 
         let client_id = "caller".to_string();
         let audience = "audience".to_string();
