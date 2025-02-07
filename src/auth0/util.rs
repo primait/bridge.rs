@@ -32,7 +32,7 @@ impl From<RangeInclusive<f64>> for StalenessCheckPercentage {
 }
 
 /// A wrapper around RwLock that cannot be poisoned,
-/// by requiring the value inside to be compltely replaced,
+/// by requiring the value inside to be completely replaced,
 /// ensuring a panic can never occur while the lock is held
 #[derive(Debug)]
 pub struct UnpoisonableRwLock<T>(RwLock<T>);

@@ -37,7 +37,7 @@ pub struct DynamoDBCache {
 impl DynamoDBCache {
     /// Construct a DynamoDBCache instance which uses a given table name and client
     ///
-    /// Note: this method doesn't currectly check whether a table with the given name exists during creation.
+    /// Note: this method doesn't correctly check whether a table with the given name exists during creation.
     /// If needed you can call [DynamoDBCache::create_table_if_not_exists], instead.
     /// DynamoDBCache expects client to have full aws permissions on the table_name table.
     pub fn new(client: aws_sdk_dynamodb::Client, table_name: String) -> Self {

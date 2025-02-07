@@ -100,7 +100,7 @@ impl Auth0Client {
         } = response;
 
         // this is not the exact issue_date, nor the exact expire_date. But is a good approximation
-        // as long as we need it just to removes the key from the cache, and calculate the approximation
+        // as long as we need it just to remove the key from the cache, and calculate the approximation
         // of the token lifetime. If we need more correctness we can decrypt the token and get
         // the exact issued_at (iat) and expiration (exp)
         // reference: https://www.iana.org/assignments/jwt/jwt.xhtml
