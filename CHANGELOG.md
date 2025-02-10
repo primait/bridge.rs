@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+---
+
+## [0.21.0] - 2025-02-10
+
 # Fixed
 
 - Fixed docs.rs not building the documentation
@@ -508,7 +512,9 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.20.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.21.0...HEAD
+[0.21.0]: https://github.com/primait/bridge.rs/compare/0.20.0...0.21.0
 [0.20.0]: https://github.com/primait/bridge.rs/compare/0.19.0...0.20.0
 [0.19.0]: https://github.com/primait/bridge.rs/compare/0.18.0...0.19.0
 [0.18.0]: https://github.com/primait/bridge.rs/compare/0.17.0...0.18.0
