@@ -8,6 +8,10 @@ services:
       CARGO_HOME: /home/app/.cargo
       CARGO_TARGET_DIR: /home/app/target
       CARGO_MAKE_DISABLE_UPDATE_CHECK: 1
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ENDPOINT_URL: http://aws:4566
+      AWS_REGION: eu-west-1
     volumes:
       - ".:/code"
       - "app:/home/app/"
@@ -17,6 +21,12 @@ services:
       - "~/.gitignore:/home/app/.gitignore"
     tty: true
     stdin_open: true
+    depends_on:
+      - aws
+  aws:
+    image: public.ecr.aws/localstack/localstack:4
+    ports:
+      - "4566:4566"
 
 volumes:
   app:

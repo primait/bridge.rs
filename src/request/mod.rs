@@ -120,7 +120,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
 
     #[cfg(feature = "auth0")]
     #[doc(hidden)]
-    fn get_auth0(&self) -> &Option<crate::auth0::Auth0>;
+    fn get_auth0(&self) -> &Option<crate::auth0::RefreshingToken>;
 
     #[cfg(feature = "auth0")]
     #[doc(hidden)]

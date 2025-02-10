@@ -6,12 +6,16 @@ license = "MIT"
 name = "prima_bridge"
 readme = "README.md"
 repository = "https://github.com/primait/bridge.rs"
-version = "0.20.0"
+version = "0.21.0"
 # See https://github.com/rust-lang/rust/issues/107557
-rust-version = "1.72"
+rust-version = "1.81"
 
 [features]
 default = ["tracing_opentelemetry"]
+
+# Feature set that should be used
+# This exists to avoid compatibility issues with otel version conflicts
+_docs = ["auth0", "cache-dynamodb", "grpc", "gzip", "redis-tls", "tracing_opentelemetry"]
 
 auth0 = [
   "rand",
@@ -22,9 +26,12 @@ auth0 = [
   "dashmap",
   "tracing",
 ]
-grpc = ["tonic"]
+grpc = [ "_any_otel_version", "tonic"]
 gzip = ["reqwest/gzip"]
-redis-tls = ["redis/tls", "redis/tokio-native-tls-comp"]
+
+redis-tls = [ "redis", "redis/tls", "redis/tokio-native-tls-comp"]
+cache-dynamodb = [ "aws-sdk-dynamodb" ]
+
 tracing_opentelemetry = ["tracing_opentelemetry_0_27"]
 
 tracing_opentelemetry_0_21 = [
@@ -102,6 +109,7 @@ tonic = { version = "0.12", default-features = false, optional = true }
 tracing = { version = "0.1", optional = true }
 uuid = { version = ">=0.7.0, <2.0.0", features = ["serde", "v4"] }
 chacha20poly1305 = { version = "0.10.1", features = ["std"], optional = true }
+aws-sdk-dynamodb = { version = "1.63", optional = true } 
 
 reqwest-middleware = { version = "0.4.0", features = ["json", "multipart"] }
 http = "1.0.0"
@@ -129,6 +137,7 @@ tracing-opentelemetry_0_27_pkg = { package = "tracing-opentelemetry", version = 
 tracing-opentelemetry_0_28_pkg = { package = "tracing-opentelemetry", version = "0.28", optional = true }
 
 [dev-dependencies]
+aws-config = { version = "1.5.16", features = ["behavior-version-latest"] }
 flate2 = "1.0"
 mockito = "1.0"
 tokio = { version = "1.16", features = ["macros", "rt-multi-thread"] }
@@ -139,7 +148,11 @@ codegen-units = 1
 lto = "thin"
 
 [package.metadata.docs.rs]
-all-features = true
+all-features = false
+# Avoid opentelemetry version conflicts
+features = [
+	"_docs"
+]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [[example]]

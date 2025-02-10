@@ -1,30 +1,33 @@
-use std::str::FromStr;
 use std::time::Duration;
 
 use jsonwebtoken::Algorithm;
 use mockito::{Matcher, Mock, Server};
-use reqwest::Url;
 
-use prima_bridge::auth0::{CacheType, Config, StalenessCheckPercentage};
+use prima_bridge::auth0::{cache::InMemoryCache, Auth0Client, RefreshingToken, StalenessCheckPercentage};
 
 mod builder;
 mod graphql;
 mod rest;
 
-fn config(server: &Server) -> Config {
-    Config {
-        token_url: Url::from_str(&format!("{}/{}", server.url().as_str(), "token")).unwrap(),
-        jwks_url: Url::from_str(&format!("{}/{}", server.url().as_str(), "jwks")).unwrap(),
-        caller: "caller".to_string(),
-        audience: "audience".to_string(),
-        cache_type: CacheType::Inmemory,
-        token_encryption_key: "32char_long_token_encryption_key".to_string(),
-        check_interval: Duration::from_secs(10),
-        staleness_check_percentage: StalenessCheckPercentage::default(),
-        client_id: "client_id".to_string(),
-        client_secret: "client_secret".to_string(),
-        scope: None,
-    }
+async fn refreshing_token(server: &Server) -> RefreshingToken {
+    let token_url = format!("{}/token", server.url().as_str()).parse().unwrap();
+    let auth0_client = Auth0Client::new(
+        token_url,
+        reqwest::Client::default(),
+        "caller".to_string(),
+        "client_secret".to_string(),
+    );
+
+    RefreshingToken::new(
+        auth0_client,
+        Duration::from_secs(10),
+        StalenessCheckPercentage::default(),
+        Box::new(InMemoryCache::default()),
+        "audience".to_string(),
+        None,
+    )
+    .await
+    .unwrap()
 }
 
 struct Auth0Mocks {

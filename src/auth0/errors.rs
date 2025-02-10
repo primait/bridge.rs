@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use super::cache;
+
 #[derive(Debug, Error)]
 pub enum Auth0Error {
     #[error(transparent)]
@@ -12,8 +14,8 @@ pub enum Auth0Error {
     JwtFetchDeserializationError(String, reqwest::Error),
     #[error("failed to fetch jwt from {0}. Status code: {0}; error: {1}")]
     JwksHttpError(String, reqwest::Error),
-    #[error("redis error: {0}")]
-    RedisError(#[from] redis::RedisError),
+    #[error("cache error: {0}")]
+    CacheError(#[from] cache::CacheError),
     #[error(transparent)]
     CryptoError(#[from] chacha20poly1305::Error),
 }

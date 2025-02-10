@@ -1,10 +1,12 @@
 use chrono::{DateTime, Utc};
-use reqwest::{Client, Response};
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
+use crate::auth0::client::Auth0Client;
 use crate::auth0::errors::Auth0Error;
 use crate::auth0::Config;
+
+use super::StalenessCheckPercentage;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Token {
@@ -22,46 +24,16 @@ impl Token {
         }
     }
 
-    pub async fn fetch(client_ref: &Client, config_ref: &Config) -> Result<Self, Auth0Error> {
-        let request: FetchTokenRequest = FetchTokenRequest::from(config_ref);
-        let response: Response = client_ref
-            .post(config_ref.token_url().clone())
-            .json(&request)
-            .send()
-            .await
-            .map_err(|e| {
-                Auth0Error::JwtFetchError(
-                    e.status().map(|v| v.as_u16()).unwrap_or_default(),
-                    config_ref.token_url().as_str().to_string(),
-                    e,
-                )
-            })?;
-
-        let status_code: u16 = response.status().as_u16();
-        if status_code != 200 {
-            return Err(Auth0Error::JwtFetchAuthError(status_code));
-        }
-
-        let response: FetchTokenResponse = response
-            .json()
-            .await
-            .map_err(|e| Auth0Error::JwtFetchDeserializationError(config_ref.token_url().as_str().to_string(), e))?;
-
-        let access_token: String = response.access_token.clone();
-
-        // this is not the exact issue_date, nor the exact expire_date. But is a good approximation
-        // as long as we need it just to removes the key from the cache, and calculate the approximation
-        // of the token lifetime. If we need more correctness we can decrypt the token and get
-        // the exact issued_at (iat) and expiration (exp)
-        // reference: https://www.iana.org/assignments/jwt/jwt.xhtml
-        let issue_date: DateTime<Utc> = Utc::now();
-        let expire_date: DateTime<Utc> = Utc::now() + Duration::from_secs(response.expires_in as u64);
-
-        Ok(Self {
-            token: access_token,
-            issue_date,
-            expire_date,
-        })
+    #[deprecated(since = "0.21.0", note = "please use Auth0Client instead")]
+    pub async fn fetch(client: &Client, config: &Config) -> Result<Self, Auth0Error> {
+        Auth0Client::new(
+            config.token_url().clone(),
+            client.clone(),
+            config.client_id().to_string(),
+            config.client_secret().to_string(),
+        )
+        .fetch_token(config.audience(), config.scope.as_deref())
+        .await
     }
 
     pub fn as_str(&self) -> &str {
@@ -95,49 +67,16 @@ impl Token {
 
     // Check if the token remaining lifetime it's less than a randomized percentage that is between
     // `max_token_remaining_life_percentage` and `min_token_remaining_life_percentage`
-    pub fn needs_refresh(&self, config_ref: &Config) -> bool {
-        self.remaining_life_percentage() < config_ref.staleness_check_percentage().random_value_between()
+    #[deprecated(since = "0.21.0", note = "please use the is_stale function instead")]
+    pub fn needs_refresh(&self, config: &Config) -> bool {
+        self.is_stale(config.staleness_check_percentage())
+    }
+
+    pub fn is_stale(&self, staleness: &StalenessCheckPercentage) -> bool {
+        self.remaining_life_percentage() < staleness.random_value_between()
     }
 
     pub fn to_bearer(&self) -> String {
         format!("Bearer {}", self.token.as_str())
     }
-}
-
-/// The successful response received from the authorization server containing the access token.
-/// Related [RFC](https://www.rfc-editor.org/rfc/rfc6749#section-5.1)
-#[derive(Deserialize, Serialize, Debug)]
-struct FetchTokenResponse {
-    access_token: String,
-    scope: Option<String>,
-    expires_in: i32,
-    token_type: String,
-}
-
-#[derive(Serialize, Debug)]
-struct FetchTokenRequest {
-    client_id: String,
-    client_secret: String,
-    audience: String,
-    grant_type: String,
-    scope: Option<String>,
-}
-
-impl From<&Config> for FetchTokenRequest {
-    fn from(config: &Config) -> Self {
-        Self {
-            client_id: config.client_id().to_string(),
-            client_secret: config.client_secret().to_string(),
-            audience: config.audience().to_string(),
-            grant_type: "client_credentials".to_string(),
-            scope: config.scope.clone(),
-        }
-    }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct Claims {
-    #[allow(dead_code)]
-    #[serde(default)]
-    pub permissions: Vec<String>,
 }

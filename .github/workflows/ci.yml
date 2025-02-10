@@ -21,6 +21,16 @@ jobs:
       - run: cargo make deny-check
       - run: cargo make docs
   test:
+    services:
+      aws:
+        image: public.ecr.aws/localstack/localstack:4
+        ports:
+          - "4566:4566"
+    env:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_ENDPOINT_URL: http://localhost:4566
+      AWS_REGION: eu-west-1
     # Avoid duplicate jobs on PR from a branch on the same repo
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     runs-on: ubuntu-latest

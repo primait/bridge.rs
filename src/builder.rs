@@ -5,6 +5,8 @@ use reqwest_middleware::Middleware;
 
 #[cfg(feature = "auth0")]
 use crate::auth0;
+#[cfg(feature = "auth0")]
+use crate::auth0::RefreshingToken;
 use crate::{Bridge, BridgeImpl, RedirectPolicy};
 
 pub type BridgeBuilder = BridgeBuilderInner<reqwest::ClientBuilder>;
@@ -13,21 +15,33 @@ pub type BridgeBuilder = BridgeBuilderInner<reqwest::ClientBuilder>;
 pub struct BridgeBuilderInner<T> {
     inner: T,
     #[cfg(feature = "auth0")]
-    auth0: Option<auth0::Auth0>,
+    auth0: Option<auth0::RefreshingToken>,
 }
 
 impl<T> BridgeBuilderInner<T> {
     /// Adds Auth0 JWT authentication to the requests made by the [Bridge].
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
     #[cfg(feature = "auth0")]
+    #[deprecated(since = "0.21.0", note = "please use with_refreshing_token instead")]
     pub async fn with_auth0(self, config: auth0::Config) -> Self {
         let client: reqwest::Client = reqwest::Client::new();
+        #[allow(deprecated)]
+        let auth0 = auth0::Auth0::new(&client, config)
+            .await
+            .expect("Failed to create auth0 bridge")
+            .refreshing_token();
+
         Self {
-            auth0: Some(
-                auth0::Auth0::new(&client, config)
-                    .await
-                    .expect("Failed to create auth0 bridge"),
-            ),
+            auth0: Some(auth0),
+            ..self
+        }
+    }
+
+    #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
+    #[cfg(feature = "auth0")]
+    pub async fn with_refreshing_token(self, refreshing_token: RefreshingToken) -> Self {
+        Self {
+            auth0: Some(refreshing_token),
             ..self
         }
     }

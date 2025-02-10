@@ -42,7 +42,7 @@ dependencies = ["build"]
 
 [tasks.test-auth0]
 command = "cargo"
-args = ["test", "--features=auth0,gzip", "${@}"]
+args = ["test", "--features=auth0,gzip,cache-dynamodb", "${@}"]
 dependencies = ["build"]
 
 [tasks.test-all-otel-versions]
@@ -80,7 +80,7 @@ dependencies = ["build"]
 command = "cargo"
 args = [
   "clippy",
-  "--features=auth0,gzip",
+  "--features=auth0,cache-dynamodb,gzip",
   "--all-targets",
   "--",
   "-D",

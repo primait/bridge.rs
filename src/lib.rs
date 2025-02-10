@@ -23,10 +23,13 @@
 //! * `redis-tls` - add support for connecting to redis with tls
 //! * `grpc` - provides the [GrpcOtelInterceptor] for adding the opentelemetry context to the gRPC requests
 //! * `tracing_opentelemetry` - adds support for integration with opentelemetry.
-//!     This feature is an alias for the latest `tracing_opentelemetry_x_xx` feature.
+//!   This feature is an alias for the latest `tracing_opentelemetry_x_xx` feature.
 //! * `tracing_opentelemetry_x_xx` (e.g. `tracing_opentelemetry_0_27`) - adds support for integration with a particular opentelemetry version.
-//!     We are going to support at least the last 3 versions of opentelemetry. After that we might remove support for older otel version without it being a breaking change.
+//!   We are going to support at least the last 3 versions of opentelemetry. After that we might remove support for older otel version without it being a breaking change.
 
+#[cfg(feature = "auth0")]
+#[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
+use auth0::RefreshingToken;
 use errors::PrimaBridgeError;
 use http::{header::HeaderName, HeaderValue, Method};
 use reqwest::{multipart::Form, Url};
@@ -43,9 +46,10 @@ pub use self::{
     response::Response,
 };
 #[cfg(all(feature = "grpc", feature = "_any_otel_version"))]
+#[cfg_attr(docsrs, doc(cfg(feature = "grpc")))]
 pub use request::grpc::{GrpcOtelInterceptedService, GrpcOtelInterceptor};
 
-mod builder;
+pub mod builder;
 mod errors;
 pub mod prelude;
 mod redirect;
@@ -61,18 +65,18 @@ pub type Bridge = BridgeImpl<reqwest::Client>;
 
 /// A Bridge instance that's generic across the client. If the [BridgeBuilder] is used
 /// to construct a bridge with middleware, this type will be used to wrap the [reqwest_middleware::ClientWithMiddleware].
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BridgeImpl<T: BridgeClient> {
     inner_client: T,
     endpoint: Url,
     #[cfg(feature = "auth0")]
-    auth0_opt: Option<auth0::Auth0>,
+    auth0_opt: Option<RefreshingToken>,
 }
 
 /// A trait that abstracts the client used by the [BridgeImpl], such that both reqwest clients and reqwest
 /// clients with middleware can be used, more or less interchangeably.
 #[doc(hidden)]
-pub trait BridgeClient: Sealed {
+pub trait BridgeClient: Sealed + Clone {
     type Builder: PrimaRequestBuilderInner;
     fn request(&self, method: Method, url: Url) -> PrimaRequestBuilder<Self::Builder>;
 }
@@ -251,7 +255,7 @@ impl Bridge {
     #[cfg_attr(docsrs, doc(cfg(feature = "auth0")))]
     /// Gets the JWT token used by the Bridge, if it has been configured with Auth0 authentication via [BridgeBuilder.with_auth0](BridgeBuilder#with_auth0).
     pub fn token(&self) -> Option<auth0::Token> {
-        self.auth0_opt.as_ref().map(|auth0| auth0.token())
+        self.auth0_opt.as_ref().map(|auth0| auth0.token().clone())
     }
 }
 
