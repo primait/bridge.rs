@@ -47,6 +47,13 @@ mod otel_crates {
     pub use tracing_opentelemetry_0_28_pkg as tracing_opentelemetry;
 }
 
+#[cfg(feature = "tracing_opentelemetry_0_28")]
+mod otel_crates {
+    pub use opentelemetry_0_28_pkg as opentelemetry;
+    pub use opentelemetry_sdk_0_28_pkg as opentelemetry_sdk;
+    pub use tracing_opentelemetry_0_29_pkg as tracing_opentelemetry;
+}
+
 use otel_crates::*;
 
 pub use opentelemetry::propagation::Injector;
