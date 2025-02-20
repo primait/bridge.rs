@@ -32,7 +32,7 @@ gzip = ["reqwest/gzip"]
 redis-tls = [ "redis", "redis/tls", "redis/tokio-native-tls-comp"]
 cache-dynamodb = [ "aws-sdk-dynamodb" ]
 
-tracing_opentelemetry = ["tracing_opentelemetry_0_27"]
+tracing_opentelemetry = ["tracing_opentelemetry_0_28"]
 
 tracing_opentelemetry_0_21 = [
   "_any_otel_version",
@@ -83,6 +83,13 @@ tracing_opentelemetry_0_27 = [
   "opentelemetry_0_27_pkg",
   "opentelemetry_sdk_0_27_pkg",
 ]
+tracing_opentelemetry_0_28 = [
+  "_any_otel_version",
+  "tracing",
+  "tracing-opentelemetry_0_29_pkg",
+  "opentelemetry_0_28_pkg",
+  "opentelemetry_sdk_0_28_pkg",
+]
 
 _any_otel_version = []
 
@@ -121,6 +128,7 @@ opentelemetry_0_24_pkg = { package = "opentelemetry", version = "0.24", optional
 opentelemetry_0_25_pkg = { package = "opentelemetry", version = "0.25", optional = true }
 opentelemetry_0_26_pkg = { package = "opentelemetry", version = "0.26", optional = true }
 opentelemetry_0_27_pkg = { package = "opentelemetry", version = "0.27", optional = true }
+opentelemetry_0_28_pkg = { package = "opentelemetry", version = "0.28", optional = true }
 opentelemetry_sdk_0_21_pkg = { package = "opentelemetry_sdk", version = "0.21", optional = true }
 opentelemetry_sdk_0_22_pkg = { package = "opentelemetry_sdk", version = "0.22", optional = true }
 opentelemetry_sdk_0_23_pkg = { package = "opentelemetry_sdk", version = "0.23", optional = true }
@@ -128,6 +136,7 @@ opentelemetry_sdk_0_24_pkg = { package = "opentelemetry_sdk", version = "0.24", 
 opentelemetry_sdk_0_25_pkg = { package = "opentelemetry_sdk", version = "0.25", optional = true }
 opentelemetry_sdk_0_26_pkg = { package = "opentelemetry_sdk", version = "0.26", optional = true }
 opentelemetry_sdk_0_27_pkg = { package = "opentelemetry_sdk", version = "0.27", optional = true }
+opentelemetry_sdk_0_28_pkg = { package = "opentelemetry_sdk", version = "0.28", optional = true }
 tracing-opentelemetry_0_22_pkg = { package = "tracing-opentelemetry", version = "0.22", optional = true }
 tracing-opentelemetry_0_23_pkg = { package = "tracing-opentelemetry", version = "0.23", optional = true }
 tracing-opentelemetry_0_24_pkg = { package = "tracing-opentelemetry", version = "0.24", optional = true }
@@ -135,6 +144,7 @@ tracing-opentelemetry_0_25_pkg = { package = "tracing-opentelemetry", version = 
 tracing-opentelemetry_0_26_pkg = { package = "tracing-opentelemetry", version = "0.26", optional = true }
 tracing-opentelemetry_0_27_pkg = { package = "tracing-opentelemetry", version = "0.27", optional = true }
 tracing-opentelemetry_0_28_pkg = { package = "tracing-opentelemetry", version = "0.28", optional = true }
+tracing-opentelemetry_0_29_pkg = { package = "tracing-opentelemetry", version = "0.29", optional = true }
 
 [dev-dependencies]
 aws-config = { version = "1.5.16", features = ["behavior-version-latest"] }
