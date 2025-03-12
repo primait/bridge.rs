@@ -16,17 +16,26 @@ and this project adheres to
 
 ## [0.21.0] - 2025-02-10
 
-# Fixed
+### Fixed
 
 - Fixed docs.rs not building the documentation
 
-# Deprecated
+### Deprecated
 
 - Deprecated a lot of old auth0 APIs. See the docs for alternatives to use.
 
-# Added 
+### Added
 
 - DynamoDB cache provider
+
+### Breaking
+
+- Redis cache keys now use a format: `auth0rs_tokens:{client_id}:{token_version}:{audience}"`
+  (changed from `auth0rs_tokens:{caller}:{token_version}:{audience}"`)
+
+  In a lot of cases these should be the same and you won't need to change anything
+
+
 
 ---
 
