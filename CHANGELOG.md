@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+---
+
+## [0.23.0] - 2025-03-24
+
 - Support for opentelemetry 0.29, now the default version.
 
 ## [0.22.0] - 2025-02-20
@@ -527,7 +531,9 @@ The old API is still available but deprecated. It will be removed soon.
 
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.22.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.23.0...HEAD
+[0.23.0]: https://github.com/primait/bridge.rs/compare/0.22.0...0.23.0
 [0.22.0]: https://github.com/primait/bridge.rs/compare/0.21.0...0.22.0
 [0.21.0]: https://github.com/primait/bridge.rs/compare/0.20.0...0.21.0
 [0.20.0]: https://github.com/primait/bridge.rs/compare/0.19.0...0.20.0
