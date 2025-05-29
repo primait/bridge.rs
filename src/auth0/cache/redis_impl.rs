@@ -2,7 +2,7 @@ use redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
 
 use super::CacheError;
-use crate::auth0::cache::{self, crypto, Cache};
+use crate::auth0::cache::{crypto, Cache};
 use crate::auth0::token::Token;
 
 #[derive(Debug, thiserror::Error)]
@@ -40,7 +40,7 @@ impl RedisCache {
         })
     }
 
-    async fn get<T>(&self, key: &str) -> Result<Option<T>, RedisCacheError>
+    async fn get<T>(&self, key: String) -> Result<Option<T>, RedisCacheError>
     where
         for<'de> T: Deserialize<'de>,
     {
@@ -54,7 +54,7 @@ impl RedisCache {
             .map_err(Into::into)
     }
 
-    async fn put<T: Serialize>(&self, key: &str, lifetime_in_seconds: u64, v: T) -> Result<(), RedisCacheError> {
+    async fn put<T: Serialize>(&self, key: String, lifetime_in_seconds: u64, v: T) -> Result<(), RedisCacheError> {
         let mut connection = self.client.get_multiplexed_async_connection().await?;
 
         let encrypted_value: Vec<u8> = crypto::encrypt(&v, self.encryption_key.as_str())?;
@@ -66,12 +66,12 @@ impl RedisCache {
 #[async_trait::async_trait]
 impl Cache for RedisCache {
     async fn get_token(&self, client_id: &str, audience: &str) -> Result<Option<Token>, CacheError> {
-        let key: &str = &cache::token_key(client_id, audience);
+        let key = self.token_key(client_id, audience);
         self.get(key).await.map_err(Into::into)
     }
 
     async fn put_token(&self, client_id: &str, audience: &str, value_ref: &Token) -> Result<(), CacheError> {
-        let key: &str = &cache::token_key(client_id, audience);
+        let key = self.token_key(client_id, audience);
         self.put(key, value_ref.lifetime_in_seconds(), value_ref)
             .await
             .map_err(Into::into)

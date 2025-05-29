@@ -1,6 +1,5 @@
 use dashmap::DashMap;
 
-use crate::auth0::cache;
 use crate::auth0::cache::Cache;
 use crate::auth0::token::Token;
 
@@ -14,15 +13,13 @@ pub struct InMemoryCache {
 #[async_trait::async_trait]
 impl Cache for InMemoryCache {
     async fn get_token(&self, client_id: &str, aud: &str) -> Result<Option<Token>, CacheError> {
-        let token = self
-            .key_value
-            .get(&cache::token_key(client_id, aud))
-            .map(|v| v.to_owned());
+        let key = self.token_key(client_id, aud);
+        let token = self.key_value.get(key.as_str()).map(|v| v.to_owned());
         Ok(token)
     }
 
     async fn put_token(&self, client_id: &str, aud: &str, token: &Token) -> Result<(), CacheError> {
-        let key: String = cache::token_key(client_id, aud);
+        let key: String = self.token_key(client_id, aud);
         let _ = self.key_value.insert(key, token.clone());
         Ok(())
     }

@@ -29,8 +29,17 @@ pub trait Cache: Send + Sync + std::fmt::Debug {
     async fn get_token(&self, client_id: &str, aud: &str) -> Result<Option<Token>, CacheError>;
 
     async fn put_token(&self, client_id: &str, aud: &str, token: &Token) -> Result<(), CacheError>;
-}
 
-pub(in crate::auth0::cache) fn token_key(caller: &str, audience: &str) -> String {
-    format!("{}:{}:{}:{}", TOKEN_PREFIX, caller, TOKEN_VERSION, audience)
+    fn service_name(&self) -> &str;
+
+    fn token_key(&self, caller: &str, audience: &str) -> String {
+        format!(
+            "{}:{}:{}:{}:{}",
+            self.service_name(),
+            TOKEN_PREFIX,
+            caller,
+            TOKEN_VERSION,
+            audience
+        )
+    }
 }
