@@ -22,7 +22,6 @@ pub use util::StalenessCheckPercentage;
 pub struct Auth0(RefreshingToken);
 
 impl Auth0 {
-    #[deprecated(since = "0.21.0", note = "please use refreshing token")]
     pub async fn new(client: &Client, config: Config) -> Result<Self, Auth0Error> {
         let cache: Box<dyn Cache> = if config.is_inmemory_cache() {
             Box::new(cache::InMemoryCache::default())

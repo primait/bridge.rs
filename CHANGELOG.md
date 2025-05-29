@@ -8,6 +8,21 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Redis cache keys now use a format of:
+  `{service_name}:auth0rs_tokens:{client_id}:{token_version}:{audience}` i.e.
+  the microservice name using the bridge is prepended, this should help with
+  permission handling on the various cache backends
+- `service_name` has been added as part of the `Config` and as an argument to
+  our `Cache` implementation
+
+### Undeprecated
+
+- `Auth0::new` is undeprecated again, since it provides a convenient way to
+  setup the client. We reserve the right to re-deprecate it in the future once
+  we settle on a nicer API
+
 ---
 
 ## [0.23.0] - 2025-03-24
@@ -34,12 +49,12 @@ and this project adheres to
 
 ### Breaking
 
-- Redis cache keys now use a format: `auth0rs_tokens:{client_id}:{token_version}:{audience}"`
-  (changed from `auth0rs_tokens:{caller}:{token_version}:{audience}"`)
+- Redis cache keys now use a format:
+  `auth0rs_tokens:{client_id}:{token_version}:{audience}"` (changed from
+  `auth0rs_tokens:{caller}:{token_version}:{audience}"`)
 
-  In a lot of cases these should be the same and you won't need to change anything
-
-
+  In a lot of cases these should be the same and you won't need to change
+  anything
 
 ---
 
@@ -48,7 +63,8 @@ and this project adheres to
 ### Added
 
 - Support for opentelemetry 0.27, now the default version.
-- Added gRPC injector to help passing opentelemetry tracing context when doing gRPC calls.
+- Added gRPC injector to help passing opentelemetry tracing context when doing
+  gRPC calls.
 
 ---
 
@@ -94,15 +110,20 @@ and this project adheres to
 
 - The library no longer validates tokens after recieving them from auth0
 
-This was unneccessary, already wasn't done in some code paths, and as a bonus let us remove a dependency.
+This was unneccessary, already wasn't done in some code paths, and as a bonus
+let us remove a dependency.
 
 ### Changed
 
-- When first creating the client if bridge.rs fails to decrypt a cached token a warning will be logged, and a new token will be fetched
+- When first creating the client if bridge.rs fails to decrypt a cached token a
+  warning will be logged, and a new token will be fetched
 
-This behavior matches what happens when a token is automatically refreshed during the applications runtime, and should help address issues that might come up in the future.
+This behavior matches what happens when a token is automatically refreshed
+during the applications runtime, and should help address issues that might come
+up in the future.
 
-- The cache key now contains a cache version, allowing its schema to be updated in the future
+- The cache key now contains a cache version, allowing its schema to be updated
+  in the future
 
 From now on cache keys will use the following format:
 
@@ -120,8 +141,9 @@ eg.
 
 - Switched to using XChaCha20Poly1305 for the redis token cache encryption.
 
-This addresses a few medium severity security issues with the tokens.
-Note that this means that this, and future versions of the library cannot be used at the same time as older versions.
+This addresses a few medium severity security issues with the tokens. Note that
+this means that this, and future versions of the library cannot be used at the
+same time as older versions.
 
 ---
 
@@ -528,9 +550,6 @@ Request::rest(&bridge).send()
 ```
 
 The old API is still available but deprecated. It will be removed soon.
-
-
-
 
 [Unreleased]: https://github.com/primait/bridge.rs/compare/0.23.0...HEAD
 [0.23.0]: https://github.com/primait/bridge.rs/compare/0.22.0...0.23.0
