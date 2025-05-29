@@ -30,6 +30,7 @@ impl From<DynamoDBCacheError> for super::CacheError {
 /// A cache using the AWS DynamoDB
 #[derive(Debug)]
 pub struct DynamoDBCache {
+    service_name: String,
     table_name: String,
     client: aws_sdk_dynamodb::Client,
 }
@@ -53,8 +54,12 @@ impl DynamoDBCache {
     /// Currently bridge.rs expects a table with:
     /// - one string key attribute, named `key` of type hash
     /// - a time to live attribute named `expiration`
-    pub fn new(client: aws_sdk_dynamodb::Client, table_name: String) -> Self {
-        Self { client, table_name }
+    pub fn new(client: aws_sdk_dynamodb::Client, service_name: String, table_name: String) -> Self {
+        Self {
+            client,
+            service_name,
+            table_name,
+        }
     }
 
     /// Create table or update the schema for a table created by a previous bridge.rs release.
@@ -171,6 +176,10 @@ impl Cache for DynamoDBCache {
 
         Ok(())
     }
+
+    fn service_name(&self) -> &str {
+        self.service_name.as_str()
+    }
 }
 
 #[cfg(test)]
@@ -183,11 +192,12 @@ mod tests {
     async fn dynamodb_cache_get_set_values() {
         let aws_config = aws_config::from_env().load().await;
         let client = aws_sdk_dynamodb::Client::new(&aws_config);
+        let service = "test_service".to_string();
         let table = "test_table".to_string();
 
         client.delete_table().table_name(table.clone()).send().await.ok();
 
-        let cache = DynamoDBCache::new(client, table);
+        let cache = DynamoDBCache::new(client, service, table);
         cache.create_update_dynamo_table().await.unwrap();
 
         let client_id = "caller".to_string();
