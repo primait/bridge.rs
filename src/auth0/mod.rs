@@ -29,8 +29,9 @@ impl Auth0 {
         } else {
             let redis_conn = config.cache_type().redis_connection_url().to_string();
             let encryption_key = config.token_encryption_key().to_string();
+            let service_name = config.service_name().to_string();
             Box::new(
-                cache::RedisCache::new(redis_conn, encryption_key)
+                cache::RedisCache::new(redis_conn, service_name, encryption_key)
                     .await
                     .map_err(Into::<CacheError>::into)?,
             )

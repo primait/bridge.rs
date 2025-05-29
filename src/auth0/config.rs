@@ -33,6 +33,9 @@ pub struct Config {
     /// Scope
     /// This is the scopes requested by the bridge when fetching tokens
     pub scope: Option<String>,
+    /// Service Name
+    /// This is the service name that is making the calls with the bridge
+    pub service_name: String,
 }
 
 impl Config {
@@ -80,6 +83,10 @@ impl Config {
         self.cache_type == CacheType::Inmemory
     }
 
+    pub fn service_name(&self) -> &str {
+        &self.service_name
+    }
+
     #[cfg(test)]
     pub fn test_config(server: &mockito::Server) -> Config {
         use std::str::FromStr;
@@ -95,6 +102,7 @@ impl Config {
             client_id: "client_id".to_string(),
             client_secret: "client_secret".to_string(),
             scope: None,
+            service_name: "service_name".to_string(),
         }
     }
 }

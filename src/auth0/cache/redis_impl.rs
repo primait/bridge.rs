@@ -25,11 +25,16 @@ impl From<RedisCacheError> for super::CacheError {
 pub struct RedisCache {
     client: redis::Client,
     encryption_key: String,
+    service_name: String,
 }
 
 impl RedisCache {
     /// Redis connection string(eg. `"redis://{host}:{port}?{ParamKey1}={ParamKey2}"`)
-    pub async fn new(redis_connection_url: String, token_encryption_key: String) -> Result<Self, RedisCacheError> {
+    pub async fn new(
+        redis_connection_url: String,
+        service_name: String,
+        token_encryption_key: String,
+    ) -> Result<Self, RedisCacheError> {
         let client: redis::Client = redis::Client::open(redis_connection_url)?;
         // Ensure connection is fine. Should fail otherwise
         let _ = client.get_multiplexed_async_connection().await?;
@@ -37,6 +42,7 @@ impl RedisCache {
         Ok(RedisCache {
             client,
             encryption_key: token_encryption_key,
+            service_name,
         })
     }
 
@@ -75,6 +81,10 @@ impl Cache for RedisCache {
         self.put(key, value_ref.lifetime_in_seconds(), value_ref)
             .await
             .map_err(Into::into)
+    }
+
+    fn service_name(&self) -> &str {
+        self.service_name.as_str()
     }
 }
 
