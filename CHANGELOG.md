@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+---
+
+## [0.24.0] - 2025-05-29
+
 ### Added
 
 - Redis cache keys now use a format of:
@@ -551,7 +555,9 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.23.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.24.0...HEAD
+[0.24.0]: https://github.com/primait/bridge.rs/compare/0.23.0...0.24.0
 [0.23.0]: https://github.com/primait/bridge.rs/compare/0.22.0...0.23.0
 [0.22.0]: https://github.com/primait/bridge.rs/compare/0.21.0...0.22.0
 [0.21.0]: https://github.com/primait/bridge.rs/compare/0.20.0...0.21.0
