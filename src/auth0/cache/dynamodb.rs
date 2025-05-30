@@ -173,7 +173,7 @@ impl Cache for DynamoDBCache {
     }
 }
 
-const TOKEN_VERSION: &str = "1";
+const TOKEN_VERSION: &str = "2";
 
 // This is tool-dependent and may change if we figure out this doesn't fit DynamoDB in the future
 fn token_key(caller: &str, audience: &str) -> String {

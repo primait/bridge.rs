@@ -20,8 +20,7 @@ and this project adheres to
     the microservice name using the bridge is prepended, this should help with
     permission handling
   - DynamoDb and InMemory use a format of
-    `auth0rs_tokens:{client_id}:{token_version}:{audience}` (starting from
-    version 1)
+    `auth0rs_tokens:{client_id}:{token_version}:{audience}`
 
 ### Changed
 

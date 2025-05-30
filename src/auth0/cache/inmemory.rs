@@ -5,7 +5,7 @@ use crate::auth0::token::Token;
 
 use super::CacheError;
 
-const TOKEN_VERSION: &str = "1";
+const TOKEN_VERSION: &str = "2";
 
 #[derive(Default, Clone, Debug)]
 pub struct InMemoryCache {
