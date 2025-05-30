@@ -28,7 +28,7 @@ impl Cache for InMemoryCache {
 }
 
 fn token_key(client_id: &str, audience: &str) -> String {
-    format!("inmem:v{}:{}:{}", TOKEN_VERSION, client_id, audience)
+    format!("inmem:{}:{}:{}", client_id, TOKEN_VERSION, audience)
 }
 
 #[cfg(test)]
@@ -41,7 +41,6 @@ mod tests {
     async fn inmemory_cache_get_set_values() {
         let client_id = "caller".to_string();
         let audience = "audience".to_string();
-        let service = "service".to_string();
 
         let cache = InMemoryCache::default();
 
