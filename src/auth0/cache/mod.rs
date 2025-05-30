@@ -32,6 +32,8 @@ pub trait Cache: Send + Sync + std::fmt::Debug {
 
     fn service_name(&self) -> &str;
 
+    // The microservice name should always be prefixed, in order to simplify permission handling on
+    // tools such as Redis/DynamoDB/... (permissions are usually given as "microservice:*")
     fn token_key(&self, caller: &str, audience: &str) -> String {
         format!(
             "{}:{}:{}:{}:{}",
