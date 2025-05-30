@@ -23,19 +23,15 @@ impl InMemoryCache {
 #[async_trait::async_trait]
 impl Cache for InMemoryCache {
     async fn get_token(&self, client_id: &str, aud: &str) -> Result<Option<Token>, CacheError> {
-        let key = self.token_key(client_id, aud);
+        let key = super::token_key(&self.service_name, client_id, aud);
         let token = self.key_value.get(key.as_str()).map(|v| v.to_owned());
         Ok(token)
     }
 
     async fn put_token(&self, client_id: &str, aud: &str, token: &Token) -> Result<(), CacheError> {
-        let key: String = self.token_key(client_id, aud);
+        let key = super::token_key(&self.service_name, client_id, aud);
         let _ = self.key_value.insert(key, token.clone());
         Ok(())
-    }
-
-    fn service_name(&self) -> &str {
-        self.service_name.as_str()
     }
 }
 

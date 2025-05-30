@@ -29,19 +29,13 @@ pub trait Cache: Send + Sync + std::fmt::Debug {
     async fn get_token(&self, client_id: &str, aud: &str) -> Result<Option<Token>, CacheError>;
 
     async fn put_token(&self, client_id: &str, aud: &str, token: &Token) -> Result<(), CacheError>;
+}
 
-    fn service_name(&self) -> &str;
-
-    // The microservice name should always be prefixed, in order to simplify permission handling on
-    // tools such as Redis/DynamoDB/... (permissions are usually given as "microservice:*")
-    fn token_key(&self, caller: &str, audience: &str) -> String {
-        format!(
-            "{}:{}:{}:{}:{}",
-            self.service_name(),
-            TOKEN_PREFIX,
-            caller,
-            TOKEN_VERSION,
-            audience
-        )
-    }
+// The microservice name should always be prefixed, in order to simplify permission handling on
+// tools such as Redis/DynamoDB/... (permissions are usually given as "microservice:*")
+pub(in crate::auth0::cache) fn token_key(service_name: &str, caller: &str, audience: &str) -> String {
+    format!(
+        "{}:{}:{}:{}:{}",
+        service_name, TOKEN_PREFIX, caller, TOKEN_VERSION, audience
+    )
 }

@@ -72,19 +72,15 @@ impl RedisCache {
 #[async_trait::async_trait]
 impl Cache for RedisCache {
     async fn get_token(&self, client_id: &str, audience: &str) -> Result<Option<Token>, CacheError> {
-        let key = self.token_key(client_id, audience);
+        let key = super::token_key(&self.service_name, client_id, audience);
         self.get(key).await.map_err(Into::into)
     }
 
     async fn put_token(&self, client_id: &str, audience: &str, value_ref: &Token) -> Result<(), CacheError> {
-        let key = self.token_key(client_id, audience);
+        let key = super::token_key(&self.service_name, client_id, audience);
         self.put(key, value_ref.lifetime_in_seconds(), value_ref)
             .await
             .map_err(Into::into)
-    }
-
-    fn service_name(&self) -> &str {
-        self.service_name.as_str()
     }
 }
 
