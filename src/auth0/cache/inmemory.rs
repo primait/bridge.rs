@@ -5,6 +5,8 @@ use crate::auth0::token::Token;
 
 use super::CacheError;
 
+const TOKEN_VERSION: &str = "1";
+
 #[derive(Default, Clone, Debug)]
 pub struct InMemoryCache {
     key_value: DashMap<String, Token>,
@@ -26,7 +28,7 @@ impl Cache for InMemoryCache {
 }
 
 fn token_key(client_id: &str, audience: &str) -> String {
-    format!("{}:{}", client_id, audience)
+    format!("inmem:v{}:{}:{}", TOKEN_VERSION, client_id, audience)
 }
 
 #[cfg(test)]
