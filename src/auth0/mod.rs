@@ -22,15 +22,15 @@ pub use util::StalenessCheckPercentage;
 pub struct Auth0(RefreshingToken);
 
 impl Auth0 {
-    #[deprecated(since = "0.21.0", note = "please use refreshing token")]
     pub async fn new(client: &Client, config: Config) -> Result<Self, Auth0Error> {
         let cache: Box<dyn Cache> = if config.is_inmemory_cache() {
             Box::new(cache::InMemoryCache::default())
         } else {
             let redis_conn = config.cache_type().redis_connection_url().to_string();
+            let redis_key_prefix = config.cache_type().redis_key_prefix().to_string();
             let encryption_key = config.token_encryption_key().to_string();
             Box::new(
-                cache::RedisCache::new(redis_conn, encryption_key)
+                cache::RedisCache::new(redis_conn, redis_key_prefix, encryption_key)
                     .await
                     .map_err(Into::<CacheError>::into)?,
             )
