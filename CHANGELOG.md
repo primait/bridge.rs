@@ -16,7 +16,7 @@ and this project adheres to
 
 - Cache keys are now dependent on implementation (Redis, DynamoDB, InMemory)
   - Redis cache keys now use a format of
-    `{service_name}:auth0rs_tokens:{client_id}:{token_version}:{audience}` i.e.
+    `{user_defined_prefix}:auth0rs_tokens:{client_id}:{token_version}:{audience}` i.e.
     the microservice name using the bridge is prepended, this should help with
     permission handling
   - DynamoDb and InMemory use a format of
