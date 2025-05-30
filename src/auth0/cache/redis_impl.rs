@@ -32,7 +32,7 @@ impl RedisCache {
     /// Redis connection string(eg. `"redis://{host}:{port}?{ParamKey1}={ParamKey2}"`)
     pub async fn new(
         redis_connection_url: String,
-        key_prefix: String,
+        redis_key_prefix: String,
         token_encryption_key: String,
     ) -> Result<Self, RedisCacheError> {
         let client: redis::Client = redis::Client::open(redis_connection_url)?;
@@ -42,7 +42,7 @@ impl RedisCache {
         Ok(RedisCache {
             client,
             encryption_key: token_encryption_key,
-            key_prefix,
+            key_prefix: redis_key_prefix,
         })
     }
 
