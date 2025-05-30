@@ -86,7 +86,7 @@ impl Cache for RedisCache {
 
 const TOKEN_VERSION: &str = "2";
 
-// The microservice name should always be redis_key_prefixed, in order to simplify permission handling
+// The microservice name should always be prefixed, in order to simplify permission handling
 // (permissions are usually given as "microservice:*")
 // This is tool-dependent and may change if we figure out this doesn't fit Redis in the future
 fn token_key(key_prefix: &str, caller: &str, audience: &str) -> String {
