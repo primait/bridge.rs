@@ -15,14 +15,20 @@ and this project adheres to
 ### Added
 
 - Cache keys are now dependent on implementation (Redis, DynamoDB, InMemory)
-- Redis and DynamoDb cache keys now use a format of
-  `{service_name}:auth0rs_tokens:{client_id}:{token_version}:{audience}` i.e.
-  the microservice name using the bridge is prepended, this should help with
-  permission handling on the various cache backends
-- In memory cache now uses a format of
-  `inmem:{client_id}:{token_version}:{audience}` (starting from version 1)
-- `service_name` has been added as part of the `Config` and as an argument to
-  our `Cache` implementation
+  - Redis cache keys now use a format of
+    `{service_name}:auth0rs_tokens:{client_id}:{token_version}:{audience}` i.e.
+    the microservice name using the bridge is prepended, this should help with
+    permission handling on the various cache backends
+  - DynamoDb uses a format of
+    `auth0rs_tokens:{client_id}:{token_version}:{audience}` (starting from
+    version 1)
+  - In memory cache now uses a format of
+    `inmem:{client_id}:{token_version}:{audience}` (starting from version 1)
+
+### Changed
+
+- `CacheType::Redis` is now a struct which accepts a url and a prefix for keys
+  saved on Redis.
 
 ### Undeprecated
 
