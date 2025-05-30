@@ -19,11 +19,9 @@ and this project adheres to
     `{service_name}:auth0rs_tokens:{client_id}:{token_version}:{audience}` i.e.
     the microservice name using the bridge is prepended, this should help with
     permission handling on the various cache backends
-  - DynamoDb uses a format of
+  - DynamoDb and InMemory use a format of
     `auth0rs_tokens:{client_id}:{token_version}:{audience}` (starting from
     version 1)
-  - In memory cache now uses a format of
-    `inmem:{client_id}:{token_version}:{audience}` (starting from version 1)
 
 ### Changed
 

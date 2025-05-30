@@ -28,7 +28,7 @@ impl Cache for InMemoryCache {
 }
 
 fn token_key(client_id: &str, audience: &str) -> String {
-    format!("inmem:{}:{}:{}", client_id, TOKEN_VERSION, audience)
+    format!("{}:{}:{}:{}", super::TOKEN_PREFIX, client_id, TOKEN_VERSION, audience)
 }
 
 #[cfg(test)]
