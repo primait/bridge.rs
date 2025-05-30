@@ -25,14 +25,14 @@ impl From<RedisCacheError> for super::CacheError {
 pub struct RedisCache {
     client: redis::Client,
     encryption_key: String,
-    service_name: String,
+    key_prefix: String,
 }
 
 impl RedisCache {
     /// Redis connection string(eg. `"redis://{host}:{port}?{ParamKey1}={ParamKey2}"`)
     pub async fn new(
         redis_connection_url: String,
-        service_name: String,
+        key_prefix: String,
         token_encryption_key: String,
     ) -> Result<Self, RedisCacheError> {
         let client: redis::Client = redis::Client::open(redis_connection_url)?;
@@ -42,7 +42,7 @@ impl RedisCache {
         Ok(RedisCache {
             client,
             encryption_key: token_encryption_key,
-            service_name,
+            key_prefix,
         })
     }
 
@@ -72,12 +72,12 @@ impl RedisCache {
 #[async_trait::async_trait]
 impl Cache for RedisCache {
     async fn get_token(&self, client_id: &str, audience: &str) -> Result<Option<Token>, CacheError> {
-        let key = token_key(&self.service_name, client_id, audience);
+        let key = token_key(&self.key_prefix, client_id, audience);
         self.get(key).await.map_err(Into::into)
     }
 
     async fn put_token(&self, client_id: &str, audience: &str, value_ref: &Token) -> Result<(), CacheError> {
-        let key = token_key(&self.service_name, client_id, audience);
+        let key = token_key(&self.key_prefix, client_id, audience);
         self.put(key, value_ref.lifetime_in_seconds(), value_ref)
             .await
             .map_err(Into::into)
@@ -86,13 +86,13 @@ impl Cache for RedisCache {
 
 const TOKEN_VERSION: &str = "2";
 
-// The microservice name should always be prefixed, in order to simplify permission handling
+// The microservice name should always be redis_key_prefixed, in order to simplify permission handling
 // (permissions are usually given as "microservice:*")
 // This is tool-dependent and may change if we figure out this doesn't fit Redis in the future
-fn token_key(service_name: &str, caller: &str, audience: &str) -> String {
+fn token_key(key_prefix: &str, caller: &str, audience: &str) -> String {
     format!(
         "{}:{}:{}:{}:{}",
-        service_name,
+        key_prefix,
         super::TOKEN_PREFIX,
         caller,
         TOKEN_VERSION,

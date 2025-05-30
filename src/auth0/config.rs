@@ -33,9 +33,6 @@ pub struct Config {
     /// Scope
     /// This is the scopes requested by the bridge when fetching tokens
     pub scope: Option<String>,
-    /// Service Name
-    /// This is the service name that is making the calls with the bridge
-    pub service_name: String,
 }
 
 impl Config {
@@ -83,10 +80,6 @@ impl Config {
         self.cache_type == CacheType::Inmemory
     }
 
-    pub fn service_name(&self) -> &str {
-        &self.service_name
-    }
-
     #[cfg(test)]
     pub fn test_config(server: &mockito::Server) -> Config {
         use std::str::FromStr;
@@ -102,7 +95,6 @@ impl Config {
             client_id: "client_id".to_string(),
             client_secret: "client_secret".to_string(),
             scope: None,
-            service_name: "service_name".to_string(),
         }
     }
 }
@@ -110,16 +102,25 @@ impl Config {
 // Eg. `Redis("redis://{host}:{port}?{ParamKey1}={ParamKey2}")` or `Inmemory` for inmemory cache
 #[derive(Clone, Eq, PartialEq)]
 pub enum CacheType {
-    Redis(String),
+    Redis { url: String, key_prefix: String },
     Inmemory,
 }
 
 impl CacheType {
     pub fn redis_connection_url(&self) -> &str {
         match &self {
-            CacheType::Redis(url) => url,
+            CacheType::Redis { url, .. } => url,
             CacheType::Inmemory => {
-                panic!("Something went wrong getting Redis connection string")
+                panic!("Cache type is set to Inmemory, you need to use Redis")
+            }
+        }
+    }
+
+    pub fn redis_key_prefix(&self) -> &str {
+        match &self {
+            CacheType::Redis { key_prefix, .. } => key_prefix,
+            CacheType::Inmemory => {
+                panic!("Cache type is set to Inmemory, you need to use Redis")
             }
         }
     }

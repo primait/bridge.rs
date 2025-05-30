@@ -30,7 +30,6 @@ impl From<DynamoDBCacheError> for super::CacheError {
 /// A cache using the AWS DynamoDB
 #[derive(Debug)]
 pub struct DynamoDBCache {
-    service_name: String,
     table_name: String,
     client: aws_sdk_dynamodb::Client,
 }
@@ -54,12 +53,8 @@ impl DynamoDBCache {
     /// Currently bridge.rs expects a table with:
     /// - one string key attribute, named `key` of type hash
     /// - a time to live attribute named `expiration`
-    pub fn new(client: aws_sdk_dynamodb::Client, service_name: String, table_name: String) -> Self {
-        Self {
-            client,
-            service_name,
-            table_name,
-        }
+    pub fn new(client: aws_sdk_dynamodb::Client, table_name: String) -> Self {
+        Self { client, table_name }
     }
 
     /// Create table or update the schema for a table created by a previous bridge.rs release.
@@ -134,7 +129,7 @@ impl DynamoDBCache {
 #[async_trait::async_trait]
 impl Cache for DynamoDBCache {
     async fn get_token(&self, client_id: &str, aud: &str) -> Result<Option<Token>, CacheError> {
-        let key = token_key(&self.service_name, client_id, aud);
+        let key = token_key(client_id, aud);
         let Some(attrs) = self
             .client
             .get_item()
@@ -159,7 +154,7 @@ impl Cache for DynamoDBCache {
     }
 
     async fn put_token(&self, client_id: &str, aud: &str, token: &Token) -> Result<(), CacheError> {
-        let key = token_key(&self.service_name, client_id, aud);
+        let key = token_key(client_id, aud);
         let encoded = serde_json::to_string(token).unwrap();
         self.client
             .put_item()
@@ -178,20 +173,11 @@ impl Cache for DynamoDBCache {
     }
 }
 
-const TOKEN_VERSION: &str = "2";
+const TOKEN_VERSION: &str = "1";
 
-// The microservice name should always be prefixed, in order to simplify permission handling
-// (permissions are usually given as "microservice:*")
 // This is tool-dependent and may change if we figure out this doesn't fit DynamoDB in the future
-fn token_key(service_name: &str, caller: &str, audience: &str) -> String {
-    format!(
-        "{}:{}:{}:{}:{}",
-        service_name,
-        super::TOKEN_PREFIX,
-        caller,
-        TOKEN_VERSION,
-        audience
-    )
+fn token_key(caller: &str, audience: &str) -> String {
+    format!("{}:{}:{}:{}", super::TOKEN_PREFIX, caller, TOKEN_VERSION, audience)
 }
 
 #[cfg(test)]
@@ -204,12 +190,11 @@ mod tests {
     async fn dynamodb_cache_get_set_values() {
         let aws_config = aws_config::from_env().load().await;
         let client = aws_sdk_dynamodb::Client::new(&aws_config);
-        let service = "test_service".to_string();
         let table = "test_table".to_string();
 
         client.delete_table().table_name(table.clone()).send().await.ok();
 
-        let cache = DynamoDBCache::new(client, service, table);
+        let cache = DynamoDBCache::new(client, table);
         cache.create_update_dynamo_table().await.unwrap();
 
         let client_id = "caller".to_string();
