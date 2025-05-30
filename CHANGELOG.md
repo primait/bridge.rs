@@ -10,14 +10,17 @@ and this project adheres to
 
 ---
 
-## [0.24.0] - 2025-05-29
+## [0.24.0] - 2025-05-30
 
 ### Added
 
-- Redis cache keys now use a format of:
+- Cache keys are now dependent on implementation (Redis, DynamoDB, InMemory)
+- Redis and DynamoDb cache keys now use a format of
   `{service_name}:auth0rs_tokens:{client_id}:{token_version}:{audience}` i.e.
   the microservice name using the bridge is prepended, this should help with
   permission handling on the various cache backends
+- In memory cache now uses a format of
+  `inmem:{client_id}:{token_version}:{audience}` (starting from version 1)
 - `service_name` has been added as part of the `Config` and as an argument to
   our `Cache` implementation
 
@@ -554,7 +557,6 @@ Request::rest(&bridge).send()
 ```
 
 The old API is still available but deprecated. It will be removed soon.
-
 
 [Unreleased]: https://github.com/primait/bridge.rs/compare/0.24.0...HEAD
 [0.24.0]: https://github.com/primait/bridge.rs/compare/0.23.0...0.24.0
