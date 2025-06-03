@@ -102,16 +102,25 @@ impl Config {
 // Eg. `Redis("redis://{host}:{port}?{ParamKey1}={ParamKey2}")` or `Inmemory` for inmemory cache
 #[derive(Clone, Eq, PartialEq)]
 pub enum CacheType {
-    Redis(String),
+    Redis { url: String, key_prefix: String },
     Inmemory,
 }
 
 impl CacheType {
     pub fn redis_connection_url(&self) -> &str {
         match &self {
-            CacheType::Redis(url) => url,
+            CacheType::Redis { url, .. } => url,
             CacheType::Inmemory => {
-                panic!("Something went wrong getting Redis connection string")
+                panic!("Cache type is set to Inmemory, you need to use Redis")
+            }
+        }
+    }
+
+    pub fn redis_key_prefix(&self) -> &str {
+        match &self {
+            CacheType::Redis { key_prefix, .. } => key_prefix,
+            CacheType::Inmemory => {
+                panic!("Cache type is set to Inmemory, you need to use Redis")
             }
         }
     }

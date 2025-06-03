@@ -129,7 +129,7 @@ impl DynamoDBCache {
 #[async_trait::async_trait]
 impl Cache for DynamoDBCache {
     async fn get_token(&self, client_id: &str, aud: &str) -> Result<Option<Token>, CacheError> {
-        let key = super::token_key(client_id, aud);
+        let key = token_key(client_id, aud);
         let Some(attrs) = self
             .client
             .get_item()
@@ -154,7 +154,7 @@ impl Cache for DynamoDBCache {
     }
 
     async fn put_token(&self, client_id: &str, aud: &str, token: &Token) -> Result<(), CacheError> {
-        let key = super::token_key(client_id, aud);
+        let key = token_key(client_id, aud);
         let encoded = serde_json::to_string(token).unwrap();
         self.client
             .put_item()
@@ -171,6 +171,13 @@ impl Cache for DynamoDBCache {
 
         Ok(())
     }
+}
+
+const TOKEN_VERSION: &str = "2";
+
+// This is tool-dependent and may change if we figure out this doesn't fit DynamoDB in the future
+fn token_key(caller: &str, audience: &str) -> String {
+    format!("{}:{}:{}:{}", super::TOKEN_PREFIX, caller, TOKEN_VERSION, audience)
 }
 
 #[cfg(test)]
