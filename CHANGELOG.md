@@ -8,7 +8,7 @@ and this project adheres to
 
 ## [Unreleased]
 
----
+- Support for opentelemetry 0.30, now the default version.
 
 ## [0.24.0] - 2025-05-30
 

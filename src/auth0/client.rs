@@ -1,5 +1,5 @@
 use crate::auth0::Auth0Error;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, Duration};
 use reqwest::{Client, Response, Url};
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
