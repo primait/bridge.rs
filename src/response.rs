@@ -127,8 +127,9 @@ where
     let inner_result = selectors
         .into_iter()
         .try_fold(&json_value, |acc: &Value, accessor: &str| {
-            acc.get(accessor)
-                .ok_or_else(|| PrimaBridgeError::SelectorNotFound(url.clone(), accessor.to_string(), acc.clone()))
+            acc.get(accessor).ok_or_else(|| {
+                PrimaBridgeError::SelectorNotFound(Box::new(url.clone()), accessor.to_string(), acc.clone())
+            })
         })?;
     Ok(serde_json::from_value::<T>(inner_result.clone())?)
 }

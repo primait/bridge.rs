@@ -1,8 +1,7 @@
 use crate::auth0::Auth0Error;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use reqwest::{Client, Response, Url};
 use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
 use super::{Config, Token};
 
@@ -105,7 +104,7 @@ impl Auth0Client {
         // the exact issued_at (iat) and expiration (exp)
         // reference: https://www.iana.org/assignments/jwt/jwt.xhtml
         let issue_date: DateTime<Utc> = Utc::now();
-        let expire_date: DateTime<Utc> = Utc::now() + Duration::from_secs(expires_in as u64);
+        let expire_date: DateTime<Utc> = Utc::now() + Duration::seconds(expires_in as i64);
 
         Ok(Token::new(access_token, issue_date, expire_date))
     }

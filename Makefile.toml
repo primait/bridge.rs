@@ -12,6 +12,7 @@ AVAILABLE_OTEL_FEATURES = [
   "tracing_opentelemetry_0_27",
   "tracing_opentelemetry_0_28",
   "tracing_opentelemetry_0_29",
+  "tracing_opentelemetry_0_30",
 ]
 
 [tasks.build]
