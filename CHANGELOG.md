@@ -10,6 +10,16 @@ and this project adheres to
 
 - Support for opentelemetry 0.30, now the default version.
 
+## [0.24.1] - 2025-06-17
+
+### Changed
+
+- Relaxed tonic dependency to allow version 0.12.
+This was done at an explicit user request, do not expect old version of tonic to be supported in the future.
+Feel free to ask if you have a similar request.
+
+---
+
 ## [0.24.0] - 2025-05-30
 
 ### Added
@@ -561,7 +571,9 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.24.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.24.1...HEAD
+[0.24.1]: https://github.com/primait/bridge.rs/compare/0.24.0...0.24.1
 [0.24.0]: https://github.com/primait/bridge.rs/compare/0.23.0...0.24.0
 [0.23.0]: https://github.com/primait/bridge.rs/compare/0.22.0...0.23.0
 [0.22.0]: https://github.com/primait/bridge.rs/compare/0.21.0...0.22.0

@@ -16,8 +16,11 @@ pub enum PrimaBridgeError {
     HttpError { url: Url, source: reqwest::Error },
     #[error(transparent)]
     SerializationError(#[from] serde_json::error::Error),
-    #[error("selector not found while calling {0}. the data for key `{1}` cannot be found in payload: {2}")]
-    SelectorNotFound(Box<Url>, String, Value),
+    #[error(
+        "selector not found while calling {url}. the data for key `{key}` cannot be found in payload: {payload}",
+        url = .0.0, key = .0.1, payload = 0.2
+    )]
+    SelectorNotFound(Box<(Url, String, Value)>),
     #[error("wrong response status code while calling {0}: {1}")]
     WrongStatusCode(Url, StatusCode),
     #[error("unserializable body. response status code: {status_code}, error: {source}")]
