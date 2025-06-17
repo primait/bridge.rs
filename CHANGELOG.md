@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- Relaxed tonic dependency to allow version 0.12.
+This was done at an explicit user request, do not expect old version of tonic to be supported in the future.
+Feel free to ask if you have a similar request.
+
 ---
 
 ## [0.24.0] - 2025-05-30
