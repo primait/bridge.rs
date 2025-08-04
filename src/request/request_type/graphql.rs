@@ -298,7 +298,7 @@ fn with_variables_prefix(path: String) -> String {
     if path.starts_with(VARIABLES) {
         path
     } else {
-        format!("{}.{}", VARIABLES, path)
+        format!("{VARIABLES}.{path}")
     }
 }
 
