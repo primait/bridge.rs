@@ -56,7 +56,7 @@ impl MockitoServerCreateBridgeExt for mockito::Server {
         path: &str,
     ) -> (Mock, Bridge) {
         let mock = self
-            .mock("GET", format!("/{}/{}", base, path).as_str())
+            .mock("GET", format!("/{base}/{path}").as_str())
             .match_header(
                 "x-request-id",
                 Matcher::Regex(r"\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b".to_string()),
