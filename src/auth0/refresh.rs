@@ -38,7 +38,7 @@ impl RefreshingToken {
         Ok(Self(token))
     }
 
-    pub fn token(&self) -> std::sync::RwLockReadGuard<Token> {
+    pub fn token(&self) -> std::sync::RwLockReadGuard<'_, Token> {
         self.0.read()
     }
 }

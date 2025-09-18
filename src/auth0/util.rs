@@ -42,7 +42,7 @@ impl<T> UnpoisonableRwLock<T> {
         Self(RwLock::new(v))
     }
 
-    pub fn read(&self) -> std::sync::RwLockReadGuard<T> {
+    pub fn read(&self) -> std::sync::RwLockReadGuard<'_, T> {
         // Unwrapping here is fine since a panic can never occur while we hold the lock
         self.0.read().unwrap()
     }
