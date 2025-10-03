@@ -1,4 +1,5 @@
-use chacha20poly1305::{aead::Aead, AeadCore, KeyInit, XChaCha20Poly1305};
+use chacha20poly1305::aead::{Aead, AeadCore, KeyInit, OsRng};
+use chacha20poly1305::XChaCha20Poly1305;
 use serde::{Deserialize, Serialize};
 
 const NONCE_SIZE: usize = 24;
@@ -15,7 +16,7 @@ pub fn encrypt<T: Serialize>(value_ref: &T, token_encryption_key_str: &str) -> R
     let json: String = serde_json::to_string(value_ref)?;
 
     let enc = XChaCha20Poly1305::new_from_slice(token_encryption_key_str.as_bytes()).unwrap();
-    let nonce = XChaCha20Poly1305::generate_nonce(&mut rand::rng());
+    let nonce = XChaCha20Poly1305::generate_nonce(&mut OsRng);
 
     let mut ciphertext = enc.encrypt(&nonce, json.as_bytes())?;
     ciphertext.extend(nonce);
