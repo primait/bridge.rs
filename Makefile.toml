@@ -3,16 +3,8 @@ skip_core_tasks = true
 
 [env]
 AVAILABLE_OTEL_FEATURES = [
-  "tracing_opentelemetry_0_21",
-  "tracing_opentelemetry_0_22",
-  "tracing_opentelemetry_0_23",
-  "tracing_opentelemetry_0_24",
-  "tracing_opentelemetry_0_25",
-  "tracing_opentelemetry_0_26",
-  "tracing_opentelemetry_0_27",
-  "tracing_opentelemetry_0_28",
-  "tracing_opentelemetry_0_29",
   "tracing_opentelemetry_0_30",
+  "tracing_opentelemetry_0_31",
 ]
 
 [tasks.build]
