@@ -18,8 +18,8 @@ and this project adheres to
 
 ### Removed
 
-- Support for opentelemetry 0.21 to 0.29, from now on only the current and
-  previous versions will be supported.
+- Support for opentelemetry 0.21 to 0.28, since we always "promised" to support
+  the latest 3 versions.
 
 ---
 
@@ -589,7 +589,6 @@ Request::rest(&bridge).send()
 ```
 
 The old API is still available but deprecated. It will be removed soon.
-
 
 [Unreleased]: https://github.com/primait/bridge.rs/compare/0.26.0...HEAD
 [0.26.0]: https://github.com/primait/bridge.rs/compare/0.25.0...0.26.0
