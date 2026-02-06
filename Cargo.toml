@@ -83,7 +83,7 @@ uuid = { version = ">=0.7.0, <2.0.0", features = ["serde", "v4"] }
 chacha20poly1305 = { version = "0.10.1", features = ["std"], optional = true }
 aws-sdk-dynamodb = { version = "1.63", optional = true } 
 
-reqwest-middleware = { version = "0.4.0", features = ["json", "multipart"] }
+reqwest-middleware = { version = "0.5.1", features = ["json", "multipart"] }
 http = "1.0.0"
 
 opentelemetry_0_29_pkg = { package = "opentelemetry", version = "0.29", optional = true }
