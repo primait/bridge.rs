@@ -1,2 +1,0 @@
-[packages]
-cargo-deny = { version = "=0.18.9", locked = true }
