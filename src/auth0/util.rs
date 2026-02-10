@@ -14,7 +14,7 @@ impl StalenessCheckPercentage {
     }
 
     pub fn random_value_between(&self) -> f64 {
-        use rand::Rng;
+        use rand::RngExt;
         rand::rng().random_range(self.0.clone())
     }
 }
