@@ -97,7 +97,7 @@ tracing-opentelemetry_0_31_pkg = { package = "tracing-opentelemetry", version = 
 tracing-opentelemetry_0_32_pkg = { package = "tracing-opentelemetry", version = "0.32", optional = true }
 
 [dev-dependencies]
-aws-config = { version = "1.5", features = ["behavior-version-latest"] }
+aws-config = { version = "1.8", features = ["behavior-version-latest"] }
 flate2 = "1.0"
 mockito = "1.0"
 tokio = { version = "1.16", features = ["macros", "rt-multi-thread"] }
