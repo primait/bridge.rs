@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+---
+
+## [0.27.0] - 2026-02-13
+
 ### Changed
 
 - MSRV is now 1.91
@@ -594,7 +598,9 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.26.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.27.0...HEAD
+[0.27.0]: https://github.com/primait/bridge.rs/compare/0.26.0...0.27.0
 [0.26.0]: https://github.com/primait/bridge.rs/compare/0.25.0...0.26.0
 [0.25.0]: https://github.com/primait/bridge.rs/compare/0.24.1...0.25.0
 [0.24.1]: https://github.com/primait/bridge.rs/compare/0.24.0...0.24.1
