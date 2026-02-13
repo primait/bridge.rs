@@ -24,6 +24,7 @@ struct FetchTokenRequest {
     scope: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub struct Claims {
     #[allow(dead_code)]
