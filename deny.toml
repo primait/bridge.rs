@@ -2,7 +2,7 @@
 feature-depth = 1
 
 [licenses]
-allow = ["Apache-2.0", "BSD-3-Clause", "MIT", "Unicode-3.0"]
+allow = ["Apache-2.0", "BSD-3-Clause", "MIT", "Unicode-3.0", "CDLA-Permissive-2.0"]
 
 [[licenses.clarify]]
 crate = "ring"
