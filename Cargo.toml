@@ -81,7 +81,7 @@ tonic = { version = ">=0.12, <0.15", default-features = false, optional = true }
 tracing = { version = "0.1", optional = true }
 uuid = { version = ">=0.7.0, <2.0.0", features = ["serde", "v4"] }
 chacha20poly1305 = { version = "0.10.1", features = ["std"], optional = true }
-aws-sdk-dynamodb = { version = "1.106", optional = true } 
+aws-sdk-dynamodb = { version = "1.107", optional = true } 
 
 reqwest-middleware = { version = "0.4.0", features = ["json", "multipart"] }
 http = "1.0.0"
