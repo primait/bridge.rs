@@ -28,6 +28,12 @@ pub enum PrimaBridgeError {
         status_code: StatusCode,
         source: serde_json::error::Error,
     },
+    #[error("failed to deserialize JSON response at path {path}: {error}", path = .error.path())]
+    DeserializationError {
+        body_structure: String,
+        #[source]
+        error: serde_path_to_error::Error<serde_json::Error>,
+    },
     #[error("empty body")]
     EmptyBody,
     #[error("variables map is malformed or provided path not step into objects only")]
