@@ -96,6 +96,7 @@ opentelemetry_sdk_0_31_pkg = { package = "opentelemetry_sdk", version = "0.31", 
 tracing-opentelemetry_0_30_pkg = { package = "tracing-opentelemetry", version = "0.30", optional = true }
 tracing-opentelemetry_0_31_pkg = { package = "tracing-opentelemetry", version = "0.31", optional = true }
 tracing-opentelemetry_0_32_pkg = { package = "tracing-opentelemetry", version = "0.32", optional = true }
+rustls-webpki = "0.103.10"
 
 [dev-dependencies]
 aws-config = { version = "1.8", features = ["behavior-version-latest"] }
