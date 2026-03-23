@@ -135,10 +135,7 @@ where
     let deserializer = &mut serde_json::Deserializer::from_slice(&buf);
     let result: T = serde_path_to_error::deserialize(deserializer).map_err(|error| {
         let body_structure = extract_json_structure_at_path(inner_result, error.path());
-        PrimaBridgeError::DeserializationError {
-            body_structure,
-            error,
-        }
+        PrimaBridgeError::DeserializationError { body_structure, error }
     })?;
     Ok(result)
 }
@@ -222,14 +219,8 @@ mod tests {
     #[serde(untagged)]
     #[allow(dead_code)]
     enum PaymentResponse {
-        Success {
-            transaction_id: String,
-            inner: Inner,
-        },
-        Error {
-            error_code: String,
-            message: String,
-        },
+        Success { transaction_id: String, inner: Inner },
+        Error { error_code: String, message: String },
     }
 
     #[derive(Debug, Deserialize)]
@@ -240,9 +231,7 @@ mod tests {
 
     #[test]
     fn get_data_deserializes_matching_variant() {
-        let resp = rest_response(
-            r#"{"data": {"transaction_id": "tx_123", "inner": {"secret": "secret_value"}}}"#,
-        );
+        let resp = rest_response(r#"{"data": {"transaction_id": "tx_123", "inner": {"secret": "secret_value"}}}"#);
         let result: PaymentResponse = resp.get_data(&["data"]).unwrap();
         assert!(matches!(result, PaymentResponse::Success { transaction_id, .. } if transaction_id == "tx_123"));
     }
@@ -265,8 +254,14 @@ mod tests {
         let err = resp.get_data::<PaymentResponse>(&["data"]).unwrap_err();
 
         if let PrimaBridgeError::DeserializationError { body_structure, .. } = &err {
-            assert!(body_structure.contains("\"unexpected_field\""), "body_structure should contain the field name: {body_structure}");
-            assert!(!body_structure.contains("42"), "body_structure should not contain actual values: {body_structure}");
+            assert!(
+                body_structure.contains("\"unexpected_field\""),
+                "body_structure should contain the field name: {body_structure}"
+            );
+            assert!(
+                !body_structure.contains("42"),
+                "body_structure should not contain actual values: {body_structure}"
+            );
         } else {
             panic!("expected DeserializationError, got: {err:?}");
         }
@@ -286,10 +281,16 @@ mod tests {
         );
         let err = resp.get_data::<Outer>(&["data"]).unwrap_err();
 
-        if let PrimaBridgeError::DeserializationError { error, body_structure, .. } = &err {
+        if let PrimaBridgeError::DeserializationError {
+            error, body_structure, ..
+        } = &err
+        {
             let path = error.path().to_string();
             assert_eq!(path, "payment", "error path should point to 'payment' field");
-            assert!(body_structure.contains("\"unexpected_field\""), "body_structure should show structure at error path: {body_structure}");
+            assert!(
+                body_structure.contains("\"unexpected_field\""),
+                "body_structure should show structure at error path: {body_structure}"
+            );
         } else {
             panic!("expected DeserializationError, got: {err:?}");
         }
