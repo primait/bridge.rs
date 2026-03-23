@@ -131,9 +131,7 @@ where
                 PrimaBridgeError::SelectorNotFound(Box::new((url.clone(), accessor.to_string(), acc.clone())))
             })
         })?;
-    let buf = serde_json::to_vec(inner_result).expect("re-serializing a Value cannot fail");
-    let deserializer = &mut serde_json::Deserializer::from_slice(&buf);
-    let result: T = serde_path_to_error::deserialize(deserializer).map_err(|error| {
+    let result: T = serde_path_to_error::deserialize(inner_result.clone()).map_err(|error| {
         let body_structure = extract_json_structure_at_path(inner_result, error.path());
         PrimaBridgeError::DeserializationError { body_structure, error }
     })?;
@@ -241,11 +239,18 @@ mod tests {
         let resp = rest_response(r#"{"data": {"unexpected_field": 42}}"#);
         let err = resp.get_data::<PaymentResponse>(&["data"]).unwrap_err();
 
-        assert!(
-            matches!(&err, PrimaBridgeError::DeserializationError { error, .. }
-                if error.to_string().contains("did not match any variant of untagged enum")),
-            "expected DeserializationError with untagged enum message, got: {err:?}"
-        );
+        if let PrimaBridgeError::DeserializationError { error, .. } = &err {
+            let msg = error.to_string();
+            assert!(
+                msg.contains("did not match any variant of untagged enum"),
+                "expected untagged enum message, got: {msg}"
+            );
+            // at the top level, the path is "." (root)
+            let path = error.path().to_string();
+            assert_eq!(path, ".", "error path should be root");
+        } else {
+            panic!("expected DeserializationError, got: {err:?}");
+        }
     }
 
     #[test]
