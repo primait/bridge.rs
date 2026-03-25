@@ -1,7 +1,7 @@
 //! Errors
 
 use std::convert::Infallible;
-use std::fmt::Debug;
+use std::fmt::{self, Debug, Display};
 use std::str::Utf8Error;
 
 use reqwest::{StatusCode, Url};
@@ -30,7 +30,7 @@ pub enum PrimaBridgeError {
     },
     #[error("failed to deserialize JSON response at path {path}: {error}", path = .error.path())]
     DeserializationError {
-        body_structure: String,
+        body_structure: BodyStructure,
         #[source]
         error: serde_path_to_error::Error<serde_json::Error>,
     },
@@ -55,5 +55,77 @@ impl PrimaBridgeError {
 impl From<Infallible> for PrimaBridgeError {
     fn from(_: Infallible) -> Self {
         unimplemented!()
+    }
+}
+
+/// Holds a JSON value navigated to the error path, and renders its structural
+/// shape (without actual values) in its `Display`/`Debug` impl.
+pub struct BodyStructure(Value);
+
+impl BodyStructure {
+    pub fn at_path(value: &Value, path: &serde_path_to_error::Path) -> Self {
+        let mut current = value;
+
+        for segment in path.iter() {
+            match segment {
+                serde_path_to_error::Segment::Map { key } => {
+                    let Some(inner) = current.get(key.as_ref() as &str) else {
+                        break;
+                    };
+                    current = inner;
+                }
+                serde_path_to_error::Segment::Seq { index } => {
+                    let Some(inner) = current.get(*index) else {
+                        break;
+                    };
+                    current = inner;
+                }
+                _ => break,
+            }
+        }
+
+        Self(current.clone())
+    }
+}
+
+impl Display for BodyStructure {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", JsonShape(&self.0))
+    }
+}
+
+impl Debug for BodyStructure {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Display::fmt(self, f)
+    }
+}
+
+struct JsonShape<'a>(&'a Value);
+
+impl Display for JsonShape<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.0 {
+            Value::Null => write!(f, "null"),
+            Value::Bool(_) => write!(f, "bool"),
+            Value::Number(_) => write!(f, "number"),
+            Value::String(_) => write!(f, "string"),
+            Value::Array(arr) => {
+                let mut list = f.debug_list();
+                if let Some(first) = arr.first() {
+                    list.entry(&format_args!("{}", JsonShape(first)));
+                    if arr.len() > 1 {
+                        list.entry(&format_args!("..{} total", arr.len()));
+                    }
+                }
+                list.finish()
+            }
+            Value::Object(map) => {
+                let mut debug_map = f.debug_map();
+                for (key, value) in map.iter() {
+                    debug_map.entry(&format_args!("{key}"), &format_args!("{}", JsonShape(value)));
+                }
+                debug_map.finish()
+            }
+        }
     }
 }

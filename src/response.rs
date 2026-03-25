@@ -5,6 +5,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use uuid::Uuid;
 
+use crate::errors::BodyStructure;
 use crate::prelude::*;
 use crate::response::graphql::{ParsedGraphqlResponse, ParsedGraphqlResponseExt};
 
@@ -131,70 +132,10 @@ where
                 PrimaBridgeError::SelectorNotFound(Box::new((url.clone(), accessor.to_string(), acc.clone())))
             })
         })?;
-    let result: T = serde_path_to_error::deserialize(inner_result.clone()).map_err(|error| {
-        let body_structure = extract_json_structure_at_path(inner_result, error.path());
+    serde_path_to_error::deserialize(inner_result.clone()).map_err(|error| {
+        let body_structure = BodyStructure::at_path(inner_result, error.path());
         PrimaBridgeError::DeserializationError { body_structure, error }
-    })?;
-    Ok(result)
-}
-
-/// Extracts the structural shape of the JSON value at the given error path,
-/// without exposing actual values (for privacy-safe logging).
-fn extract_json_structure_at_path(value: &Value, path: &serde_path_to_error::Path) -> String {
-    let mut current = value;
-
-    for segment in path.iter() {
-        match segment {
-            serde_path_to_error::Segment::Map { key } => {
-                let Some(inner) = current.get(key.as_ref() as &str) else {
-                    break;
-                };
-                current = inner;
-            }
-            serde_path_to_error::Segment::Seq { index } => {
-                let Some(inner) = current.get(*index) else {
-                    break;
-                };
-                current = inner;
-            }
-            _ => break,
-        }
-    }
-
-    format!("{}", JsonShape(current))
-}
-
-struct JsonShape<'a>(&'a Value);
-
-impl std::fmt::Display for JsonShape<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.0 {
-            Value::Null => write!(f, "null"),
-            Value::Bool(_) => write!(f, "bool"),
-            Value::Number(_) => write!(f, "number"),
-            Value::String(_) => write!(f, "string"),
-            Value::Array(arr) => {
-                write!(f, "[")?;
-                if let Some(first) = arr.first() {
-                    write!(f, "{}", JsonShape(first))?;
-                    if arr.len() > 1 {
-                        write!(f, ", ..{} total", arr.len())?;
-                    }
-                }
-                write!(f, "]")
-            }
-            Value::Object(map) => {
-                write!(f, "{{")?;
-                for (i, (key, value)) in map.iter().enumerate() {
-                    if i > 0 {
-                        write!(f, ", ")?;
-                    }
-                    write!(f, "\"{key}\": {}", JsonShape(value))?;
-                }
-                write!(f, "}}")
-            }
-        }
-    }
+    })
 }
 
 #[cfg(test)]
@@ -259,8 +200,9 @@ mod tests {
         let err = resp.get_data::<PaymentResponse>(&["data"]).unwrap_err();
 
         if let PrimaBridgeError::DeserializationError { body_structure, .. } = &err {
+            let body_structure = body_structure.to_string();
             assert!(
-                body_structure.contains("\"unexpected_field\""),
+                body_structure.contains("unexpected_field"),
                 "body_structure should contain the field name: {body_structure}"
             );
             assert!(
@@ -291,9 +233,10 @@ mod tests {
         } = &err
         {
             let path = error.path().to_string();
+            let body_structure = body_structure.to_string();
             assert_eq!(path, "payment", "error path should point to 'payment' field");
             assert!(
-                body_structure.contains("\"unexpected_field\""),
+                body_structure.contains("unexpected_field"),
                 "body_structure should show structure at error path: {body_structure}"
             );
         } else {
