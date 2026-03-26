@@ -23,11 +23,22 @@ pub enum PrimaBridgeError {
     SelectorNotFound(Box<(Url, String, Value)>),
     #[error("wrong response status code while calling {0}: {1}")]
     WrongStatusCode(Url, StatusCode),
+    /// The response body is not valid JSON at all (e.g. malformed JSON, an HTML
+    /// error page, or an empty/binary payload). This is distinct from
+    /// [`DeserializationError`](Self::DeserializationError), where the body *is*
+    /// valid JSON but doesn't match the expected Rust type.
     #[error("unserializable body. response status code: {status_code}, error: {source}")]
     ResponseBodyNotDeserializable {
         status_code: StatusCode,
         source: serde_json::error::Error,
     },
+    /// The response body is valid JSON, but it doesn't deserialize into the
+    /// expected Rust type (e.g. missing fields, type mismatches, untagged enum
+    /// that doesn't match any variant). This is distinct from
+    /// [`ResponseBodyNotDeserializable`](Self::ResponseBodyNotDeserializable),
+    /// where the body isn't valid JSON in the first place.
+    /// Includes the path to the failing field and the structural shape of the
+    /// body at that path for debugging.
     #[error("failed to deserialize JSON response at path {path}: {error}", path = .error.path())]
     DeserializationError {
         body_structure: BodyStructure,
