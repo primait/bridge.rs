@@ -2314,7 +2314,6 @@ dependencies = [
  "redis",
  "reqwest",
  "reqwest-middleware",
- "rustls-webpki 0.103.10",
  "serde",
  "serde_json",
  "serde_path_to_error",
