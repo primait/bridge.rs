@@ -6,7 +6,7 @@ license = "MIT"
 name = "prima_bridge"
 readme = "README.md"
 repository = "https://github.com/primait/bridge.rs"
-version = "0.27.0"
+version = "0.28.0"
 rust-version = "1.91"
 
 [features]
@@ -14,7 +14,14 @@ default = ["tracing_opentelemetry"]
 
 # Feature set that should be used
 # This exists to avoid compatibility issues with otel version conflicts
-_docs = ["auth0", "cache-dynamodb", "grpc", "gzip", "redis-tls", "tracing_opentelemetry"]
+_docs = [
+  "auth0",
+  "cache-dynamodb",
+  "grpc",
+  "gzip",
+  "redis-tls",
+  "tracing_opentelemetry",
+]
 
 auth0 = [
   "rand",
@@ -25,11 +32,11 @@ auth0 = [
   "dashmap",
   "tracing",
 ]
-grpc = [ "_any_otel_version", "tonic"]
+grpc = ["_any_otel_version", "tonic"]
 gzip = ["reqwest/gzip"]
 
-redis-tls = [ "redis", "redis/tls", "redis/tokio-native-tls-comp"]
-cache-dynamodb = [ "aws-sdk-dynamodb" ]
+redis-tls = ["redis", "redis/tls", "redis/tokio-native-tls-comp"]
+cache-dynamodb = ["aws-sdk-dynamodb"]
 
 tracing_opentelemetry = ["tracing_opentelemetry_0_31"]
 
@@ -74,6 +81,7 @@ redis = { version = "0.32", features = ["tokio-comp"], optional = true }
 reqwest = { version = "0.13", features = ["json", "multipart", "stream"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+serde_path_to_error = "0.1"
 thiserror = "2"
 tokio = { version = "1.50", features = ["macros", "rt-multi-thread", "fs"] }
 # ALlow both 0.12 and 0.14 versions of tonic temporairly to simplify migration.
@@ -81,7 +89,7 @@ tonic = { version = ">=0.12, <0.15", default-features = false, optional = true }
 tracing = { version = "0.1", optional = true }
 uuid = { version = ">=0.7.0, <2.0.0", features = ["serde", "v4"] }
 chacha20poly1305 = { version = "0.10.1", features = ["std"], optional = true }
-aws-sdk-dynamodb = { version = "1.107", optional = true } 
+aws-sdk-dynamodb = { version = "1.107", optional = true }
 
 reqwest-middleware = { version = "0.5.1", features = ["json", "multipart"] }
 http = "1.0.0"
@@ -110,9 +118,7 @@ lto = "thin"
 [package.metadata.docs.rs]
 all-features = false
 # Avoid opentelemetry version conflicts
-features = [
-	"_docs"
-]
+features = ["_docs"]
 rustdoc-args = ["--cfg", "docsrs"]
 
 [[example]]

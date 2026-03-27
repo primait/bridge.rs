@@ -10,6 +10,15 @@ and this project adheres to
 
 ---
 
+## [0.28.0] - 2026-03-27
+
+### Added
+
+- **Breaking**: Added a `ResponseBodyNotDeserializable` variant to `PrimaBridgeError`.
+  This improves error logging when the response does not deserialize into a given rust type correctly.
+
+---
+
 ## [0.27.0] - 2026-02-13
 
 ### Changed
@@ -599,7 +608,9 @@ Request::rest(&bridge).send()
 The old API is still available but deprecated. It will be removed soon.
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.27.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.28.0...HEAD
+[0.28.0]: https://github.com/primait/bridge.rs/compare/0.27.0...0.28.0
 [0.27.0]: https://github.com/primait/bridge.rs/compare/0.26.0...0.27.0
 [0.26.0]: https://github.com/primait/bridge.rs/compare/0.25.0...0.26.0
 [0.25.0]: https://github.com/primait/bridge.rs/compare/0.24.1...0.25.0
