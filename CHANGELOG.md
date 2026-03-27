@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- **Breaking**: Added a `ResponseBodyNotDeserializable` variant to `PrimaBridgeError`.
+  This improves error logging when the response does not deserialize into a given rust type correctly.
+
 ---
 
 ## [0.27.0] - 2026-02-13
