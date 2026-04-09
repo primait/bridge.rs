@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+---
+
+## [0.29.0] - 2026-04-09
+
 ### Changed
 
 - **Breaking**: `RestMultipart::Multiple` now accepts a `Vec<_>` instead of
@@ -613,7 +617,9 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.28.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.29.0...HEAD
+[0.29.0]: https://github.com/primait/bridge.rs/compare/0.28.0...0.29.0
 [0.28.0]: https://github.com/primait/bridge.rs/compare/0.27.0...0.28.0
 [0.27.0]: https://github.com/primait/bridge.rs/compare/0.26.0...0.27.0
 [0.26.0]: https://github.com/primait/bridge.rs/compare/0.25.0...0.26.0
