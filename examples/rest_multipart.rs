@@ -5,8 +5,6 @@
 //! ```shell
 //! cargo run --example rest_multipart
 //! ```
-use std::collections::HashSet;
-
 use prima_bridge::{prelude::*, MultipartFile, MultipartFormFileField, RestMultipart};
 
 const URL: &str = "https://youtube.com/";
@@ -15,12 +13,18 @@ const URL: &str = "https://youtube.com/";
 async fn main() {
     let bridge: Bridge = Bridge::builder().build(URL.parse().unwrap());
 
-    let multipart = RestMultipart::multiple(HashSet::from_iter([
+    let multipart = RestMultipart::multiple(Vec::from_iter([
         MultipartFormFileField::new(
             "file0",
             MultipartFile::new("Hello, world!")
                 .with_name("hello_world.txt")
                 .with_mime_type("text/plain"),
+        ),
+        MultipartFormFileField::new(
+            "file0",
+            MultipartFile::new("Goodbye, world!")
+                .with_name("goodbye_world.dat")
+                .with_mime_type("application/octet-stream"),
         ),
         MultipartFormFileField::new(
             "file1",

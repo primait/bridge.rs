@@ -6,7 +6,7 @@ license = "MIT"
 name = "prima_bridge"
 readme = "README.md"
 repository = "https://github.com/primait/bridge.rs"
-version = "0.28.0"
+version = "0.29.0"
 rust-version = "1.91"
 
 [features]

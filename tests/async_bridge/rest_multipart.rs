@@ -1,7 +1,6 @@
 use mockito::{Matcher, Server};
 use prima_bridge::prelude::*;
 use prima_bridge::{MultipartFile, MultipartFormFileField, RestMultipart};
-use std::collections::HashSet;
 use std::error::Error;
 
 #[tokio::test]
@@ -39,6 +38,7 @@ async fn multipart_rest_single_file() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
     let re_first_file = r#"Content-Disposition: form-data; name="first_file"; filename="hello_world\.txt"\s+Content-Type: text/plain\s+Hello, world!"#;
+    let re_first_file_again = r#"Content-Disposition: form-data; name="first_file"; filename="goodbye_world\.dat"\s+Content-Type: application/octet-stream\s+Goodbye, world!"#;
     let re_second_file = r#"Content-Disposition: form-data; name="second_file"; filename="goodbye_world\.dat"\s+Content-Type: application/octet-stream\s+Goodbye, world!"#;
 
     let mut server = Server::new_async().await;
@@ -52,6 +52,7 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
         // so we must be able to match the files in either order.
         .match_body(Matcher::AllOf(vec![
             Matcher::Regex(re_first_file.to_string()),
+            Matcher::Regex(re_first_file_again.to_string()),
             Matcher::Regex(re_second_file.to_string()),
         ]))
         .create_async()
@@ -59,13 +60,19 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
 
     let bridge = Bridge::builder().build(server.url().parse().unwrap());
 
-    let multipart = RestMultipart::multiple(HashSet::from_iter(
+    let multipart = RestMultipart::multiple(Vec::from_iter(
         [
             MultipartFormFileField::new(
                 "first_file",
                 MultipartFile::new(b"Hello, world!".to_vec())
                     .with_name("hello_world.txt")
                     .with_mime_type("text/plain"),
+            ),
+            MultipartFormFileField::new(
+                "first_file",
+                MultipartFile::new(b"Goodbye, world!".to_vec())
+                    .with_name("goodbye_world.dat")
+                    .with_mime_type("application/octet-stream"),
             ),
             MultipartFormFileField::new(
                 "second_file",
