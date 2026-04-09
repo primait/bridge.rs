@@ -1,5 +1,5 @@
+use std::borrow::Cow;
 use std::time::Duration;
-use std::{borrow::Cow, collections::HashSet};
 
 use async_trait::async_trait;
 use reqwest::{
@@ -173,7 +173,7 @@ impl<'a, Client: BridgeClient> DeliverableRequest<'a> for RestRequest<'a, Client
 /// Each file corresponds to a named field in the form data.
 pub enum RestMultipart {
     Single(MultipartFormFileField),
-    Multiple(HashSet<MultipartFormFileField>),
+    Multiple(Vec<MultipartFormFileField>),
 }
 impl RestMultipart {
     pub fn single<S>(form_field: S, file: MultipartFile) -> Self
@@ -184,7 +184,7 @@ impl RestMultipart {
     }
 
     #[allow(clippy::mutable_key_type)] // caused by reqwest::Body
-    pub fn multiple(files: HashSet<MultipartFormFileField>) -> Self {
+    pub fn multiple(files: Vec<MultipartFormFileField>) -> Self {
         Self::Multiple(files)
     }
 

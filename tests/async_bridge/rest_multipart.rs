@@ -1,7 +1,6 @@
 use mockito::{Matcher, Server};
 use prima_bridge::prelude::*;
 use prima_bridge::{MultipartFile, MultipartFormFileField, RestMultipart};
-use std::collections::HashSet;
 use std::error::Error;
 
 #[tokio::test]
@@ -59,7 +58,7 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
 
     let bridge = Bridge::builder().build(server.url().parse().unwrap());
 
-    let multipart = RestMultipart::multiple(HashSet::from_iter(
+    let multipart = RestMultipart::multiple(Vec::from_iter(
         [
             MultipartFormFileField::new(
                 "first_file",

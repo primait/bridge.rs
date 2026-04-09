@@ -1,4 +1,4 @@
-use std::{collections::HashSet, error::Error};
+use std::error::Error;
 
 use reqwest::header::{HeaderName, HeaderValue};
 use serde::{Deserialize, Serialize};
@@ -298,7 +298,7 @@ async fn get_body_returns_none_when_request_is_multipart() -> Result<(), Box<dyn
     let mut server = mockito::Server::new_async().await;
     let (_m, bridge) = server.create_bridge(200, "{\"hello\": \"world!\"}").await;
 
-    let data = RestMultipart::multiple(HashSet::from_iter([MultipartFormFileField::new(
+    let data = RestMultipart::multiple(Vec::from_iter([MultipartFormFileField::new(
         "file0",
         MultipartFile::new("Hello, world!")
             .with_name("hello_world.txt")
