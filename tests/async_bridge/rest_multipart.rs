@@ -38,6 +38,7 @@ async fn multipart_rest_single_file() -> Result<(), Box<dyn Error>> {
 #[tokio::test]
 async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
     let re_first_file = r#"Content-Disposition: form-data; name="first_file"; filename="hello_world\.txt"\s+Content-Type: text/plain\s+Hello, world!"#;
+    let re_first_file_again = r#"Content-Disposition: form-data; name="first_file"; filename="goodbye_world\.dat"\s+Content-Type: application/octet-stream\s+Goodbye, world!"#;
     let re_second_file = r#"Content-Disposition: form-data; name="second_file"; filename="goodbye_world\.dat"\s+Content-Type: application/octet-stream\s+Goodbye, world!"#;
 
     let mut server = Server::new_async().await;
@@ -51,6 +52,7 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
         // so we must be able to match the files in either order.
         .match_body(Matcher::AllOf(vec![
             Matcher::Regex(re_first_file.to_string()),
+            Matcher::Regex(re_first_file_again.to_string()),
             Matcher::Regex(re_second_file.to_string()),
         ]))
         .create_async()
