@@ -174,14 +174,3 @@ impl MultipartFormFileField {
         }
     }
 }
-impl std::hash::Hash for MultipartFormFileField {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.field_name.hash(state);
-    }
-}
-impl Eq for MultipartFormFileField {}
-impl PartialEq for MultipartFormFileField {
-    fn eq(&self, other: &Self) -> bool {
-        self.field_name == other.field_name
-    }
-}
