@@ -67,6 +67,12 @@ async fn multipart_rest_multi_file() -> Result<(), Box<dyn Error>> {
                     .with_mime_type("text/plain"),
             ),
             MultipartFormFileField::new(
+                "first_file",
+                MultipartFile::new(b"Goodbye, world!".to_vec())
+                    .with_name("goodbye_world.dat")
+                    .with_mime_type("application/octet-stream"),
+            ),
+            MultipartFormFileField::new(
                 "second_file",
                 MultipartFile::new(b"Goodbye, world!".to_vec())
                     .with_name("goodbye_world.dat")
