@@ -83,7 +83,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_path_to_error = "0.1"
 thiserror = "2"
-tokio = { version = "1.51", features = ["macros", "rt-multi-thread", "fs"] }
+tokio = { version = "1.52", features = ["macros", "rt-multi-thread", "fs"] }
 # ALlow both 0.12 and 0.14 versions of tonic temporairly to simplify migration.
 tonic = { version = ">=0.12, <0.15", default-features = false, optional = true }
 tracing = { version = "0.1", optional = true }
@@ -108,7 +108,7 @@ tracing-opentelemetry_0_32_pkg = { package = "tracing-opentelemetry", version = 
 aws-config = { version = "1.8", features = ["behavior-version-latest"] }
 flate2 = "1.0"
 mockito = "1.0"
-tokio = { version = "1.51", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.52", features = ["macros", "rt-multi-thread"] }
 tonic = "0.14"
 
 [profile.release]
