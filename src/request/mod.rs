@@ -5,6 +5,7 @@ use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::multipart::Form;
 use reqwest::{Method, Url};
 use serde::Serialize;
+use tracing::Instrument;
 use uuid::Uuid;
 
 pub use body::{Body, GraphQLBody, MultipartFile, MultipartFormFileField};
@@ -164,54 +165,80 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
     fn get_body(&self) -> Option<&[u8]>;
 
     async fn send(self) -> PrimaBridgeResult<Response> {
-        use futures_util::future::TryFutureExt;
         let request_id = self.get_id();
         let url = self.get_url();
         let ignore_status_code = self.get_ignore_status_code();
         let request_type = self.get_request_type();
+        let method = self.get_method();
+
+        // TODO: the span name on [telepoison](https://github.com/primait/telepoison/blob/b65bcc3bf4ee7744a49ae7ffa040302ab5fe3ce4/lib/telepoison.ex#L160)
+        //  is configurable and defaults to the request method
+        // TODO: server.address should be probably set after the host is resolved
+        //  and we actually have the server address, we are using the hostname here
+        #[cfg(feature = "_any_otel_version")]
+        let client_span = tracing::info_span!(
+            "prima_bridge.http.client",
+            "otel.kind" = "client",
+            "otel.name" = %method.as_str(),
+            "http.request.method" = %method.as_str(),
+            "server.address" = %url.host().map(|h| h.to_string()).unwrap_or_default(),
+            "server.port" = %url.port_or_known_default().map(|p| p.to_string()).unwrap_or_default(),
+            "url.full" = %url.as_str(),
+            "url.scheme" = %url.scheme(),
+            request_id = %request_id
+        );
+
+        #[cfg(feature = "_any_otel_version")]
+        let headers = client_span.in_scope(|| self.get_all_headers());
+
+        #[cfg(not(feature = "_any_otel_version"))]
+        let headers = self.get_all_headers();
 
         let request_builder = self
             .get_bridge()
             .inner_client
-            .request(self.get_method(), url.clone())
+            .request(method, url.clone())
             .timeout(self.get_timeout())
             .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
-            .headers(self.get_all_headers());
+            .headers(headers);
 
-        let response = match self.into_body()? {
-            DeliverableRequestBody::Empty => request_builder,
-            DeliverableRequestBody::RawBody(body) => request_builder.body(body.inner),
-            DeliverableRequestBody::Multipart(form) => request_builder.multipart(form),
+        let (status_code, response_headers, response_vec) = async move {
+            let response = match self.into_body()? {
+                DeliverableRequestBody::Empty => request_builder,
+                DeliverableRequestBody::RawBody(body) => request_builder.body(body.inner),
+                DeliverableRequestBody::Multipart(form) => request_builder.multipart(form),
+            }
+            .send()
+            .await?;
+
+            let status_code = response.status();
+            let resp_headers = response.headers().clone();
+            let resp_vec = response.bytes().await.map(|b| b.to_vec());
+
+            Ok::<_, PrimaBridgeError>((status_code, resp_headers, resp_vec))
         }
-        .send()
+        .instrument(client_span)
         .await?;
 
-        let status_code = response.status();
         if !ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
 
-        let response_headers = response.headers().clone();
-
-        let response_body = response
-            .bytes()
-            .map_err(|e| PrimaBridgeError::HttpError {
-                source: e,
-                url: url.clone(),
-            })
-            .await?
-            .to_vec();
+        let response_body = response_vec.map_err(|e| PrimaBridgeError::HttpError {
+            source: e,
+            url: url.clone(),
+        })?;
 
         match request_type {
             RequestType::Rest => Ok(Response::rest(
-                url,
+                url.clone(),
                 response_body,
                 status_code,
                 response_headers,
                 request_id,
             )),
             RequestType::GraphQL => Ok(Response::graphql(
-                url,
+                url.clone(),
                 response_body,
                 status_code,
                 response_headers,
