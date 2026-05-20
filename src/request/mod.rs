@@ -171,8 +171,6 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
 
         // TODO: the span name on [telepoison](https://github.com/primait/telepoison/blob/b65bcc3bf4ee7744a49ae7ffa040302ab5fe3ce4/lib/telepoison.ex#L160)
         //  is configurable and defaults to the request method
-        // TODO: server.address should be probably set after the host is resolved
-        //  and we actually have the server address, we are using the hostname here
         #[cfg(feature = "_any_otel_version")]
         let client_span = tracing::info_span!(
             "prima_bridge.http.client",
