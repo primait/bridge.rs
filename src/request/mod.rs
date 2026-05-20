@@ -220,6 +220,8 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
 
         let status_code = response.status();
 
+        tracing::Span::current().record("http.response.status_code", status_code.as_u16());
+
         if !ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
