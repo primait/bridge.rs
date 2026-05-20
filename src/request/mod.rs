@@ -13,7 +13,7 @@ pub use request_type::{GraphQLMultipart, GraphQLRequest, Request, RestMultipart,
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::sealed::Sealed;
-use crate::{BridgeClient, BridgeImpl, Response};
+use crate::{BridgeClient, BridgeImpl, PrimaRequestBuilder, PrimaRequestBuilderInner, Response};
 
 mod body;
 mod request_type;
@@ -167,8 +167,6 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
     async fn send(self) -> PrimaBridgeResult<Response> {
         let request_id = self.get_id();
         let url = self.get_url();
-        let ignore_status_code = self.get_ignore_status_code();
-        let request_type = self.get_request_type();
         let method = self.get_method();
 
         // TODO: the span name on [telepoison](https://github.com/primait/telepoison/blob/b65bcc3bf4ee7744a49ae7ffa040302ab5fe3ce4/lib/telepoison.ex#L160)
@@ -202,29 +200,35 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
             .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
             .headers(headers);
 
-        let (status_code, response_headers, response_vec) = async move {
-            let response = match self.into_body()? {
-                DeliverableRequestBody::Empty => request_builder,
-                DeliverableRequestBody::RawBody(body) => request_builder.body(body.inner),
-                DeliverableRequestBody::Multipart(form) => request_builder.multipart(form),
-            }
-            .send()
-            .await?;
+        self.send_request(request_builder).instrument(client_span).await
+    }
 
-            let status_code = response.status();
-            let resp_headers = response.headers().clone();
-            let resp_vec = response.bytes().await.map(|b| b.to_vec());
+    async fn send_request<T>(self, request: PrimaRequestBuilder<T>) -> PrimaBridgeResult<Response>
+    where
+        T: PrimaRequestBuilderInner,
+    {
+        let request_id = self.get_id();
+        let url = self.get_url();
+        let ignore_status_code = self.get_ignore_status_code();
+        let request_type = self.get_request_type();
 
-            Ok::<_, PrimaBridgeError>((status_code, resp_headers, resp_vec))
+        let response = match self.into_body()? {
+            DeliverableRequestBody::Empty => request,
+            DeliverableRequestBody::RawBody(body) => request.body(body.inner),
+            DeliverableRequestBody::Multipart(form) => request.multipart(form),
         }
-        .instrument(client_span)
+        .send()
         .await?;
+
+        let status_code = response.status();
 
         if !ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
 
-        let response_body = response_vec.map_err(|e| PrimaBridgeError::HttpError {
+        let response_headers = response.headers().clone();
+        let raw_body = response.bytes().await.map(|b| b.to_vec());
+        let body = raw_body.map_err(|e| PrimaBridgeError::HttpError {
             source: e,
             url: url.clone(),
         })?;
@@ -232,14 +236,14 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
         match request_type {
             RequestType::Rest => Ok(Response::rest(
                 url.clone(),
-                response_body,
+                body,
                 status_code,
                 response_headers,
                 request_id,
             )),
             RequestType::GraphQL => Ok(Response::graphql(
                 url.clone(),
-                response_body,
+                body,
                 status_code,
                 response_headers,
                 request_id,
