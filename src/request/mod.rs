@@ -23,6 +23,9 @@ pub mod grpc;
 #[cfg(feature = "_any_otel_version")]
 mod otel;
 
+#[cfg(feature = "tracing_opentelemetry")]
+use otel::otel_crates::tracing_opentelemetry::OpenTelemetrySpanExt;
+
 pub enum RequestType {
     Rest,
     #[allow(clippy::upper_case_acronyms)]
@@ -187,6 +190,9 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
         #[cfg(not(feature = "_any_otel_version"))]
         let headers = self.get_all_headers();
 
+        #[cfg(feature = "tracing_opentelemetry")]
+        client_span.set_status(otel::otel_crates::opentelemetry::trace::Status::Unset);
+
         let request_builder = self
             .get_bridge()
             .inner_client
@@ -195,7 +201,16 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
             .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
             .headers(headers);
 
-        self.send_request(request_builder).instrument(client_span).await
+        let result = self.send_request(request_builder).instrument(client_span.clone()).await;
+
+        #[cfg(feature = "tracing_opentelemetry")]
+        if let Err(ref reason) = result {
+            client_span.set_status(otel::otel_crates::opentelemetry::trace::Status::Error {
+                description: reason.to_string().into(),
+            });
+        }
+
+        result
     }
 
     async fn send_request<T>(self, request: PrimaRequestBuilder<T>) -> PrimaBridgeResult<Response>
@@ -216,8 +231,16 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
         .await?;
 
         let status_code = response.status();
+        let span = tracing::Span::current();
 
-        tracing::Span::current().record("http.response.status_code", status_code.as_u16());
+        span.record("http.response.status_code", status_code.as_u16());
+
+        // 4xx or 5xx range
+        #[cfg(feature = "tracing_opentelemetry")]
+        if status_code.is_client_error() || status_code.is_server_error() {
+            // Don’t set the span status description if the reason can be inferred from http.response.status_code
+            span.set_status(otel::otel_crates::opentelemetry::trace::Status::Error { description: "".into() });
+        }
 
         if !ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
