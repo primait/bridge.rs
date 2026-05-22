@@ -179,7 +179,7 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
             "http.request.method" = %method.as_str(),
             "server.address" = %url.host().map(|h| h.to_string()).unwrap_or_default(),
             "server.port" = %url.port_or_known_default().map(|p| p.to_string()).unwrap_or_default(),
-            "url.full" = %url.as_str(),
+            "url.full" = %strip_url_credentials(&url),
             "url.scheme" = %url.scheme(),
             request_id = %request_id
         );
@@ -322,5 +322,62 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
     #[cfg(not(feature = "_any_otel_version"))]
     fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
         vec![]
+    }
+}
+
+fn strip_url_credentials(url: &reqwest::Url) -> String {
+    if url.username().is_empty() && url.password().is_none() {
+        return url.as_str().to_owned();
+    }
+
+    let mut redacted = url.clone();
+
+    let _ = redacted.set_username("");
+    let _ = redacted.set_password(None);
+
+    redacted.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use reqwest::Url;
+
+    #[test]
+    fn preserves_url_without_credentials() {
+        let url = Url::parse("https://example.com?xx=yy#123").unwrap();
+
+        assert_eq!(strip_url_credentials(&url), "https://example.com/?xx=yy#123");
+    }
+
+    #[test]
+    fn strips_username_and_password() {
+        let url = Url::parse("https://myuser:secret@example.com?xx=yy#123").unwrap();
+
+        assert_eq!(strip_url_credentials(&url), "https://example.com/?xx=yy#123");
+    }
+
+    #[test]
+    fn strips_username_without_password() {
+        let url = Url::parse("https://myuser@example.com/api/v1/users").unwrap();
+
+        assert_eq!(strip_url_credentials(&url), "https://example.com/api/v1/users");
+    }
+
+    #[test]
+    fn preserves_port_path_query_and_fragment() {
+        let url = Url::parse("https://user:pass@example.com:8443/api/test?q=1#frag").unwrap();
+
+        assert_eq!(
+            strip_url_credentials(&url),
+            "https://example.com:8443/api/test?q=1#frag"
+        );
+    }
+
+    #[test]
+    fn handles_special_characters_in_credentials() {
+        let url = Url::parse("https://user%40mail.com:p%40ss@example.com/path").unwrap();
+
+        assert_eq!(strip_url_credentials(&url), "https://example.com/path");
     }
 }
