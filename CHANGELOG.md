@@ -10,6 +10,14 @@ and this project adheres to
 
 ---
 
+## [0.30.0] - 2026-05-25
+
+### Added
+
+- tracing/OpenTelemetry client span for outgoing HTTP requests.
+
+---
+
 ## [0.29.0] - 2026-04-09
 
 ### Changed
@@ -618,7 +626,8 @@ Request::rest(&bridge).send()
 The old API is still available but deprecated. It will be removed soon.
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.29.0...HEAD
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.30.0...HEAD
+[0.30.0]: https://github.com/primait/bridge.rs/compare/0.29.0...0.30.0
 [0.29.0]: https://github.com/primait/bridge.rs/compare/0.28.0...0.29.0
 [0.28.0]: https://github.com/primait/bridge.rs/compare/0.27.0...0.28.0
 [0.27.0]: https://github.com/primait/bridge.rs/compare/0.26.0...0.27.0
