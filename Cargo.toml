@@ -92,7 +92,7 @@ chacha20poly1305 = { version = "0.10.1", features = ["std"], optional = true }
 aws-sdk-dynamodb = { version = "1.107", optional = true }
 
 reqwest-middleware = { version = "0.5.2", features = ["json", "multipart"] }
-http = "1.0.0"
+http = "1.4.1"
 
 opentelemetry_0_29_pkg = { package = "opentelemetry", version = "0.29", optional = true }
 opentelemetry_0_30_pkg = { package = "opentelemetry", version = "0.30", optional = true }
