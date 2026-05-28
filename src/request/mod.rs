@@ -5,6 +5,7 @@ use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::multipart::Form;
 use reqwest::{Method, Url};
 use serde::Serialize;
+use tracing::Instrument;
 use uuid::Uuid;
 
 pub use body::{Body, GraphQLBody, MultipartFile, MultipartFormFileField};
@@ -12,7 +13,7 @@ pub use request_type::{GraphQLMultipart, GraphQLRequest, Request, RestMultipart,
 
 use crate::errors::{PrimaBridgeError, PrimaBridgeResult};
 use crate::sealed::Sealed;
-use crate::{BridgeClient, BridgeImpl, Response};
+use crate::{BridgeClient, BridgeImpl, PrimaRequestBuilder, PrimaRequestBuilderInner, Response};
 
 mod body;
 mod request_type;
@@ -21,6 +22,9 @@ mod request_type;
 pub mod grpc;
 #[cfg(feature = "_any_otel_version")]
 mod otel;
+
+#[cfg(feature = "tracing_opentelemetry")]
+use otel::otel_crates::tracing_opentelemetry::OpenTelemetrySpanExt;
 
 pub enum RequestType {
     Rest,
@@ -164,55 +168,102 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
     fn get_body(&self) -> Option<&[u8]>;
 
     async fn send(self) -> PrimaBridgeResult<Response> {
-        use futures_util::future::TryFutureExt;
+        let request_id = self.get_id();
+        let url = self.get_url();
+        let method = self.get_method();
+
+        let client_span = tracing::info_span!(
+            "prima_bridge.http.client",
+            "otel.kind" = "client",
+            "otel.name" = %method.as_str(),
+            "http.request.method" = %method.as_str(),
+            "server.address" = %url.host().map(|h| h.to_string()).unwrap_or_default(),
+            "server.port" = %url.port_or_known_default().map(|p| p.to_string()).unwrap_or_default(),
+            "url.full" = %strip_url_credentials(&url),
+            "url.scheme" = %url.scheme(),
+            request_id = %request_id
+        );
+
+        #[cfg(feature = "_any_otel_version")]
+        let headers = client_span.in_scope(|| self.get_all_headers());
+
+        #[cfg(not(feature = "_any_otel_version"))]
+        let headers = self.get_all_headers();
+
+        #[cfg(feature = "tracing_opentelemetry")]
+        client_span.set_status(otel::otel_crates::opentelemetry::trace::Status::Unset);
+
+        let request_builder = self
+            .get_bridge()
+            .inner_client
+            .request(method, url.clone())
+            .timeout(self.get_timeout())
+            .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
+            .headers(headers);
+
+        let result = self.send_request(request_builder).instrument(client_span.clone()).await;
+
+        #[cfg(feature = "tracing_opentelemetry")]
+        if let Err(ref reason) = result {
+            client_span.set_status(otel::otel_crates::opentelemetry::trace::Status::Error {
+                description: reason.to_string().into(),
+            });
+        }
+
+        result
+    }
+
+    async fn send_request<T>(self, request: PrimaRequestBuilder<T>) -> PrimaBridgeResult<Response>
+    where
+        T: PrimaRequestBuilderInner,
+    {
         let request_id = self.get_id();
         let url = self.get_url();
         let ignore_status_code = self.get_ignore_status_code();
         let request_type = self.get_request_type();
 
-        let request_builder = self
-            .get_bridge()
-            .inner_client
-            .request(self.get_method(), url.clone())
-            .timeout(self.get_timeout())
-            .header(HeaderName::from_static("x-request-id"), &request_id.to_string())
-            .headers(self.get_all_headers());
-
         let response = match self.into_body()? {
-            DeliverableRequestBody::Empty => request_builder,
-            DeliverableRequestBody::RawBody(body) => request_builder.body(body.inner),
-            DeliverableRequestBody::Multipart(form) => request_builder.multipart(form),
+            DeliverableRequestBody::Empty => request,
+            DeliverableRequestBody::RawBody(body) => request.body(body.inner),
+            DeliverableRequestBody::Multipart(form) => request.multipart(form),
         }
         .send()
         .await?;
 
         let status_code = response.status();
+        let span = tracing::Span::current();
+
+        span.record("http.response.status_code", status_code.as_u16());
+
+        // 4xx or 5xx range
+        #[cfg(feature = "tracing_opentelemetry")]
+        if status_code.is_client_error() || status_code.is_server_error() {
+            // Don’t set the span status description if the reason can be inferred from http.response.status_code
+            span.set_status(otel::otel_crates::opentelemetry::trace::Status::Error { description: "".into() });
+        }
+
         if !ignore_status_code && !status_code.is_success() {
             return Err(PrimaBridgeError::WrongStatusCode(url.clone(), status_code));
         }
 
         let response_headers = response.headers().clone();
-
-        let response_body = response
-            .bytes()
-            .map_err(|e| PrimaBridgeError::HttpError {
-                source: e,
-                url: url.clone(),
-            })
-            .await?
-            .to_vec();
+        let raw_body = response.bytes().await.map(|b| b.to_vec());
+        let body = raw_body.map_err(|e| PrimaBridgeError::HttpError {
+            source: e,
+            url: url.clone(),
+        })?;
 
         match request_type {
             RequestType::Rest => Ok(Response::rest(
-                url,
-                response_body,
+                url.clone(),
+                body,
                 status_code,
                 response_headers,
                 request_id,
             )),
             RequestType::GraphQL => Ok(Response::graphql(
-                url,
-                response_body,
+                url.clone(),
+                body,
                 status_code,
                 response_headers,
                 request_id,
@@ -271,5 +322,62 @@ pub trait DeliverableRequest<'a>: Sized + Sealed + 'a {
     #[cfg(not(feature = "_any_otel_version"))]
     fn tracing_headers(&self) -> Vec<(HeaderName, HeaderValue)> {
         vec![]
+    }
+}
+
+fn strip_url_credentials(url: &reqwest::Url) -> String {
+    if url.username().is_empty() && url.password().is_none() {
+        return url.as_str().to_owned();
+    }
+
+    let mut redacted = url.clone();
+
+    let _ = redacted.set_username("");
+    let _ = redacted.set_password(None);
+
+    redacted.to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use reqwest::Url;
+
+    #[test]
+    fn preserves_url_without_credentials() {
+        let url = Url::parse("https://example.com?xx=yy#123").unwrap();
+
+        assert_eq!(strip_url_credentials(&url), "https://example.com/?xx=yy#123");
+    }
+
+    #[test]
+    fn strips_username_and_password() {
+        let url = Url::parse("https://myuser:secret@example.com?xx=yy#123").unwrap();
+
+        assert_eq!(strip_url_credentials(&url), "https://example.com/?xx=yy#123");
+    }
+
+    #[test]
+    fn strips_username_without_password() {
+        let url = Url::parse("https://myuser@example.com/api/v1/users").unwrap();
+
+        assert_eq!(strip_url_credentials(&url), "https://example.com/api/v1/users");
+    }
+
+    #[test]
+    fn preserves_port_path_query_and_fragment() {
+        let url = Url::parse("https://user:pass@example.com:8443/api/test?q=1#frag").unwrap();
+
+        assert_eq!(
+            strip_url_credentials(&url),
+            "https://example.com:8443/api/test?q=1#frag"
+        );
+    }
+
+    #[test]
+    fn handles_special_characters_in_credentials() {
+        let url = Url::parse("https://user%40mail.com:p%40ss@example.com/path").unwrap();
+
+        assert_eq!(strip_url_credentials(&url), "https://example.com/path");
     }
 }
