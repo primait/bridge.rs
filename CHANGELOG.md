@@ -10,6 +10,16 @@ and this project adheres to
 
 ---
 
+## [0.31.0] - 2026-07-20
+
+### Added
+
+- Support for OpenTelemetry 0.32 via the `tracing_opentelemetry_0_32` feature
+  (opentelemetry 0.32, opentelemetry_sdk 0.32, tracing-opentelemetry 0.33). The
+  default `tracing_opentelemetry` feature now targets 0.32.
+
+---
+
 ## [0.30.0] - 2026-05-25
 
 ### Added
@@ -626,7 +636,9 @@ Request::rest(&bridge).send()
 The old API is still available but deprecated. It will be removed soon.
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.30.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.31.0...HEAD
+[0.31.0]: https://github.com/primait/bridge.rs/compare/0.30.0...0.31.0
 [0.30.0]: https://github.com/primait/bridge.rs/compare/0.29.0...0.30.0
 [0.29.0]: https://github.com/primait/bridge.rs/compare/0.28.0...0.29.0
 [0.28.0]: https://github.com/primait/bridge.rs/compare/0.27.0...0.28.0
