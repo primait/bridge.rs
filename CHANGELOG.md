@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Support for OpenTelemetry 0.32 via the `tracing_opentelemetry_0_32` feature
+  (opentelemetry 0.32, opentelemetry_sdk 0.32, tracing-opentelemetry 0.33). The
+  default `tracing_opentelemetry` feature now targets 0.32.
+
 ---
 
 ## [0.30.0] - 2026-05-25
