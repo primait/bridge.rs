@@ -8,6 +8,20 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.31.1](https://github.com/primait/bridge.rs/compare/v0.31.0...v0.31.1) - 2026-08-10
+
+### Fixed
+
+- remove legacy Rustls from DynamoDB support ([#287](https://github.com/primait/bridge.rs/pull/287))
+
+### Other
+
+- *(deps-cargo)* bump the cargo-non-major group with 9 updates ([#294](https://github.com/primait/bridge.rs/pull/294))
+- *(deps-github-actions)* bump actions/checkout from 4 to 7 ([#293](https://github.com/primait/bridge.rs/pull/293))
+- update dependabot config & configure release-plz ([#290](https://github.com/primait/bridge.rs/pull/290))
+- Revert "chore: use public docker image with pull-through cache ([#285](https://github.com/primait/bridge.rs/pull/285))" ([#286](https://github.com/primait/bridge.rs/pull/286))
+- use public docker image with pull-through cache ([#285](https://github.com/primait/bridge.rs/pull/285))
+
 ---
 
 ## [0.31.0] - 2026-07-20
