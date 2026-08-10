@@ -10,6 +10,13 @@ and this project adheres to
 
 ---
 
+## [0.32.0] - 2026-08-10
+
+- Disabled `aws-sdk-dynamodb` default features and explicitly enabled
+  `default-https-client` + `rt-tokio` instead
+
+---
+
 ## [0.31.0] - 2026-07-20
 
 ### Added
@@ -635,9 +642,8 @@ Request::rest(&bridge).send()
 
 The old API is still available but deprecated. It will be removed soon.
 
-
-
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.31.0...HEAD
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.32.0...HEAD
+[0.32.0]: https://github.com/primait/bridge.rs/compare/0.31.0...0.32.0
 [0.31.0]: https://github.com/primait/bridge.rs/compare/0.30.0...0.31.0
 [0.30.0]: https://github.com/primait/bridge.rs/compare/0.29.0...0.30.0
 [0.29.0]: https://github.com/primait/bridge.rs/compare/0.28.0...0.29.0
