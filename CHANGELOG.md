@@ -200,10 +200,6 @@ and this project adheres to
 
 - Support for opentelemetry 0.24, now the default version.
 
----
-
-## [0.16.6] - 2024-08-23
-
 ### Removed
 
 - The library no longer validates tokens after recieving them from auth0
