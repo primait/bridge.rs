@@ -8,6 +8,18 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.31.2](https://github.com/primait/bridge.rs/compare/v0.31.1...v0.31.2) - 2026-08-18
+
+### Other
+
+- *(deps-cargo)* bump the cargo-non-major group with 2 updates ([#298](https://github.com/primait/bridge.rs/pull/298))
+- *(deps-docker)* bump rust ([#299](https://github.com/primait/bridge.rs/pull/299))
+- *(deps-github-actions)* bump the github-actions-non-major group with 2 updates ([#300](https://github.com/primait/bridge.rs/pull/300))
+- remove duplicate entries for 0.16.6 ([#296](https://github.com/primait/bridge.rs/pull/296))
+- *(deps-github-actions)* bump the github-actions-non-major group across 1 directory with 3 updates ([#292](https://github.com/primait/bridge.rs/pull/292))
+- *(deps-cargo)* bump quinn-proto from 0.11.14 to 0.11.16 ([#284](https://github.com/primait/bridge.rs/pull/284))
+- *(deps-cargo)* bump jsonwebtoken from 10.4.0 to 11.0.0 ([#282](https://github.com/primait/bridge.rs/pull/282))
+
 ## [0.31.1](https://github.com/primait/bridge.rs/compare/v0.31.0...v0.31.1) - 2026-08-10
 
 ### Fixed
