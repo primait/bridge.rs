@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+---
+
+## [0.32.0] - 2026-10-06
+
 ## [0.31.1](https://github.com/primait/bridge.rs/compare/v0.31.0...v0.31.1) - 2026-08-10
 
 ### Fixed
@@ -647,7 +651,9 @@ The old API is still available but deprecated. It will be removed soon.
 
 
 
-[Unreleased]: https://github.com/primait/bridge.rs/compare/0.31.0...HEAD
+
+[Unreleased]: https://github.com/primait/bridge.rs/compare/0.32.0...HEAD
+[0.32.0]: https://github.com/primait/bridge.rs/compare/0.31.1...0.32.0
 [0.31.0]: https://github.com/primait/bridge.rs/compare/0.30.0...0.31.0
 [0.30.0]: https://github.com/primait/bridge.rs/compare/0.29.0...0.30.0
 [0.29.0]: https://github.com/primait/bridge.rs/compare/0.28.0...0.29.0
