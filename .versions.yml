@@ -1,3 +1,5 @@
 files:
   - path: Cargo.toml
     pattern: '^version = \"{version}\"'
+  - path: Cargo.lock
+    pattern: 'name = \"prima_bridge\"\nversion = \"{version}\"'
