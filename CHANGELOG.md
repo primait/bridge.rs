@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased]
 
+### Changed
+
+- MSRV is now 1.94.1
+
 ---
 
 ## [0.32.0] - 2026-10-06
@@ -16,15 +20,22 @@ and this project adheres to
 
 ### Fixed
 
-- remove legacy Rustls from DynamoDB support ([#287](https://github.com/primait/bridge.rs/pull/287))
+- remove legacy Rustls from DynamoDB support
+  ([#287](https://github.com/primait/bridge.rs/pull/287))
 
 ### Other
 
-- *(deps-cargo)* bump the cargo-non-major group with 9 updates ([#294](https://github.com/primait/bridge.rs/pull/294))
-- *(deps-github-actions)* bump actions/checkout from 4 to 7 ([#293](https://github.com/primait/bridge.rs/pull/293))
-- update dependabot config & configure release-plz ([#290](https://github.com/primait/bridge.rs/pull/290))
-- Revert "chore: use public docker image with pull-through cache ([#285](https://github.com/primait/bridge.rs/pull/285))" ([#286](https://github.com/primait/bridge.rs/pull/286))
-- use public docker image with pull-through cache ([#285](https://github.com/primait/bridge.rs/pull/285))
+- _(deps-cargo)_ bump the cargo-non-major group with 9 updates
+  ([#294](https://github.com/primait/bridge.rs/pull/294))
+- _(deps-github-actions)_ bump actions/checkout from 4 to 7
+  ([#293](https://github.com/primait/bridge.rs/pull/293))
+- update dependabot config & configure release-plz
+  ([#290](https://github.com/primait/bridge.rs/pull/290))
+- Revert "chore: use public docker image with pull-through cache
+  ([#285](https://github.com/primait/bridge.rs/pull/285))"
+  ([#286](https://github.com/primait/bridge.rs/pull/286))
+- use public docker image with pull-through cache
+  ([#285](https://github.com/primait/bridge.rs/pull/285))
 
 ---
 
@@ -648,9 +659,6 @@ Request::rest(&bridge).send()
 ```
 
 The old API is still available but deprecated. It will be removed soon.
-
-
-
 
 [Unreleased]: https://github.com/primait/bridge.rs/compare/0.32.0...HEAD
 [0.32.0]: https://github.com/primait/bridge.rs/compare/0.31.1...0.32.0

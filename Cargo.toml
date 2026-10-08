@@ -6,8 +6,8 @@ license = "MIT"
 name = "prima_bridge"
 readme = "README.md"
 repository = "https://github.com/primait/bridge.rs"
+rust-version = "1.94.1"
 version = "0.32.0"
-rust-version = "1.91"
 
 [features]
 default = ["tracing_opentelemetry"]
@@ -35,8 +35,8 @@ auth0 = [
 grpc = ["_any_otel_version", "tonic"]
 gzip = ["reqwest/gzip"]
 
-redis-tls = ["redis", "redis/tls", "redis/tokio-native-tls-comp"]
 cache-dynamodb = ["aws-sdk-dynamodb"]
+redis-tls = ["redis", "redis/tls", "redis/tokio-native-tls-comp"]
 
 tracing_opentelemetry = ["tracing_opentelemetry_0_33"]
 
@@ -81,57 +81,57 @@ _any_otel_version = []
 [dependencies]
 async-trait = "0.1"
 bytes = "1.2"
-chrono = { version = "0.4", default-features = false, features = [
+chrono = {version = "0.4", default-features = false, features = [
   "clock",
   "std",
   "serde",
-], optional = true }
-dashmap = { version = "6.2", optional = true }
+], optional = true}
+dashmap = {version = "6.2", optional = true}
 futures = "0.3"
 futures-util = "0.3"
-jsonwebtoken = { version = "11.0", features = ["rust_crypto"], optional = true }
-rand = { version = "0.10", features = ["thread_rng"], optional = true }
-redis = { version = "0.32", features = ["tokio-comp"], optional = true }
-reqwest = { version = "0.13", features = ["json", "multipart", "stream"] }
-serde = { version = "1.0", features = ["derive"] }
+jsonwebtoken = {version = "11.0", features = ["rust_crypto"], optional = true}
+rand = {version = "0.10", features = ["thread_rng"], optional = true}
+redis = {version = "0.32", features = ["tokio-comp"], optional = true}
+reqwest = {version = "0.13", features = ["json", "multipart", "stream"]}
+serde = {version = "1.0", features = ["derive"]}
 serde_json = "1.0"
 serde_path_to_error = "0.1"
 thiserror = "2"
-tokio = { version = "1.52", features = ["macros", "rt-multi-thread", "fs"] }
+tokio = {version = "1.52", features = ["macros", "rt-multi-thread", "fs"]}
 # ALlow both 0.12 and 0.14 versions of tonic temporairly to simplify migration.
-tonic = { version = ">=0.12, <0.15", default-features = false, optional = true }
-tracing = { version = "0.1", optional = true }
-uuid = { version = ">=0.7.0, <2.0.0", features = ["serde", "v4"] }
-chacha20poly1305 = { version = "0.10.1", features = ["std"], optional = true }
-aws-sdk-dynamodb = { version = "1.107", default-features = false, features = [
+aws-sdk-dynamodb = {version = "1.107", default-features = false, features = [
   "default-https-client",
   "rt-tokio",
-], optional = true }
+], optional = true}
+chacha20poly1305 = {version = "0.10.1", features = ["std"], optional = true}
+tonic = {version = ">=0.12, <0.15", default-features = false, optional = true}
+tracing = {version = "0.1", optional = true}
+uuid = {version = ">=0.7.0, <2.0.0", features = ["serde", "v4"]}
 
-reqwest-middleware = { version = "0.5.2", features = ["json", "multipart"] }
 http = "1.4.1"
+reqwest-middleware = {version = "0.5.2", features = ["json", "multipart"]}
 
-opentelemetry_0_29_pkg = { package = "opentelemetry", version = "0.29", optional = true }
-opentelemetry_0_30_pkg = { package = "opentelemetry", version = "0.30", optional = true }
-opentelemetry_0_31_pkg = { package = "opentelemetry", version = "0.31", optional = true }
-opentelemetry_0_32_pkg = { package = "opentelemetry", version = "0.32", optional = true }
-opentelemetry_0_33_pkg = { package = "opentelemetry", version = "0.33", optional = true }
-opentelemetry_sdk_0_29_pkg = { package = "opentelemetry_sdk", version = "0.29", optional = true }
-opentelemetry_sdk_0_30_pkg = { package = "opentelemetry_sdk", version = "0.30", optional = true }
-opentelemetry_sdk_0_31_pkg = { package = "opentelemetry_sdk", version = "0.31", optional = true }
-opentelemetry_sdk_0_32_pkg = { package = "opentelemetry_sdk", version = "0.32", optional = true }
-opentelemetry_sdk_0_33_pkg = { package = "opentelemetry_sdk", version = "0.33", optional = true }
-tracing-opentelemetry_0_30_pkg = { package = "tracing-opentelemetry", version = "0.30", optional = true }
-tracing-opentelemetry_0_31_pkg = { package = "tracing-opentelemetry", version = "0.31", optional = true }
-tracing-opentelemetry_0_32_pkg = { package = "tracing-opentelemetry", version = "0.32", optional = true }
-tracing-opentelemetry_0_33_pkg = { package = "tracing-opentelemetry", version = "0.33", optional = true }
-tracing-opentelemetry_0_34_pkg = { package = "tracing-opentelemetry", version = "0.34", optional = true }
+opentelemetry_0_29_pkg = {package = "opentelemetry", version = "0.29", optional = true}
+opentelemetry_0_30_pkg = {package = "opentelemetry", version = "0.30", optional = true}
+opentelemetry_0_31_pkg = {package = "opentelemetry", version = "0.31", optional = true}
+opentelemetry_0_32_pkg = {package = "opentelemetry", version = "0.32", optional = true}
+opentelemetry_0_33_pkg = {package = "opentelemetry", version = "0.33", optional = true}
+opentelemetry_sdk_0_29_pkg = {package = "opentelemetry_sdk", version = "0.29", optional = true}
+opentelemetry_sdk_0_30_pkg = {package = "opentelemetry_sdk", version = "0.30", optional = true}
+opentelemetry_sdk_0_31_pkg = {package = "opentelemetry_sdk", version = "0.31", optional = true}
+opentelemetry_sdk_0_32_pkg = {package = "opentelemetry_sdk", version = "0.32", optional = true}
+opentelemetry_sdk_0_33_pkg = {package = "opentelemetry_sdk", version = "0.33", optional = true}
+tracing-opentelemetry_0_30_pkg = {package = "tracing-opentelemetry", version = "0.30", optional = true}
+tracing-opentelemetry_0_31_pkg = {package = "tracing-opentelemetry", version = "0.31", optional = true}
+tracing-opentelemetry_0_32_pkg = {package = "tracing-opentelemetry", version = "0.32", optional = true}
+tracing-opentelemetry_0_33_pkg = {package = "tracing-opentelemetry", version = "0.33", optional = true}
+tracing-opentelemetry_0_34_pkg = {package = "tracing-opentelemetry", version = "0.34", optional = true}
 
 [dev-dependencies]
-aws-config = { version = "1.8", features = ["behavior-version-latest"] }
+aws-config = {version = "1.8", features = ["behavior-version-latest"]}
 flate2 = "1.0"
 mockito = "1.0"
-tokio = { version = "1.52", features = ["macros", "rt-multi-thread"] }
+tokio = {version = "1.52", features = ["macros", "rt-multi-thread"]}
 tonic = "0.14"
 
 [profile.release]
