@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.32.1](https://github.com/primait/bridge.rs/compare/v0.32.0...v0.32.1) - 2026-10-08
+
+### Other
+
+- bump deps to latest ([#318](https://github.com/primait/bridge.rs/pull/318))
+
 ### Changed
 
 - MSRV is now 1.94.1

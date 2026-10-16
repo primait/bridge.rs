@@ -2361,7 +2361,7 @@ dependencies = [
 
 [[package]]
 name = "prima_bridge"
-version = "0.32.0"
+version = "0.32.1"
 dependencies = [
  "async-trait",
  "aws-config",
