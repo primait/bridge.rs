@@ -20,8 +20,8 @@ jobs:
       - uses: actions/checkout@v7
       - run: rustup default 1.94.1
       - run: rustup component add clippy rustfmt
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # ratchet:Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # v2.87.22
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # ratchet:Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # v2.87.29
         with:
           tool: cargo-make,cargo-deny@0.19
       - run: cargo make fmt-check
@@ -47,8 +47,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: rustup default 1.94.1
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # ratchet:Swatinem/rust-cache@v2
-      - uses: taiki-e/install-action@83ac0ad63c0167e6f06796fab0fce28db1bf3db0 # 2.87.22
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # ratchet:Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@8cca0918f8471c33515202b73f56ab27f2bed283 # 2.87.29
         with:
           tool: cargo-make
       - run: cargo make test
