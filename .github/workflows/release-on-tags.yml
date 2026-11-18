@@ -17,7 +17,7 @@ jobs:
 
   release:
     name: Publish Package
-    runs-on: k8s-small
+    runs-on: ubuntu-latest
     needs: test-and-build
     permissions:
       contents: read
