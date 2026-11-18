@@ -28,6 +28,7 @@ jobs:
         with:
           ref: master
           fetch-depth: 0
+          ssh-key: ${{ secrets.SSH_KEY }}
 
       - run: rustup default 1.94.1
 
@@ -79,6 +80,10 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
+          case "$(git remote get-url origin)" in
+            git@github.com:*) ;;
+            *) echo "::error::Expected SSH origin configured with SSH_KEY"; exit 1 ;;
+          esac
           git add Cargo.toml Cargo.lock
           if git diff --cached --quiet; then
             echo "Crate version is already $VERSION; continuing the release."

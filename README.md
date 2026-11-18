@@ -48,9 +48,12 @@ draft. It rejects invalid versions, downgrades, and existing tags (including
 legacy `vX.Y.Z` tags). Release drafting and publishing are serialized.
 
 Publishing uses the existing `CARGO_AUTH_KEY` repository secret. Version commits
-and tags use `GITHUB_TOKEN`, so they do not trigger other workflows; crates.io
-publishing runs in the same workflow and verifies the package with Cargo.
-Repository rules must allow GitHub Actions to push the version commit to `master`.
+and tags use the `SSH_KEY` Actions secret, whose identity must be authorized to
+push directly to protected `master`, including bypassing the required PR and
+status checks for the version commit. SSH alone does not bypass branch protection.
+These pushes can trigger other workflows; crates.io publishing still runs in
+the same workflow and verifies the package with Cargo. `GH_TOKEN`, backed by
+`github.token`, is used only for GitHub API calls to read and publish the draft.
 
 Release notes for new releases live in GitHub Releases; `CHANGELOG.md` retains
 the existing history. If a run fails after the crate has been published, finish
