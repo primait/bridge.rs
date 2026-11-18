@@ -10,15 +10,10 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: release-${{ github.repository }}
-  cancel-in-progress: false
-
 jobs:
   update_release_draft:
     name: Update Release Draft
-    if: github.repository_owner == 'primait'
-    runs-on: ubuntu-latest
+    runs-on: k8s-small
     permissions:
       contents: write
       pull-requests: write

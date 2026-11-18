@@ -1,0 +1,79 @@
+name: Release on Tags
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  test-and-build:
+    name: Test and Build Package
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+  release:
+    name: Publish Package
+    runs-on: k8s-small
+    needs: test-and-build
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      - name: Set up Rust
+        uses: primait/shared-github-actions/actions/install-rust@install-rust-v1
+        with:
+          rust-toolchain: "1.94.1"
+
+      - name: Publish package to crates.io
+        run: cargo publish --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_AUTH_KEY }}
+
+      - name: Install GitHub CLI
+        uses: primait/shared-github-actions/actions/install-gh-cli@install-gh-cli-v1
+
+      - name: Comment on PR with published RC version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! [[ "$TAG" =~ ^([0-9]+\.[0-9]+\.[0-9]+)-rc\.([1-9][0-9]*)$ ]]; then
+            exit 0
+          fi
+
+          PACKAGE_VERSION="$TAG"
+          grep -Fx "version = \"${PACKAGE_VERSION}\"" Cargo.toml
+          SOURCE_COMMIT=$(git rev-parse HEAD^)
+          PR=$(gh api "/repos/${GITHUB_REPOSITORY}/commits/${SOURCE_COMMIT}/pulls" --paginate --jq '.[]' |
+            jq -sr --arg repo "$GITHUB_REPOSITORY" \
+              '[.[] | select(.state == "open" and .head.repo.full_name == $repo)] |
+               if length == 0 then empty elif length == 1 then .[0].number else error("Multiple open PRs for the RC source commit") end')
+          if [ -z "$PR" ]; then
+            echo "No open PR associated with the RC source commit; skipping the comment."
+            exit 0
+          fi
+
+          MARKER="<!-- prima-bridge-rc:${TAG} -->"
+          COMMENTS=$(gh api "/repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate --jq '.[].body')
+          if grep -Fq "$MARKER" <<< "$COMMENTS"; then
+            echo "RC instructions already posted to PR #${PR}."
+            exit 0
+          fi
+
+          gh pr comment "$PR" --body "To use this version, change your dependency to:
+
+          \`\`\`toml
+          prima_bridge = \"=${PACKAGE_VERSION}\"
+          \`\`\`
+
+          ${MARKER}"

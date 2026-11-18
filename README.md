@@ -12,6 +12,28 @@ You can find all the examples in [examples](./examples) directory.
 
 ## Release Process
 
+### TL;DR
+
+**Release a new version:**
+
+1. Merge your PR into `master` and wait for CI to pass.
+2. Check the version and notes in the [draft release](https://github.com/primait/bridge.rs/releases).
+3. In [Actions > Bump Version and Publish Release](https://github.com/primait/bridge.rs/actions/workflows/bump.yml),
+   click **Run workflow**, select `master`, and run it.
+4. Wait for [Release on Tags](https://github.com/primait/bridge.rs/actions/workflows/release-on-tags.yml)
+   to succeed. The new version is now on crates.io.
+
+**Test a release candidate before merging:**
+
+1. Open a PR for your branch and ensure a draft release exists.
+2. In [Actions > Build Release Candidate](https://github.com/primait/bridge.rs/actions/workflows/release-candidate.yml),
+   click **Run workflow**, select your PR branch, and run it.
+3. Follow the download and Cargo patch instructions posted on your PR, then run
+   your consuming project's tests. Nothing is published to crates.io.
+4. Remove the temporary Cargo patch and downloaded files when finished.
+
+### How it works
+
 This project uses **[Release Drafter](https://github.com/release-drafter/release-drafter)**
 to maintain draft release notes and calculate the next version from PR labels.
 The [Release Drafter workflow](./.github/workflows/release-drafter.yml) updates
@@ -43,19 +65,33 @@ conventional commit messages alone do not control the release version.
    from `master`.
 
 The workflow updates `Cargo.toml` and `Cargo.lock`, commits and pushes the version
-bump, publishes to crates.io, creates the release tag, and publishes the GitHub
-draft. It rejects invalid versions, downgrades, and existing tags (including
-legacy `vX.Y.Z` tags). Release drafting and publishing are serialized.
+bump, creates the release tag, and publishes the GitHub draft, following the same
+flow as `primapy-tracing`.
+
+The tag triggers [Release on Tags](./.github/workflows/release-on-tags.yml), which
+runs the existing Rust CI checks and then publishes to crates.io with
+`cargo publish --locked`. Check that this workflow succeeds before using the
+release: the GitHub release can appear before crates.io publishing finishes.
 
 Publishing uses the existing `CARGO_AUTH_KEY` repository secret. Version commits
-and tags use the `SSH_KEY` Actions secret, whose identity must be authorized to
-push directly to protected `master`, including bypassing the required PR and
-status checks for the version commit. SSH alone does not bypass branch protection.
-These pushes can trigger other workflows; crates.io publishing still runs in
-the same workflow and verifies the package with Cargo. `GH_TOKEN`, backed by
-`github.token`, is used only for GitHub API calls to read and publish the draft.
+and tags use the `DEPLOY_KEY` Actions secret, available to the `release`
+environment. The key's identity must be authorized to push directly to protected
+`master`, including bypassing the required PR and status checks for the version
+commit. SSH alone does not bypass branch protection.
+These SSH pushes trigger the CI, release-drafter, and tag-release workflows as
+applicable. `GH_TOKEN`, backed by `github.token`, is used for GitHub API calls.
 
 Release notes for new releases live in GitHub Releases; `CHANGELOG.md` retains
-the existing history. If a run fails after the crate has been published, finish
-the tag and draft publication manually rather than rerunning `cargo publish`:
+the existing history. Do not rerun publishing after a successful upload:
 crates.io versions are immutable.
+
+### Testing a release candidate
+
+Run [Build Release Candidate](./.github/workflows/release-candidate.yml) manually
+on a branch with exactly one open PR. It uses the draft release version to build
+`X.Y.Z-rc.<run number>`, uploads a `.crate` artifact, and creates or updates a PR
+comment with download and local Cargo patch instructions.
+
+This workflow does not push a commit or tag and does not publish to crates.io.
+For explicitly tagged RC releases, the tag-release workflow also posts the
+published dependency version to the associated PR.
