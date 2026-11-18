@@ -1,0 +1,111 @@
+name: Bump Version and Publish Release
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  bump:
+    name: Bump Version and Publish Release
+    if: github.repository_owner == 'primait' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - run: rustup default 1.94.1
+
+      - name: Install Cargo versioning tool
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
+        with:
+          tool: cargo-edit@0.13.13
+
+      - name: Read draft release version
+        id: release-version
+        run: |
+          DRAFT=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/${GITHUB_REPOSITORY}/releases" --paginate \
+            --jq '.[] | select(.draft == true)' |
+            jq -sc 'if length == 1 then .[0] else error("Expected exactly one draft release") end')
+          VERSION=$(jq -r '.tag_name' <<< "$DRAFT")
+          if ! [[ "$VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::Invalid draft release version: $VERSION"
+            exit 1
+          fi
+          for TAG in "$VERSION" "v$VERSION"; do
+            if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+              echo "::error::Release tag ${TAG} already exists"
+              exit 1
+            fi
+          done
+          CURRENT_VERSION=$(cargo metadata --locked --no-deps --format-version 1 |
+            jq -r '.packages[] | select(.name == "prima_bridge") | .version')
+          jq -en --arg current "$CURRENT_VERSION" --arg next "$VERSION" \
+            'if ($next | split(".") | map(tonumber)) >= ($current | split(".") | map(tonumber))
+             then true else error("Draft version is older than the crate version") end'
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "ID=$(jq -r '.id' <<< "$DRAFT")" >> "$GITHUB_OUTPUT"
+
+      - name: Update crate version and lockfile
+        env:
+          VERSION: ${{ steps.release-version.outputs.VERSION }}
+        run: |
+          cargo set-version --package prima_bridge "$VERSION"
+          cargo metadata --locked --no-deps --format-version 1 |
+            jq -e --arg version "$VERSION" \
+              '.packages[] | select(.name == "prima_bridge") | .version == $version'
+
+      - name: Commit and push version update
+        env:
+          VERSION: ${{ steps.release-version.outputs.VERSION }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add Cargo.toml Cargo.lock
+          if git diff --cached --quiet; then
+            echo "Crate version is already $VERSION; continuing the release."
+          else
+            git commit -m "Bump release version to $VERSION"
+          fi
+          git push origin HEAD:master
+
+      - name: Publish crate to crates.io
+        run: cargo publish --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_AUTH_KEY }}
+
+      - name: Create and push release tag
+        env:
+          VERSION: ${{ steps.release-version.outputs.VERSION }}
+        run: |
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "refs/tags/${VERSION}"
+
+      - name: Publish GitHub release
+        env:
+          RELEASE_ID: ${{ steps.release-version.outputs.ID }}
+        run: |
+          gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}" \
+            -F "draft=false" -F "prerelease=false"
