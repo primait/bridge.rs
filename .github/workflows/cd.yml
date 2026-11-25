@@ -37,12 +37,13 @@ jobs:
   release-plz-release:
     name: Release-plz release
     if: github.repository_owner == 'primait'
-    runs-on: ubuntu-latest
+    runs-on: k8s-xlarge
     needs:
       - release-plz-pr
     permissions:
       contents: write
       pull-requests: read
+      id-token: write
     concurrency:
       group: release-plz-release-${{ github.ref }}
       cancel-in-progress: false
@@ -52,8 +53,48 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - run: rustup default 1.94.1
-      - name: Run release-plz
+      - uses: primait/shared-github-actions/actions/install-rust@install-rust-v3
+        with:
+          rust-toolchain: 1.94.1
+          cargo-liner: false
+      - name: Check Vault role
+        env:
+          VAULT_ROLE: ${{ vars.ARTIFACTORY_VAULT_ROLE }}
+        run: |
+          if [ -z "$VAULT_ROLE" ]; then
+            echo "::error::Set the ARTIFACTORY_VAULT_ROLE repository variable before publishing."
+            exit 1
+          fi
+      - name: Retrieve Artifactory token
+        id: artifactory-token
+        uses: hashicorp/vault-action@v4.0.0
+        with:
+          method: jwt
+          url: https://vault.helloprima.com:8200
+          role: ${{ vars.ARTIFACTORY_VAULT_ROLE }}
+          path: github/
+          secrets: |
+            artifactory/token/${{ vars.ARTIFACTORY_VAULT_ROLE }} access_token | CARGO_REGISTRIES_ARTIFACTORY_TOKEN
+      - name: Set up Cargo registry token
+        uses: primait/shared-github-actions/actions/setup-cargo-registry-tokens@setup-cargo-registry-tokens-v1
+        with:
+          token: Bearer ${{ steps.artifactory-token.outputs.CARGO_REGISTRIES_ARTIFACTORY_TOKEN }}
+          registries: developer-platform-crates
+
+      # Publish first to Artifactory without creating a tag: release-plz skips versions with an existing tag
+      - name: Publish to Artifactory
+        uses: release-plz/action@66b324fd6c72d05d2a08568492ecdd62bfb8a62b
+        with:
+          command: release
+          config: .github/release-plz-artifactory.toml
+          registry: developer-platform-crates
+          token: Bearer ${{ steps.artifactory-token.outputs.CARGO_REGISTRIES_ARTIFACTORY_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Keep crates.io clients supplied, including with security patches during migration
+      # This release also creates the shared Git tag and GitHub release
+      - name: Publish to crates.io
         uses: release-plz/action@66b324fd6c72d05d2a08568492ecdd62bfb8a62b
         with:
           command: release

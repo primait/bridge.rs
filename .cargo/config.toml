@@ -1,0 +1,5 @@
+[registries.developer-platform-crates]
+index = "sparse+https://prima.jfrog.io/artifactory/api/cargo/developer-platform-crates/index/"
+
+[registry]
+global-credential-providers = ["cargo:token"]
