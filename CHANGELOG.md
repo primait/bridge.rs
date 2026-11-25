@@ -8,6 +8,26 @@ and this project adheres to
 
 ## [Unreleased]
 
+## [0.33.0](https://github.com/primait/bridge.rs/compare/v0.32.0...v0.33.0) - 2026-11-25
+
+### Other
+
+- remove support from older otel versions (<0.32.1) ([#338](https://github.com/primait/bridge.rs/pull/338))
+- Revert "chore(cd): move to release-drafter ([#335](https://github.com/primait/bridge.rs/pull/335))" ([#342](https://github.com/primait/bridge.rs/pull/342))
+- *(cd)* move to release-drafter ([#335](https://github.com/primait/bridge.rs/pull/335))
+- *(deps-docker)* bump rust ([#311](https://github.com/primait/bridge.rs/pull/311))
+- *(deps-github-actions)* bump taiki-e/install-action ([#334](https://github.com/primait/bridge.rs/pull/334))
+- *(deps-github-actions)* bump the github-actions-non-major group across 1 directory with 3 updates ([#324](https://github.com/primait/bridge.rs/pull/324))
+- *(deps-cargo)* bump the cargo-non-major group across 1 directory with 4 updates ([#332](https://github.com/primait/bridge.rs/pull/332))
+- *(deps-cargo)* bump the cargo-non-major group across 1 directory with 3 updates
+- *(deps-cargo)* bump the cargo-non-major group with 2 updates ([#327](https://github.com/primait/bridge.rs/pull/327))
+- *(deps-cargo)* bump the cargo-non-major group across 1 directory with 3 updates ([#326](https://github.com/primait/bridge.rs/pull/326))
+- update vulnerable deps ([#325](https://github.com/primait/bridge.rs/pull/325))
+- *(deps-github-actions)* bump the github-actions-non-major group across 1 directory with 2 updates ([#306](https://github.com/primait/bridge.rs/pull/306))
+- bump deps to latest ([#318](https://github.com/primait/bridge.rs/pull/318))
+- *(deps-cargo)* bump the cargo-non-major group across 1 directory with 4 updates ([#317](https://github.com/primait/bridge.rs/pull/317))
+- *(deps-cargo)* bump rand from 0.10.2 to 0.10.3 ([#315](https://github.com/primait/bridge.rs/pull/315))
+
 ### Changed
 
 - MSRV is now 1.94.1
