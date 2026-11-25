@@ -11,6 +11,12 @@ and this project adheres to
 ### Changed
 
 - MSRV is now 1.94.1
+- **Breaking**: Removed the `tracing_opentelemetry_0_29`,
+  `tracing_opentelemetry_0_30`, and `tracing_opentelemetry_0_31` features.
+  Upgrade to OpenTelemetry 0.32 or 0.33 and select the corresponding feature.
+- The `tracing_opentelemetry_0_32` feature now requires
+  `opentelemetry_sdk` 0.32.1 or later in the 0.32 series, fixing
+  [CVE-2026-48504](https://github.com/advisories/GHSA-w9wp-h8wv-79jx).
 
 ---
 

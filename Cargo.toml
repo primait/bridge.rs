@@ -7,7 +7,7 @@ name = "prima_bridge"
 readme = "README.md"
 repository = "https://github.com/primait/bridge.rs"
 rust-version = "1.94.1"
-version = "0.32.0"
+version = "0.33.0"
 
 [features]
 default = ["tracing_opentelemetry"]
@@ -40,27 +40,6 @@ redis-tls = ["redis", "redis/tls", "redis/tokio-native-tls-comp"]
 
 tracing_opentelemetry = ["tracing_opentelemetry_0_33"]
 
-tracing_opentelemetry_0_29 = [
-  "_any_otel_version",
-  "tracing",
-  "tracing-opentelemetry_0_30_pkg",
-  "opentelemetry_0_29_pkg",
-  "opentelemetry_sdk_0_29_pkg",
-]
-tracing_opentelemetry_0_30 = [
-  "_any_otel_version",
-  "tracing",
-  "tracing-opentelemetry_0_31_pkg",
-  "opentelemetry_0_30_pkg",
-  "opentelemetry_sdk_0_30_pkg",
-]
-tracing_opentelemetry_0_31 = [
-  "_any_otel_version",
-  "tracing",
-  "tracing-opentelemetry_0_32_pkg",
-  "opentelemetry_0_31_pkg",
-  "opentelemetry_sdk_0_31_pkg",
-]
 tracing_opentelemetry_0_32 = [
   "_any_otel_version",
   "tracing",
@@ -111,19 +90,10 @@ uuid = {version = ">=0.7.0, <2.0.0", features = ["serde", "v4"]}
 http = "1.4.1"
 reqwest-middleware = {version = "0.5.2", features = ["json", "multipart"]}
 
-opentelemetry_0_29_pkg = {package = "opentelemetry", version = "0.29", optional = true}
-opentelemetry_0_30_pkg = {package = "opentelemetry", version = "0.30", optional = true}
-opentelemetry_0_31_pkg = {package = "opentelemetry", version = "0.31", optional = true}
 opentelemetry_0_32_pkg = {package = "opentelemetry", version = "0.32", optional = true}
 opentelemetry_0_33_pkg = {package = "opentelemetry", version = "0.33", optional = true}
-opentelemetry_sdk_0_29_pkg = {package = "opentelemetry_sdk", version = "0.29", optional = true}
-opentelemetry_sdk_0_30_pkg = {package = "opentelemetry_sdk", version = "0.30", optional = true}
-opentelemetry_sdk_0_31_pkg = {package = "opentelemetry_sdk", version = "0.31", optional = true}
-opentelemetry_sdk_0_32_pkg = {package = "opentelemetry_sdk", version = "0.32", optional = true}
+opentelemetry_sdk_0_32_pkg = {package = "opentelemetry_sdk", version = "0.32.1", optional = true}
 opentelemetry_sdk_0_33_pkg = {package = "opentelemetry_sdk", version = "0.33", optional = true}
-tracing-opentelemetry_0_30_pkg = {package = "tracing-opentelemetry", version = "0.30", optional = true}
-tracing-opentelemetry_0_31_pkg = {package = "tracing-opentelemetry", version = "0.31", optional = true}
-tracing-opentelemetry_0_32_pkg = {package = "tracing-opentelemetry", version = "0.32", optional = true}
 tracing-opentelemetry_0_33_pkg = {package = "tracing-opentelemetry", version = "0.33", optional = true}
 tracing-opentelemetry_0_34_pkg = {package = "tracing-opentelemetry", version = "0.34", optional = true}
 
