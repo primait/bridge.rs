@@ -37,7 +37,7 @@ jobs:
   release-plz-release:
     name: Release-plz release
     if: github.repository_owner == 'primait'
-    runs-on: k8s-xlarge
+    runs-on: ubuntu-latest
     needs:
       - release-plz-pr
     permissions:
